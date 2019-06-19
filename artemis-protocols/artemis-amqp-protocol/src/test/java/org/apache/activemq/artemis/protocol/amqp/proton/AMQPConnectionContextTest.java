@@ -32,13 +32,59 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AMQPConnectionContextTest {
 
    @Test
    public void testLeakAfterClose() throws Exception {
+      WeakReference<AMQPConnectionContext> connectionContextRef;
+
+      ScheduledThreadPoolExecutor scheduledPool = new ScheduledThreadPoolExecutor(
+         ActiveMQDefaultConfiguration.getDefaultScheduledThreadPoolMaxSize());
+      scheduledPool.setRemoveOnCancelPolicy(false);
+
+      {
+         AMQPConnectionContext connectionContext = getAMQPConnectionContext(scheduledPool);
+
+         Connection connection = getConnection(connectionContext.getConnectionCallback());
+
+         connectionContextRef = new WeakReference<>(connectionContext);
+
+         connectionContext.onRemoteOpen(connection);
+
+         connectionContext.close(null);
+      }
+
+      while (connectionContextRef.get() != null) {
+         System.gc();
+         Thread.sleep(1000);
+      }
+
+      Assert.assertEquals(0, scheduledPool.getTaskCount());
+   }
+
+   @Test
+   public void testLeakAfterCloseWithRemoveOnCancelPolicy() throws Exception {
+      ScheduledThreadPoolExecutor scheduledPool = new ScheduledThreadPoolExecutor(
+         ActiveMQDefaultConfiguration.getDefaultScheduledThreadPoolMaxSize());
+      scheduledPool.setRemoveOnCancelPolicy(true);
+
+      AMQPConnectionContext connectionContext = getAMQPConnectionContext(scheduledPool);
+
+      Connection connection = getConnection(connectionContext.getConnectionCallback());
+
+      connectionContext.onRemoteOpen(connection);
+
+      connectionContext.close(null);
+
+      Assert.assertEquals(0, scheduledPool.getTaskCount());
+   }
+
+   private AMQPConnectionContext getAMQPConnectionContext(ScheduledExecutorService scheduledPool) {
       ArtemisExecutor executor = Mockito.mock(ArtemisExecutor.class);
       ExecutorFactory executorFactory = Mockito.mock(ExecutorFactory.class);
       Mockito.when(executorFactory.getExecutor()).thenReturn(executor);
@@ -56,15 +102,10 @@ public class AMQPConnectionContextTest {
       Mockito.when(eventLoop.inEventLoop()).thenReturn(true);
       NettyConnection transportConnection = new NettyConnection(new HashMap<>(), transportChannel, null, false, false);
 
-      Connection connection = Mockito.mock(Connection.class);
       AMQPConnectionCallback protonSPI = Mockito.mock(AMQPConnectionCallback.class);
       Mockito.when(protonSPI.getTransportConnection()).thenReturn(transportConnection);
-      Mockito.when(protonSPI.validateConnection(connection, null)).thenReturn(true);
 
-      ScheduledThreadPoolExecutor scheduledPool = new ScheduledThreadPoolExecutor(
-         ActiveMQDefaultConfiguration.getDefaultScheduledThreadPoolMaxSize());
-
-      AMQPConnectionContext connectionContext = new AMQPConnectionContext(
+      return new AMQPConnectionContext(
          manager,
          protonSPI,
          null,
@@ -76,11 +117,12 @@ public class AMQPConnectionContextTest {
          false,
          null,
          null);
+   }
 
-      connectionContext.onRemoteOpen(connection);
+   private Connection getConnection(AMQPConnectionCallback protonSPI) {
+      Connection connection = Mockito.mock(Connection.class);
+      Mockito.when(protonSPI.validateConnection(connection, null)).thenReturn(true);
 
-      connectionContext.close(null);
-
-      Assert.assertEquals(0, scheduledPool.getTaskCount());
+      return connection;
    }
 }

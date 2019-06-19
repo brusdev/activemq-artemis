@@ -2002,4 +2002,12 @@ public interface ActiveMQServerLogger extends BasicLogger {
    @LogMessage(level = Logger.Level.INFO)
    @Message(id = 224098, value = "Received a vote saying the backup is live with connector: {0}", format = Message.Format.MESSAGE_FORMAT)
    void qourumBackupIsLive(String liveConnector);
+
+   @LogMessage(level = Logger.Level.WARN)
+   @Message(id = 224099, value = "Apache ActiveMQ Artemis is using a scheduled pool without remove on cancel policy, so a cancelled task could be not automatically removed from the work queue and it, together with the object referenced, wont't be collected until its delay elapses.", format = Message.Format.MESSAGE_FORMAT)
+   void scheduledPoolWithNoRemoveOnCancelPolicy();
+
+   @LogMessage(level = Logger.Level.WARN)
+   @Message(id = 224100, value = "Failed to cancel a scheduled task.", format = Message.Format.MESSAGE_FORMAT)
+   void failedToCancelScheduledTask();
 }

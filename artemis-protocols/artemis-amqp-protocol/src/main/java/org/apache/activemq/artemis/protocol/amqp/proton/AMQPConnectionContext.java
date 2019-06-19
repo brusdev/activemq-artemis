@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.artemis.protocol.amqp.proton;
 
+import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
+import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
@@ -194,10 +196,9 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
       synchronized (schedulingLock) {
          isSchedulingCancelled = true;
 
-         if (scheduledPool != null && scheduledPool instanceof ThreadPoolExecutor &&
-            scheduledFuture != null && scheduledFuture instanceof Runnable) {
-            if (!((ThreadPoolExecutor) scheduledPool).remove((Runnable) scheduledFuture)) {
-               log.warn("Scheduled task can't be removed from scheduledPool.");
+         if (scheduledFuture != null) {
+            if (!scheduledFuture.cancel(true)) {
+               ActiveMQServerLogger.LOGGER.failedToCancelScheduledTask();
             }
          }
       }
@@ -424,6 +425,8 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
    class TickerRunnable implements Runnable {
 
       final ScheduleRunnable scheduleRunnable;
+      final WeakReference<AMQPConnectionContext> contextRef =
+         new WeakReference<>(AMQPConnectionContext.this);
 
       TickerRunnable(ScheduleRunnable scheduleRunnable) {
          this.scheduleRunnable = scheduleRunnable;
@@ -431,15 +434,19 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
 
       @Override
       public void run() {
-         Long rescheduleAt = handler.tick(false);
+         AMQPConnectionContext context = contextRef.get();
 
-         synchronized (schedulingLock) {
-            if (!isSchedulingCancelled) {
-               if (rescheduleAt == null) {
-                  // this mean tick could not acquire a lock, we will just retry in 10 milliseconds.
-                  scheduledFuture = scheduledPool.schedule(scheduleRunnable, 10, TimeUnit.MILLISECONDS);
-               } else if (rescheduleAt != 0) {
-                  scheduledFuture = scheduledPool.schedule(scheduleRunnable, rescheduleAt - TimeUnit.NANOSECONDS.toMillis(System.nanoTime()), TimeUnit.MILLISECONDS);
+         if (context != null) {
+            Long rescheduleAt = context.handler.tick(false);
+
+            synchronized (context.schedulingLock) {
+               if (!context.isSchedulingCancelled) {
+                  if (rescheduleAt == null) {
+                     // this mean tick could not acquire a lock, we will just retry in 10 milliseconds.
+                     context.scheduledFuture = context.scheduledPool.schedule(scheduleRunnable, 10, TimeUnit.MILLISECONDS);
+                  } else if (rescheduleAt != 0) {
+                     context.scheduledFuture = context.scheduledPool.schedule(scheduleRunnable, rescheduleAt - TimeUnit.NANOSECONDS.toMillis(System.nanoTime()), TimeUnit.MILLISECONDS);
+                  }
                }
             }
          }
@@ -448,14 +455,19 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
 
    class ScheduleRunnable implements Runnable {
 
-      TickerRunnable tickerRunnable = new TickerRunnable(this);
+      final TickerRunnable tickerRunnable = new TickerRunnable(this);
+      final WeakReference<AMQPConnectionContext> contextRef =
+         new WeakReference<>(AMQPConnectionContext.this);
 
       @Override
       public void run() {
+         AMQPConnectionContext context = contextRef.get();
 
-         // The actual tick has to happen within a Netty Worker, to avoid requiring a lock
-         // this will also be used to flush the data directly into netty connection's executor
-         handler.runLater(tickerRunnable);
+         if (context != null) {
+            // The actual tick has to happen within a Netty Worker, to avoid requiring a lock
+            // this will also be used to flush the data directly into netty connection's executor
+            context.handler.runLater(tickerRunnable);
+         }
       }
    }
 
