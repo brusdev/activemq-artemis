@@ -56,7 +56,7 @@ public class JMSNonDestructiveTest extends JMSClientTestSupport {
       server.getConfiguration().setPersistenceEnabled(false);
       server.getConfiguration().setMessageExpiryScanPeriod(100);
       server.getAddressSettingsRepository().addMatch(NON_DESTRUCTIVE_QUEUE_NAME, new AddressSettings().setDefaultNonDestructive(true));
-      server.getAddressSettingsRepository().addMatch(NON_DESTRUCTIVE_EXPIRY_QUEUE_NAME, new AddressSettings().setDefaultNonDestructive(true).setExpiryDelay(100L));
+      server.getAddressSettingsRepository().addMatch(NON_DESTRUCTIVE_EXPIRY_QUEUE_NAME, new AddressSettings().setDefaultNonDestructive(true).setExpiryDelay(250L));
       server.getAddressSettingsRepository().addMatch(NON_DESTRUCTIVE_LVQ_QUEUE_NAME, new AddressSettings().setDefaultLastValueQueue(true).setDefaultNonDestructive(true));
       server.getAddressSettingsRepository().addMatch(NON_DESTRUCTIVE_TOMBSTONE_LVQ_QUEUE_NAME, new AddressSettings().setDefaultLastValueQueue(true).setDefaultNonDestructive(true));
    }
@@ -319,12 +319,25 @@ public class JMSNonDestructiveTest extends JMSClientTestSupport {
    }
 
    private void receive(ConnectionSupplier consumerConnectionSupplier, String queueName) throws JMSException {
+      long time_x, time_y, diff_0, diff_1, diff_2, diff_3;
+
+      time_x = System.nanoTime();
       try (Connection consumerConnection = consumerConnectionSupplier.createConnection()) {
+         time_y = System.nanoTime();
+         diff_0 = (time_y - time_x) / 1000000;
 
          Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         time_x = System.nanoTime();
+         diff_1 = (time_x - time_y) / 1000000;
          Queue consumerQueue = consumerSession.createQueue(queueName);
+         time_y = System.nanoTime();
+         diff_2 = (time_y - time_x) / 1000000;
          MessageConsumer consumer = consumerSession.createConsumer(consumerQueue);
+         time_y = System.nanoTime();
+         diff_3 = (time_y - time_x) / 1000000;
+
          TextMessage msg = (TextMessage) consumer.receive(2000);
+         System.out.println(String.format("%d-%d-%d-%d", diff_0, diff_1, diff_2, diff_3));
          assertNotNull(msg);
          consumer.close();
       }
