@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,6 +61,8 @@ import org.apache.activemq.artemis.core.config.ha.ReplicaPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicatedPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.SharedStoreMasterPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.SharedStoreSlavePolicyConfiguration;
+import org.apache.activemq.artemis.core.config.impl.LegacyJMSConfiguration;
+import org.apache.activemq.artemis.core.deployers.impl.FileConfigurationParser;
 import org.apache.activemq.artemis.core.postoffice.Binding;
 import org.apache.activemq.artemis.core.postoffice.Bindings;
 import org.apache.activemq.artemis.core.postoffice.PostOffice;
@@ -1491,6 +1494,15 @@ public abstract class ClusterTestBase extends ActiveMQTestBase {
                                   final boolean sharedStorage,
                                   final boolean netty,
                                   boolean liveOnly) throws Exception {
+      setupLiveServer(node, fileStorage, sharedStorage, netty, liveOnly, null);
+   }
+
+   protected void setupLiveServer(final int node,
+                                  final boolean fileStorage,
+                                  final boolean sharedStorage,
+                                  final boolean netty,
+                                  boolean liveOnly,
+                                  URL configurationUrl) throws Exception {
       if (servers[node] != null) {
          throw new IllegalArgumentException("Already a server at node " + node);
       }
@@ -1506,6 +1518,18 @@ public abstract class ClusterTestBase extends ActiveMQTestBase {
       }
 
       Configuration configuration = createBasicConfig(node).setJournalMaxIO_AIO(1000).setThreadPoolMaxSize(10).clearAcceptorConfigurations().addAcceptorConfiguration(createTransportConfiguration(netty, true, generateParams(node, netty))).setHAPolicyConfiguration(haPolicyConfiguration).setResolveProtocols(isResolveProtocols());
+
+      if (configurationUrl != null) {
+         Configuration config = new FileConfigurationParser().parseMainConfig(configurationUrl.openStream());
+         LegacyJMSConfiguration legacyJMSConfiguration = new LegacyJMSConfiguration(config);
+         legacyJMSConfiguration.parseConfiguration(configurationUrl.openStream());
+         configuration.setSecurityRoles(config.getSecurityRoles());
+         configuration.setAddressesSettings(config.getAddressesSettings());
+         configuration.setDivertConfigurations(config.getDivertConfigurations());
+         configuration.setAddressConfigurations(config.getAddressConfigurations());
+         configuration.setQueueConfigurations(config.getQueueConfigurations());
+         configuration.setConfigurationUrl(configurationUrl);
+      }
 
       ActiveMQServer server;
 
