@@ -30,6 +30,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -1915,8 +1917,8 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    }
 
    @Override
-   public synchronized int deleteMatchingReferences(final int flushLimit, final Filter filter1, AckReason ackReason) throws Exception {
-      return iterQueue(flushLimit, filter1, createDeleteMatchingAction(ackReason));
+   public int deleteMatchingReferences(final int flushLimit, final Filter filter1, AckReason ackReason) throws Exception {
+      return iterQueue(flushLimit, filter1, createDeleteMatchingAction(ackReason)).get();
    }
 
    QueueIterateAction createDeleteMatchingAction(AckReason ackReason) {
@@ -1947,11 +1949,12 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
     * @return
     * @throws Exception
     */
-   private synchronized int iterQueue(final int flushLimit,
-                                      final Filter filter1,
-                                      QueueIterateAction messageAction) throws Exception {
+   private synchronized Future<Integer> iterQueue(final int flushLimit,
+                                         final Filter filter1,
+                                         QueueIterateAction messageAction) throws Exception {
       int count = 0;
       int txCount = 0;
+      Future<Integer> result = null;
 
       Transaction tx = new TransactionImpl(storageManager);
 
@@ -1992,41 +1995,128 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
 
          if (txCount > 0) {
             tx.commit();
-            tx = new TransactionImpl(storageManager);
-            txCount = 0;
+            tx = null;
          }
 
          if (pageIterator != null && !queueDestroyed) {
-            while (pageIterator.hasNext()) {
-               PagedReference reference = pageIterator.next();
-               pageIterator.remove();
+            if (pageSubscription.getMessageCount() > flushLimit) {
+               result = iterPagedQueueAsync(count, flushLimit, filter1, messageAction);
+            } else {
+               count += iterPagedQueue(0, flushLimit, filter1, messageAction);
 
-               if (filter1 == null || filter1.match(reference.getMessage())) {
-                  count++;
-                  txCount++;
-                  messageAction.actMessage(tx, reference, false);
-               } else {
-                  addTail(reference, false);
-               }
-
-               if (txCount > 0 && txCount % flushLimit == 0) {
-                  tx.commit();
-                  tx = new TransactionImpl(storageManager);
-                  txCount = 0;
+               if (filter != null && !queueDestroyed && pageSubscription != null) {
+                  scheduleDepage(false);
                }
             }
          }
 
-         if (txCount > 0) {
-            tx.commit();
-            tx = null;
+         if (result == null) {
+            result = CompletableFuture.completedFuture(count);
          }
 
-         if (filter != null && !queueDestroyed && pageSubscription != null) {
-            scheduleDepage(false);
-         }
+         return result;
+      }
+   }
 
-         return count;
+
+   private int iterPagedQueue(final int timeout,
+                              final int flushLimit,
+                              final Filter messageFilter,
+                              QueueIterateAction messageAction) throws Exception {
+      int count = 0;
+      int txCount = 0;
+
+      Transaction tx = new TransactionImpl(storageManager);
+
+      if (pageIterator != null && !queueDestroyed) {
+         long endTime = System.currentTimeMillis() + timeout;
+
+         while ((timeout <= 0 || endTime > System.currentTimeMillis()) && pageIterator.hasNext()) {
+            PagedReference reference = pageIterator.next();
+            pageIterator.remove();
+
+            if (messageFilter == null || messageFilter.match(reference.getMessage())) {
+               count++;
+               txCount++;
+               messageAction.actMessage(tx, reference, false);
+            } else {
+               addTail(reference, false);
+            }
+
+            if (txCount > 0 && txCount % flushLimit == 0) {
+               tx.commit();
+               tx = new TransactionImpl(storageManager);
+               txCount = 0;
+            }
+         }
+      }
+
+      if (txCount > 0) {
+         tx.commit();
+         tx = null;
+      }
+
+      return count;
+   }
+
+   private Future<Integer> iterPagedQueueAsync(final int count,
+                                               final int flushLimit,
+                                               final Filter messageFilter,
+                                               QueueIterateAction messageAction) {
+      if (logger.isTraceEnabled()) {
+         logger.trace("Scheduling iter paged queue " + this.getName());
+      }
+
+      IterPagedQueueRunner runner = new IterPagedQueueRunner(count, flushLimit, messageFilter, messageAction);
+      pageSubscription.getExecutor().execute(runner);
+
+      return runner.getFuture();
+   }
+
+   private final class IterPagedQueueRunner implements Runnable {
+
+      int count;
+      final int flushLimit;
+      final Filter messageFilter;
+      final QueueIterateAction messageAction;
+      CompletableFuture<Integer> future;
+
+      public Future<Integer> getFuture() {
+         return future;
+      }
+
+      private IterPagedQueueRunner(final int count,
+                                   final int flushLimit,
+                                   final Filter messageFilter,
+                                   QueueIterateAction messageAction) {
+         this.count = count;
+         this.flushLimit = flushLimit;
+         this.messageFilter = messageFilter;
+         this.messageAction = messageAction;
+         this.future = new CompletableFuture<>();
+      }
+
+      @Override
+      public void run() {
+         try {
+            synchronized (QueueImpl.this) {
+               if (pageIterator != null && !queueDestroyed && pageIterator.hasNext()) {
+                  this.count += iterPagedQueue(DELIVERY_TIMEOUT, flushLimit, messageFilter, messageAction);
+
+                  if (pageIterator.hasNext()) {
+                     pageSubscription.getExecutor().execute(this);
+                  } else {
+                     if (filter != null && !queueDestroyed && pageSubscription != null) {
+                        scheduleDepage(false);
+                     }
+
+                     future.complete(count);
+                  }
+               }
+            }
+         } catch (Exception e) {
+            ActiveMQServerLogger.LOGGER.errorDelivering(e);
+         }
       }
    }
 
@@ -2350,7 +2440,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    }
 
    @Override
-   public synchronized int moveReferences(final int flushLimit,
+   public int moveReferences(final int flushLimit,
                                           final Filter filter,
                                           final SimpleString toAddress,
                                           final boolean rejectDuplicates,
@@ -2381,16 +2471,16 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
                //move(toAddress, tx, ref, false, rejectDuplicates);
             }
          }
-      });
+      }).get();
    }
 
-   public synchronized int moveReferencesBetweenSnFQueues(final SimpleString queueSuffix) throws Exception {
+   public int moveReferencesBetweenSnFQueues(final SimpleString queueSuffix) throws Exception {
       return iterQueue(DEFAULT_FLUSH_LIMIT, null, new QueueIterateAction() {
          @Override
          public void actMessage(Transaction tx, MessageReference ref) throws Exception {
             moveBetweenSnFQueues(queueSuffix, tx, ref);
          }
-      });
+      }).get();
    }
 
    @Override
@@ -2430,8 +2520,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
                refRemoved(ref);
             }
          }
-      });
-
+      }).get();
    }
 
    @Override
