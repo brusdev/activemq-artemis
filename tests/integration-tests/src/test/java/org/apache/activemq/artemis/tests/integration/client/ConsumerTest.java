@@ -1230,4 +1230,46 @@ public class ConsumerTest extends ActiveMQTestBase {
          Assert.assertEquals("The consumer " + i + " must receive all the messages sent.", messages * runs, receivedMessages.get(i));
       }
    }
+
+   @Test
+   public void testStopOnReceiving() throws Throwable {
+      if (!isNetty()) {
+         return;
+      }
+
+      ConnectionFactory factorySend = createFactory(1);
+      Connection connection = factorySend.createConnection();
+
+      try (Session session = connection.createSession(Session.CLIENT_ACKNOWLEDGE)) {
+         javax.jms.Queue queue = session.createQueue("queueStop");
+         MessageProducer producer = session.createProducer(queue);
+         producer.send(session.createTextMessage("text"));
+         connection.start();
+         MessageConsumer consumer = session.createConsumer(queue);
+         javax.jms.Message message = consumer.receive(1000);
+         assertNotNull(message);
+
+         (new Thread(new Runnable() {
+            @Override
+            public void run() {
+               try {
+                  Thread.sleep(1000);
+                  server.stop();
+               } catch (Exception e) {
+                  e.printStackTrace();
+               }
+            }
+         })).start();
+
+         javax.jms.Message nullMessage = consumer.receive(5000);
+         assertNull(nullMessage);
+
+         try {
+            message.acknowledge();
+            Assert.fail("didn't get expected exception!");
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }
+   }
 }
