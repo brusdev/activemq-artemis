@@ -669,6 +669,8 @@ public class LinkedListTest extends ActiveMQTestBase {
       // Remove the last one, that's element 9
       iter.remove();
 
+      assertFalse(iter.hasNext());
+
       iter = list.iterator();
 
       for (int i = 0; i < num - 1; i++) {
@@ -768,9 +770,6 @@ public class LinkedListTest extends ActiveMQTestBase {
       for (int i = num; i < num * 2; i++) {
          list.addTail(i);
       }
-
-      assertTrue(iter.hasNext());
-      assertEquals(8, iter.next().intValue());
 
       for (int i = num; i < num * 2; i++) {
          assertTrue(iter.hasNext());
@@ -1144,8 +1143,6 @@ public class LinkedListTest extends ActiveMQTestBase {
       assertTrue(iter5.hasNext());
       assertEquals(10, iter5.next().intValue());
 
-      assertTrue(iter4.hasNext());
-      assertEquals(7, iter4.next().intValue());
       assertTrue(iter4.hasNext());
       assertEquals(10, iter4.next().intValue());
 

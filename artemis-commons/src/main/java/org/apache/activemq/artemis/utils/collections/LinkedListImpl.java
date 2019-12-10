@@ -336,6 +336,8 @@ public class LinkedListImpl<E> implements LinkedList<E> {
 
       boolean repeat;
 
+      boolean removed;
+
       Iterator() {
          if (current != null) {
             current.iterCount++;
@@ -396,12 +398,14 @@ public class LinkedListImpl<E> implements LinkedList<E> {
 
          repeat = false;
 
+         removed = false;
+
          return e.val();
       }
 
       @Override
       public void remove() {
-         if (last == null) {
+         if (removed) {
             throw new NoSuchElementException();
          }
 
@@ -409,9 +413,11 @@ public class LinkedListImpl<E> implements LinkedList<E> {
             throw new NoSuchElementException();
          }
 
-         LinkedListImpl.this.removeAfter(current.prev);
+         removed = true;
 
-         last = null;
+         last = current.prev;
+
+         LinkedListImpl.this.removeAfter(current.prev);
       }
 
       @Override
