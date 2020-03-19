@@ -306,15 +306,12 @@ public class AMQConsumer {
       List<MessageReference> ackList = serverConsumer.getDeliveringReferencesBasedOnProtocol(removeReferences, first, last);
 
       if (removeReferences && (ack.isIndividualAck() || ack.isStandardAck() || ack.isPoisonAck())) {
-         this.deliveredAcks.getAndUpdate(deliveredAcks -> {
-            if (deliveredAcks >= ackList.size()) {
-               return deliveredAcks - ackList.size();
-            }
+         int previousDeliveredAcks = this.deliveredAcks.getAndUpdate(
+            deliveredAcks -> deliveredAcks > ackList.size() ? deliveredAcks - ackList.size() : 0);
 
-            acquireCredit(ackList.size() - deliveredAcks);
-
-            return 0;
-         });
+         if (ackList.size() > previousDeliveredAcks) {
+            acquireCredit(ackList.size() - previousDeliveredAcks);
+         }
       } else {
          if (ack.isDeliveredAck()) {
             this.deliveredAcks.addAndGet(ack.getMessageCount());
