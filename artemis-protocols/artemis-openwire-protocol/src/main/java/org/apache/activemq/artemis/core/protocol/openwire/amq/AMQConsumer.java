@@ -68,13 +68,14 @@ public class AMQConsumer {
 
    private int prefetchSize;
    private final AtomicInteger currentWindow;
-   private final AtomicInteger deliveredAcks;
+   private int deliveredAcks;
    private long messagePullSequence = 0;
    private final AtomicReference<MessagePullHandler> messagePullHandler = new AtomicReference<>(null);
    //internal means we don't expose
    //it's address/queue to management service
    private boolean internalAddress = false;
    private volatile Set<MessageReference> rolledbackMessageRefs;
+   private long threadId;
 
    public AMQConsumer(AMQSession amqSession,
                       org.apache.activemq.command.ActiveMQDestination d,
@@ -88,12 +89,14 @@ public class AMQConsumer {
       this.scheduledPool = scheduledPool;
       this.prefetchSize = info.getPrefetchSize();
       this.currentWindow = new AtomicInteger(prefetchSize);
-      this.deliveredAcks = new AtomicInteger(0);
+      this.deliveredAcks = 0;
       if (prefetchSize == 0) {
          messagePullHandler.set(new MessagePullHandler());
       }
       this.internalAddress = internalAddress;
       this.rolledbackMessageRefs = null;
+
+      this.threadId = Thread.currentThread().getId();
    }
 
    private Set<MessageReference> guardedInitializationOfRolledBackMessageRefs() {
@@ -287,6 +290,9 @@ public class AMQConsumer {
     * Notice that we will start a new transaction on the cases where there is no transaction.
     */
    public void acknowledge(MessageAck ack) throws Exception {
+      if (Thread.currentThread().getId() != this.threadId) {
+         ActiveMQServerLogger.LOGGER.warnf("Acknowledge received by a wrong thread {0} != {1}", Thread.currentThread().getId(), this.threadId);
+      }
 
       MessageId first = ack.getFirstMessageId();
       MessageId last = ack.getLastMessageId();
@@ -306,15 +312,15 @@ public class AMQConsumer {
       List<MessageReference> ackList = serverConsumer.getDeliveringReferencesBasedOnProtocol(removeReferences, first, last);
 
       if (removeReferences && (ack.isIndividualAck() || ack.isStandardAck() || ack.isPoisonAck())) {
-         int previousDeliveredAcks = this.deliveredAcks.getAndUpdate(
-            deliveredAcks -> deliveredAcks > ackList.size() ? deliveredAcks - ackList.size() : 0);
-
-         if (ackList.size() > previousDeliveredAcks) {
-            acquireCredit(ackList.size() - previousDeliveredAcks);
+         if (deliveredAcks < ackList.size()) {
+            acquireCredit(ackList.size() - deliveredAcks);
+            deliveredAcks = 0;
+         } else {
+            deliveredAcks -= ackList.size();
          }
       } else {
          if (ack.isDeliveredAck()) {
-            this.deliveredAcks.addAndGet(ack.getMessageCount());
+            this.deliveredAcks += ack.getMessageCount();
          }
 
          acquireCredit(ack.getMessageCount());
