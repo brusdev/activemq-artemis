@@ -66,6 +66,15 @@ public class TestConversions extends Assert {
 
    private static final Logger logger = Logger.getLogger(TestConversions.class);
 
+   private final byte[] blobBytes = new byte[Byte.MAX_VALUE - Byte.MIN_VALUE + 1];
+
+   public TestConversions()
+   {
+      for (int i = 0; i < blobBytes.length; i++) {
+         blobBytes[i] = (byte)(i - Byte.MIN_VALUE);
+      }
+   }
+
    @Test
    public void testAmqpValueOfBooleanIsPassedThrough() throws Exception {
       Map<String, Object> mapprop = createPropertiesMap();
@@ -124,6 +133,7 @@ public class TestConversions extends Assert {
       assertEquals(true, message.getBooleanProperty("true"));
       assertEquals(false, message.getBooleanProperty("false"));
       assertEquals("bar", message.getStringProperty("foo"));
+      assertArrayEquals(blobBytes, (byte[]) message.getObjectProperty("blob"));
    }
 
    private Map<String, Object> createPropertiesMap() {
@@ -132,6 +142,7 @@ public class TestConversions extends Assert {
       mapprop.put("true", Boolean.TRUE);
       mapprop.put("false", Boolean.FALSE);
       mapprop.put("foo", "bar");
+      mapprop.put("blob", new Binary(blobBytes));
       return mapprop;
    }
 
@@ -140,6 +151,7 @@ public class TestConversions extends Assert {
       typedProperties.putBooleanProperty(new SimpleString("true"), Boolean.TRUE);
       typedProperties.putBooleanProperty(new SimpleString("false"), Boolean.FALSE);
       typedProperties.putSimpleStringProperty(new SimpleString("foo"), new SimpleString("bar"));
+      typedProperties.putBytesProperty(new SimpleString("blob"), blobBytes);
       return typedProperties;
    }
 
