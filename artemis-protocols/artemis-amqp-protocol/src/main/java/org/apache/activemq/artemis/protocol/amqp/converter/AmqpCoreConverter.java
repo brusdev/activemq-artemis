@@ -477,7 +477,7 @@ public class AmqpCoreConverter {
       } else if (value instanceof Decimal32) {
          msg.setFloatProperty(key, ((Decimal32) value).floatValue());
       } else if (value instanceof Binary) {
-         msg.setStringProperty(key, value.toString());
+         msg.setObjectProperty(key, ((Binary) value).getArray());
       } else {
          msg.setObjectProperty(key, value);
       }
