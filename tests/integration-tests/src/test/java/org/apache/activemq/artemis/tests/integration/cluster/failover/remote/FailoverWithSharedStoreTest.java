@@ -39,4 +39,6 @@ public class FailoverWithSharedStoreTest extends ClusterTestBase {
          fail("Invalid Exception type:" + e.getType());
       }
    }
+
+
 }

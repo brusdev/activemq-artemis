@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.tests.integration.amqp;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.artemis.core.server.Queue;
+import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
@@ -109,6 +110,8 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
       AmqpClient client = createAmqpClient();
       AmqpConnection connection = addConnection(client.connect());
 
+      //server.getConfiguration().addAddressesSetting(getQueueName(), new AddressSettings().setRedeliveryDelay(5000));
+
       try {
          AmqpSession session = connection.createSession();
 
@@ -118,26 +121,66 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
          final Queue queueView = getProxyToQueue(getQueueName());
          assertNotNull(queueView);
 
+
+
+         /*
+         for (int i = 0; i < 10; i++) {
+            AmqpMessage msg = new AmqpMessage();
+            msg.setSubject("B");
+            msg.setText("TEST");
+            sender.send(msg);
+         }
+         */
+
          AmqpMessage message = new AmqpMessage();
          long delay = 6000;
+         message.setSubject("C");
          message.setMessageAnnotation("x-opt-delivery-delay", delay);
          message.setText("Test-Message");
-         sender.send(message);
+         //sender.send(message);
+         //assertEquals(1, queueView.getScheduledCount());
+
+         for (int i = 0; i < 10; i++) {
+            AmqpMessage msg = new AmqpMessage();
+            msg.setSubject("A");
+            msg.setText("TEST");
+            sender.send(msg);
+         }
          sender.close();
 
-         assertEquals(1, queueView.getScheduledCount());
 
          AmqpReceiver receiver = session.createReceiver(getQueueName());
          receiver.flow(1);
 
          // Now try and get the message, should not due to being scheduled.
-         AmqpMessage received = receiver.receive(2, TimeUnit.SECONDS);
-         assertNull(received);
+         String subject = null;
+         AmqpMessage received = receiver.receive();
+         //assertNull(received);
+         //assertNotNull(received);
+         //subject = received.getSubject();
+         received.accept();
+
+         Thread.sleep(7000);
+         Thread.sleep(3000);
 
          // Now try and get the message, should get it now
          received = receiver.receive(10, TimeUnit.SECONDS);
          assertNotNull(received);
-         received.accept();
+         subject = received.getSubject();
+         received.reject();
+
+
+
+         received = receiver.receive(3, TimeUnit.SECONDS);
+         assertNotNull(received);
+         subject = received.getSubject();
+         received.reject();
+
+         //received.accept();
+         //received.reject();
+
+
+
       } finally {
          connection.close();
       }

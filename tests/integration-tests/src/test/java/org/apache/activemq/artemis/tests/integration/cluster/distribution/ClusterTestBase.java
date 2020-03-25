@@ -55,6 +55,7 @@ import org.apache.activemq.artemis.core.client.impl.TopologyMemberImpl;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.HAPolicyConfiguration;
+import org.apache.activemq.artemis.core.config.ScaleDownConfiguration;
 import org.apache.activemq.artemis.core.config.ha.LiveOnlyPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicaPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicatedPolicyConfiguration;
@@ -1557,7 +1558,9 @@ public abstract class ClusterTestBase extends ActiveMQTestBase {
       TransportConfiguration backupConfig = createTransportConfiguration(netty, false, generateParams(node, netty));
       TransportConfiguration acceptorConfig = createTransportConfiguration(netty, true, generateParams(node, netty));
 
-      Configuration configuration = createBasicConfig(sharedStorage ? liveNode : node).clearAcceptorConfigurations().addAcceptorConfiguration(acceptorConfig).addConnectorConfiguration(liveConfig.getName(), liveConfig).addConnectorConfiguration(backupConfig.getName(), backupConfig).setHAPolicyConfiguration(sharedStorage ? new SharedStoreSlavePolicyConfiguration() : new ReplicaPolicyConfiguration());
+      ScaleDownConfiguration scaleDownConfiguration = new ScaleDownConfiguration().setEnabled(true);
+
+      Configuration configuration = createBasicConfig(sharedStorage ? liveNode : node).clearAcceptorConfigurations().addAcceptorConfiguration(acceptorConfig).addConnectorConfiguration(liveConfig.getName(), liveConfig).addConnectorConfiguration(backupConfig.getName(), backupConfig).setHAPolicyConfiguration(sharedStorage ? new SharedStoreSlavePolicyConfiguration().setScaleDownConfiguration(scaleDownConfiguration) : new ReplicaPolicyConfiguration().setScaleDownConfiguration(scaleDownConfiguration));
 
       ActiveMQServer server;
 

@@ -21,11 +21,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.client.impl.TopologyMemberImpl;
 import org.apache.activemq.artemis.core.config.ha.ReplicaPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicatedPolicyConfiguration;
+import org.apache.activemq.artemis.core.config.ha.SharedStoreSlavePolicyConfiguration;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.impl.SharedNothingBackupActivation;
@@ -58,6 +60,11 @@ public abstract class GroupingFailoverTestBase extends ClusterTestBase {
          ((ReplicatedPolicyConfiguration) servers[0].getConfiguration().getHAPolicyConfiguration()).setGroupName("group1");
          ((ReplicatedPolicyConfiguration) servers[1].getConfiguration().getHAPolicyConfiguration()).setGroupName("group2");
          ((ReplicaPolicyConfiguration) servers[2].getConfiguration().getHAPolicyConfiguration()).setGroupName("group1");
+      } else {
+         //((SharedStoreSlavePolicyConfiguration) servers[2].getConfiguration().getHAPolicyConfiguration()).getScaleDownConfiguration().addConnector(servers[1].getConfiguration().getName());
+
+         TransportConfiguration nodeConfig = createTransportConfiguration(isNetty(), false, generateParams(1, isNetty()));
+         ((SharedStoreSlavePolicyConfiguration) servers[2].getConfiguration().addConnectorConfiguration(nodeConfig.getName(), nodeConfig).getHAPolicyConfiguration()).getScaleDownConfiguration().addConnector(nodeConfig.getName());
       }
 
       startServers(0, 1, 2);
@@ -151,6 +158,10 @@ public abstract class GroupingFailoverTestBase extends ClusterTestBase {
          ((ReplicatedPolicyConfiguration) servers[0].getConfiguration().getHAPolicyConfiguration()).setGroupName("group1");
          ((ReplicatedPolicyConfiguration) servers[1].getConfiguration().getHAPolicyConfiguration()).setGroupName("group2");
          ((ReplicaPolicyConfiguration) servers[2].getConfiguration().getHAPolicyConfiguration()).setGroupName("group1");
+      } else {
+         //TransportConfiguration nodeConfig = createTransportConfiguration(isNetty(), false, generateParams(1, isNetty()));
+         //((SharedStoreSlavePolicyConfiguration) servers[2].getConfiguration().addConnectorConfiguration(nodeConfig.getName(), nodeConfig).getHAPolicyConfiguration()).getScaleDownConfiguration().addConnector(nodeConfig.getName());
+         ((SharedStoreSlavePolicyConfiguration) servers[2].getConfiguration().getHAPolicyConfiguration()).getScaleDownConfiguration().addConnector(servers[2].getConfiguration().getName());
       }
 
       startServers(0, 1, 2);

@@ -46,6 +46,8 @@ import org.apache.activemq.artemis.core.transaction.ResourceManager;
 * */
 public class BackupRecoveryJournalLoader extends PostOfficeJournalLoader {
 
+   private StorageManager storageManager;
+   private Configuration configuration;
    private ActiveMQServer parentServer;
    private ServerLocator locator;
    private final ClusterController clusterController;
@@ -63,6 +65,8 @@ public class BackupRecoveryJournalLoader extends PostOfficeJournalLoader {
                                       ClusterController clusterController) {
 
       super(postOffice, pagingManager, storageManager, queueFactory, nodeManager, managementService, groupingHandler, configuration);
+      this.storageManager = storageManager;
+      this.configuration = configuration;
       this.parentServer = parentServer;
       this.locator = locator;
       this.clusterController = clusterController;
@@ -87,11 +91,11 @@ public class BackupRecoveryJournalLoader extends PostOfficeJournalLoader {
    public void postLoad(Journal messageJournal,
                         ResourceManager resourceManager,
                         Map<SimpleString, List<Pair<byte[], Long>>> duplicateIDMap) throws Exception {
-      ScaleDownHandler scaleDownHandler = new ScaleDownHandler(pagingManager, postOffice, nodeManager, clusterController, parentServer.getStorageManager());
+      ScaleDownHandler scaleDownHandler = new ScaleDownHandler(pagingManager, postOffice, nodeManager, clusterController, parentServer != null ? parentServer.getStorageManager() : storageManager);
       locator.setProtocolManagerFactory(ActiveMQServerSideProtocolManagerFactory.getInstance(locator));
 
       try (ClientSessionFactory sessionFactory = locator.createSessionFactory()) {
-         scaleDownHandler.scaleDown(sessionFactory, resourceManager, duplicateIDMap, parentServer.getConfiguration().getManagementAddress(), parentServer.getNodeID());
+         scaleDownHandler.scaleDown(sessionFactory, resourceManager, duplicateIDMap, parentServer != null ? parentServer.getConfiguration().getManagementAddress() : configuration.getManagementAddress(), parentServer != null ? parentServer.getNodeID() : null);
       }
    }
 
