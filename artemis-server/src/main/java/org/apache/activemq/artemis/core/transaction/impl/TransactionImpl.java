@@ -55,6 +55,8 @@ public class TransactionImpl implements Transaction {
 
    private final long id;
 
+   private final String clientID;
+
    private volatile State state = State.ACTIVE;
 
    private ActiveMQException exception;
@@ -98,7 +100,7 @@ public class TransactionImpl implements Transaction {
    }
 
    public TransactionImpl(final StorageManager storageManager, final int timeoutSeconds) {
-      this(storageManager.generateID(), null, storageManager, timeoutSeconds, false);
+      this(storageManager.generateID(), null, null, storageManager, timeoutSeconds, false);
    }
 
    public TransactionImpl(final StorageManager storageManager) {
@@ -106,31 +108,37 @@ public class TransactionImpl implements Transaction {
    }
 
    public TransactionImpl(final StorageManager storageManager, boolean sorted) {
-      this(storageManager.generateID(), null, storageManager,-1, sorted);
+      this(storageManager.generateID(), null, null, storageManager,-1, sorted);
    }
 
    public TransactionImpl(final Xid xid, final StorageManager storageManager, final int timeoutSeconds) {
-      this(storageManager.generateID(), xid, storageManager, timeoutSeconds, false);
+      this(storageManager.generateID(), xid, null, storageManager, timeoutSeconds, false);
    }
 
    public TransactionImpl(final Xid xid, final StorageManager storageManager, final int timeoutSeconds, final boolean sorted) {
-      this(storageManager.generateID(), xid, storageManager, timeoutSeconds, sorted);
+      this(storageManager.generateID(), xid, null, storageManager, timeoutSeconds, sorted);
    }
 
    public TransactionImpl(final long id, final Xid xid, final StorageManager storageManager) {
-      this(id, xid, storageManager, -1, false);
+      this(id, xid, null, storageManager, -1, false);
    }
 
    public TransactionImpl(final long id, final Xid xid, final StorageManager storageManager, boolean sorted) {
-      this(id, xid, storageManager, -1, sorted);
+      this(id, xid, null, storageManager, -1, sorted);
    }
 
-   private TransactionImpl(final long id, final Xid xid, final StorageManager storageManager, final int timeoutSeconds, boolean sorted) {
+   public TransactionImpl(final Xid xid, final String clientID, final StorageManager storageManager, final int timeoutSeconds) {
+      this(storageManager.generateID(), xid, clientID, storageManager, timeoutSeconds, false);
+   }
+
+   private TransactionImpl(final long id, final Xid xid, final String clientID, final StorageManager storageManager, final int timeoutSeconds, boolean sorted) {
       this.storageManager = storageManager;
 
       this.xid = xid;
 
       this.id = id;
+
+      this.clientID = clientID;
 
       this.createTime = System.currentTimeMillis();
 
@@ -492,6 +500,11 @@ public class TransactionImpl implements Transaction {
    @Override
    public Xid getXid() {
       return xid;
+   }
+
+   @Override
+   public String getClientID() {
+      return clientID;
    }
 
    @Override

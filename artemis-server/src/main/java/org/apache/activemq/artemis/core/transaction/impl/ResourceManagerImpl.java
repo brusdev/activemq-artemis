@@ -17,7 +17,9 @@
 package org.apache.activemq.artemis.core.transaction.impl;
 
 import javax.transaction.xa.Xid;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,8 +36,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.transaction.ResourceManager;
 import org.apache.activemq.artemis.core.transaction.Transaction;
+import org.jboss.logging.Logger;
 
 public class ResourceManagerImpl implements ResourceManager {
+
+   private static final Logger logger = Logger.getLogger(ResourceManager.class);
 
    private final ConcurrentMap<Xid, Transaction> transactions = new ConcurrentHashMap<>();
 
@@ -50,6 +55,10 @@ public class ResourceManagerImpl implements ResourceManager {
    private final long txTimeoutScanPeriod;
 
    private final ScheduledExecutorService scheduledThreadPool;
+
+   // TODO: Read from the configuration.
+   private final boolean detectDuplicatedTxNode = true;
+   private final ConcurrentMap<String, String> clients = new ConcurrentHashMap<>();
 
    public ResourceManagerImpl(final int defaultTimeoutSeconds,
                               final long txTimeoutScanPeriod,
@@ -104,7 +113,29 @@ public class ResourceManagerImpl implements ResourceManager {
 
    @Override
    public boolean putTransaction(final Xid xid, final Transaction tx) {
+      if (detectDuplicatedTxNode) {
+         String nodeName = getNodeName(xid);
+
+         if (nodeName != null && tx.getClientID() != null) {
+            String clientID = clients.putIfAbsent(nodeName, tx.getClientID());
+
+            if (clientID != null && clientID != tx.getClientID()) {
+               //Warn possible duplicated node name.
+               logger.warn("Possible duplicated node name " + nodeName + " " + clientID + "/" + tx.getClientID());
+            }
+         }
+      }
+
       return transactions.putIfAbsent(xid, tx) == null;
+   }
+
+   private String getNodeName(Xid xid) {
+      if (xid.getFormatId() == 131077) {
+         byte[] globalTransactionId = xid.getGlobalTransactionId();
+         return new String(Arrays.copyOfRange(globalTransactionId, 28, globalTransactionId.length), StandardCharsets.UTF_8);
+      } else {
+         return null;
+      }
    }
 
    @Override

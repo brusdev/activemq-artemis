@@ -184,6 +184,11 @@ public class BindingsImplTest extends ActiveMQTestBase {
       }
 
       @Override
+      public String getClientID() {
+         return null;
+      }
+
+      @Override
       public void markAsRollbackOnly(final ActiveMQException exception) {
 
       }

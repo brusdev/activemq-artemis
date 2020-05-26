@@ -60,6 +60,8 @@ public interface Transaction {
 
    Xid getXid();
 
+   String getClientID();
+
    void suspend();
 
    void resume();
