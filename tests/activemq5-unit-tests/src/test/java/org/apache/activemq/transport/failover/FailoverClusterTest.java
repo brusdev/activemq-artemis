@@ -119,7 +119,7 @@ public class FailoverClusterTest extends OpenwireArtemisBaseTest {
          String remoteAddress = c.getTransportChannel().getRemoteAddress();
          System.out.println("======> spy address: " + remoteAddress);
       }
-      
+
       Thread.sleep(3000);
 
       Set<String> set = new HashSet<>();
