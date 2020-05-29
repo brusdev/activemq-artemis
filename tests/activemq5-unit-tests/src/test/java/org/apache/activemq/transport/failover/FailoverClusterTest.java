@@ -35,6 +35,8 @@ import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.jms.server.config.impl.JMSConfigurationImpl;
 import org.apache.activemq.artemis.jms.server.embedded.EmbeddedJMS;
 import org.apache.activemq.broker.artemiswrapper.OpenwireArtemisBaseTest;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,6 +53,8 @@ public class FailoverClusterTest extends OpenwireArtemisBaseTest {
 
    @Before
    public void setUp() throws Exception {
+      LogManager.getLogger(FailoverTransport.class).setLevel(Level.ALL);
+
       Map<String, String> params = new HashMap<>();
 
       params.put("rebalanceClusterClients", "true");
@@ -61,6 +65,8 @@ public class FailoverClusterTest extends OpenwireArtemisBaseTest {
 
       deployClusterConfiguration(config1, 2);
       deployClusterConfiguration(config2, 1);
+
+      connections.clear();
 
       server1 = new EmbeddedJMS().setConfiguration(config1).setJmsConfiguration(new JMSConfigurationImpl());
       server2 = new EmbeddedJMS().setConfiguration(config2).setJmsConfiguration(new JMSConfigurationImpl());
@@ -100,6 +106,8 @@ public class FailoverClusterTest extends OpenwireArtemisBaseTest {
    //is concerned.
    @Test
    public void testClusterURIOptionsStrip() throws Exception {
+      System.out.println("Start testClusterURIOptionsStrip");
+
       server1.start();
 
       createClients();
@@ -107,11 +115,18 @@ public class FailoverClusterTest extends OpenwireArtemisBaseTest {
       Assert.assertTrue(server1.waitClusterForming(100, TimeUnit.MILLISECONDS, 20, 2));
       Assert.assertTrue(server2.waitClusterForming(100, TimeUnit.MILLISECONDS, 20, 2));
 
+      for (ActiveMQConnection c : connections) {
+         String remoteAddress = c.getTransportChannel().getRemoteAddress();
+         System.out.println("======> spy address: " + remoteAddress);
+      }
+      
       Thread.sleep(3000);
 
       Set<String> set = new HashSet<>();
       for (ActiveMQConnection c : connections) {
-         set.add(c.getTransportChannel().getRemoteAddress());
+         String remoteAddress = c.getTransportChannel().getRemoteAddress();
+         System.out.println("======> adding address: " + remoteAddress);
+         set.add(remoteAddress);
       }
       Assert.assertTrue(set.size() > 1);
    }
