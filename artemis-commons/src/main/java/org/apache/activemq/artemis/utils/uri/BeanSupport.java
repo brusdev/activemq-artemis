@@ -74,8 +74,8 @@ public class BeanSupport {
    }
 
    public static <T> Map<String, T> maskPasswords(Map<String, T> properties) {
-      return properties.entrySet().stream().collect(Collectors.toMap(
-         x -> x.getKey(), x -> (T)(x.getKey().toLowerCase().contains("password") ? "****" : x.getValue())));
+      return properties.entrySet().stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), (T)(
+         e.getKey().toLowerCase().contains("password") ? "****" : e.getValue())), HashMap::putAll);
    }
 
    public static <P> P setProperties(P bean, Properties properties)
