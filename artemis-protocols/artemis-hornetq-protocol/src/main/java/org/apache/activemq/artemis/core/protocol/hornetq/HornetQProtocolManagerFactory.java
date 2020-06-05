@@ -50,7 +50,6 @@ public class HornetQProtocolManagerFactory extends CoreProtocolManagerFactory {
       hqIncoming.add(new HQFilterConversionInterceptor());
       hqOutgoing.add(new HQPropertiesConversionInterceptor(false));
 
-      stripPasswordParameters(parameters);
       return BeanSupport.setData(new HornetQProtocolManager(this, server, hqIncoming, hqOutgoing), parameters);
    }
 

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.Converter;
@@ -59,16 +60,22 @@ public class BeanSupport {
          beanUtils.setProperty(obj, "host", uri.getHost());
          beanUtils.setProperty(obj, "port", uri.getPort());
          beanUtils.setProperty(obj, "userInfo", uri.getUserInfo());
-         beanUtils.populate(obj, query);
+
+         beanUtils.populate(obj, maskPasswords(query));
       }
       return obj;
    }
 
    public static <P> P setData(P obj, Map<String, Object> data) throws Exception {
       synchronized (beanUtils) {
-         beanUtils.populate(obj, data);
+         beanUtils.populate(obj, maskPasswords(data));
       }
       return obj;
+   }
+
+   public static <T> Map<String, T> maskPasswords(Map<String, T> properties) {
+      return properties.entrySet().stream().collect(Collectors.toMap(
+         x -> x.getKey(), x -> (T)(x.getKey().toLowerCase().contains("password") ? "****" : x.getValue())));
    }
 
    public static <P> P setProperties(P bean, Properties properties)

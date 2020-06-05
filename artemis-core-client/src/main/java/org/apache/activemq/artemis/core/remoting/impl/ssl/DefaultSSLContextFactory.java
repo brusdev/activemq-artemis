@@ -20,6 +20,7 @@ import javax.net.ssl.SSLContext;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.spi.core.remoting.ssl.SSLContextFactory;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
+import org.apache.activemq.artemis.utils.uri.BeanSupport;
 
 /**
  * Simple SSLContextFactory for use in NettyConnector and NettyAcceptor.
@@ -44,7 +45,7 @@ public class DefaultSSLContextFactory implements SSLContextFactory {
            String crlPath, String trustManagerFactoryPlugin, boolean trustAll) throws Exception {
       if (log.isDebugEnabled()) {
          final StringBuilder builder = new StringBuilder();
-         configuration.forEach((k, v) -> builder.append("\r\n").append(k).append("=").append(v));
+         BeanSupport.maskPasswords(configuration).forEach((k, v) -> builder.append("\r\n").append(k).append("=").append(v));
          log.debugf("Creating SSL context with configuration %s", builder.toString());
       }
       boolean useDefaultSslContext = ConfigurationHelper.getBooleanProperty(TransportConstants.USE_DEFAULT_SSL_CONTEXT_PROP_NAME, TransportConstants.DEFAULT_USE_DEFAULT_SSL_CONTEXT, configuration);
