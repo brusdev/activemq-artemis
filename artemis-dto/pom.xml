@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -20,7 +21,7 @@
    <parent>
       <groupId>org.apache.activemq</groupId>
       <artifactId>artemis-pom</artifactId>
-      <version>2.9.0</version>
+      <version>2.9.0.redhat-00013</version>
    </parent>
 
    <artifactId>artemis-dto</artifactId>
@@ -28,9 +29,9 @@
    <name>ActiveMQ Artemis DTO</name>
 
    <properties>
-      <version.activation>1.1.1</version.activation>
-      <version.jaxb>2.2.11</version.jaxb>
-      <version.jaxb-api>1.0.5.Final</version.jaxb-api>
+      <version.activation>1.1.1.redhat-5</version.activation>
+      <version.jaxb>2.2.11.redhat-4</version.jaxb>
+      <version.jaxb-api>1.0.5.Final-redhat-1</version.jaxb-api>
 
       <activemq.basedir>${project.basedir}/..</activemq.basedir>
    </properties>
@@ -89,19 +90,19 @@
                   <phase>generate-resources</phase>
                   <configuration>
                      <target>
-                        <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask" />
-                        <mkdir dir="${project.build.directory}/schema/org.apache.activemq/dto" />
-                        <echo message="Generating XSD to: ${project.build.directory}/schema/org.apache.activemq/dto" />
+                        <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask"></taskdef>
+                        <mkdir dir="${project.build.directory}/schema/org.apache.activemq/dto"></mkdir>
+                        <echo message="Generating XSD to: ${project.build.directory}/schema/org.apache.activemq/dto"></echo>
                         <schemagen srcdir="${basedir}/.." destdir="${project.build.directory}/schema/org.apache.activemq/dto" includeantruntime="false">
-                           <schema namespace="http://activemq.org/schema" file="activemq.xsd" />
-                           <classpath refid="maven.compile.classpath" />
-                           <include name="**/package-info.java" />
-                           <include name="**/*DTO.java" />
-                           <exclude name="**/.git/**" />
-                           <exclude name="**/.svn/**" />
+                           <schema namespace="http://activemq.org/schema" file="activemq.xsd"></schema>
+                           <classpath refid="maven.compile.classpath"></classpath>
+                           <include name="**/package-info.java"></include>
+                           <include name="**/*DTO.java"></include>
+                           <exclude name="**/.git/**"></exclude>
+                           <exclude name="**/.svn/**"></exclude>
                         </schemagen>
                         <copy todir="${project.build.directory}/classes">
-                           <fileset dir="${project.build.directory}/schema" />
+                           <fileset dir="${project.build.directory}/schema"></fileset>
                         </copy>
                      </target>
                   </configuration>
@@ -149,7 +150,7 @@
                               </goals>
                            </pluginExecutionFilter>
                            <action>
-                              <ignore />
+                              <ignore></ignore>
                            </action>
                         </pluginExecution>
                      </pluginExecutions>

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
 	license agreements. See the NOTICE file distributed with this work for additional
 	information regarding copyright ownership. The ASF licenses this file to
@@ -14,17 +15,15 @@
    <parent>
       <groupId>org.apache.activemq</groupId>
       <artifactId>artemis-pom</artifactId>
-      <version>2.9.0</version>
+      <version>2.9.0.redhat-00013</version>
    </parent>
 
    <artifactId>artemis-server-osgi</artifactId>
    <packaging>bundle</packaging>
    <name>ActiveMQ Artemis Server OSGi</name>
 
-   <description>
-      Combines the commons, core-client and server jars as they contain too many duplicate packages
-      to be deployed separately.
-   </description>
+   <description>Combines the commons, core-client and server jars as they contain too many duplicate packages
+      to be deployed separately.</description>
 
    <properties>
       <activemq.basedir>${project.basedir}/..</activemq.basedir>
@@ -142,12 +141,10 @@
             <configuration>
                <instructions>
                   <Embed-Dependency>*;scope=compile|runtime;groupId=org.apache.activemq</Embed-Dependency>
-                  <Import-Package>
-                     org.postgresql*;resolution:=optional,
+                  <Import-Package>org.postgresql*;resolution:=optional,
                      io.netty.buffer;io.netty.*;version="[4.1,5)",
                      org.apache.johnzon.core,
-                     *
-                  </Import-Package>
+                     *</Import-Package>
                   <_exportcontents>org.apache.activemq.artemis.*;-noimport:=true</_exportcontents>
                </instructions>
             </configuration>

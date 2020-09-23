@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -20,7 +21,7 @@
    <parent>
       <groupId>org.apache.activemq</groupId>
       <artifactId>artemis-pom</artifactId>
-      <version>2.9.0</version>
+      <version>2.9.0.redhat-00013</version>
    </parent>
 
    <artifactId>artemis-selector</artifactId>
@@ -79,7 +80,6 @@
                   <!-- version 3.2 is having problems with the APT processor resulting in
                     java.lang.IllegalStateException: endPosTable already set  -->
                   <version>3.1</version>
-                  <configuration combine.self="override" />
                </plugin>
             </plugins>
          </build>
@@ -156,7 +156,7 @@
                               </goals>
                            </pluginExecutionFilter>
                            <action>
-                              <execute />
+                              <execute></execute>
                            </action>
                         </pluginExecution>
                      </pluginExecutions>

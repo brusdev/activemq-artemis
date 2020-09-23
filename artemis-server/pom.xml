@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -20,7 +21,7 @@
    <parent>
       <groupId>org.apache.activemq</groupId>
       <artifactId>artemis-pom</artifactId>
-      <version>2.9.0</version>
+      <version>2.9.0.redhat-00013</version>
    </parent>
 
    <artifactId>artemis-server</artifactId>
@@ -142,7 +143,7 @@
       <dependency>
          <groupId>org.apache.geronimo.specs</groupId>
          <artifactId>geronimo-json_1.0_spec</artifactId>
-         <version>1.0-alpha-1</version>
+         <version>1.0.0.alpha-1-redhat-1</version>
       </dependency>
       <dependency>
          <groupId>junit</groupId>
@@ -214,8 +215,7 @@
                      <maxmemory>512m</maxmemory>
                      <quiet>false</quiet>
                      <aggregate>true</aggregate>
-                     <excludePackageNames>org.apache.activemq.artemis.core:org.apache.activemq.artemis.utils
-                     </excludePackageNames>
+                     <excludePackageNames>org.apache.activemq.artemis.core:org.apache.activemq.artemis.utils</excludePackageNames>
                   </configuration>
                   <executions>
                      <execution>
