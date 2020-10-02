@@ -319,6 +319,8 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
    public Configuration parseMainConfig(final InputStream input) throws Exception {
       Element e = XMLUtil.streamToElement(input);
       SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+      schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+      schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
       Schema schema = schemaFactory.newSchema(XMLUtil.findResource("schema/artemis-server.xsd"));
       Validator validator = schema.newValidator();
       try {

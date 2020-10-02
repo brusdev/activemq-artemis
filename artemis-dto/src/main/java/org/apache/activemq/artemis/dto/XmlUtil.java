@@ -73,7 +73,16 @@ public class XmlUtil {
 
    }
 
-   private static final XMLInputFactory factory = XMLInputFactory.newInstance();
+   private static final XMLInputFactory factory;
+
+   static {
+      factory = XMLInputFactory.newInstance();
+      // This disables DTDs entirely for that factory
+      factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      // disable external entities
+      factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+   }
+
 
    public static <T> T decode(Class<T> clazz, File configuration) throws Exception {
       return decode(clazz, configuration, null, null, null);
@@ -91,6 +100,8 @@ public class XmlUtil {
 
       Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
       SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+      sf.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+      sf.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
       sf.setFeature("http://apache.org/xml/features/validation/schema-full-checking", false);
       InputStream xsdStream = XmlUtil.class.getClassLoader().getResourceAsStream("org.apache.activemq/dto/activemq.xsd");
       StreamSource xsdSource = new StreamSource(xsdStream);

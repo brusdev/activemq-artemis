@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.artemis.tools.migrate.config;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -90,6 +91,12 @@ public class XMLConfigurationMigration {
 
          DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
          factory.setIgnoringElementContentWhitespace(true);
+         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+         factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+         factory.setXIncludeAware(false);
+         factory.setExpandEntityReferences(false);
 
          DocumentBuilder db = factory.newDocumentBuilder();
          this.document = db.parse(this.input);
@@ -286,7 +293,10 @@ public class XMLConfigurationMigration {
    }
 
    public void write(File output, Properties outputProperties) throws TransformerException {
-      Transformer transformer = TransformerFactory.newInstance().newTransformer();
+      TransformerFactory factory = TransformerFactory.newInstance();
+      factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+      factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+      Transformer transformer = factory.newTransformer();
       transformer.setOutputProperties(outputProperties);
       StreamResult streamResult = new StreamResult(output);
       transformer.transform(new DOMSource(document), streamResult);

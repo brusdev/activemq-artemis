@@ -47,6 +47,7 @@ import org.xml.sax.SAXException;
 public final class XMLUtil {
 
    private static final Logger logger = Logger.getLogger(XMLUtil.class);
+   private static final boolean xxeEnabled = Boolean.parseBoolean(System.getProperty("artemis.xxe.enabled", "false"));
 
    private XMLUtil() {
       // Utility class
@@ -80,6 +81,16 @@ public final class XMLUtil {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
       factory.setXIncludeAware(true);
+
+      if (!xxeEnabled) {
+         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+         factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+         factory.setXIncludeAware(false);
+         factory.setExpandEntityReferences(false);
+      }
+
       DocumentBuilder parser = factory.newDocumentBuilder();
       Document doc = replaceSystemPropsInXml(parser.parse(new InputSource(new StringReader(replaceSystemPropsInString(readerToString(r))))));
       return doc.getDocumentElement();
@@ -348,6 +359,11 @@ public final class XMLUtil {
 
    public static void validate(final Node node, final String schemaFile) throws Exception {
       SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
+      if (!xxeEnabled) {
+         factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+         factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+      }
 
       Schema schema = factory.newSchema(new URL(findResource(schemaFile).toURI().toASCIIString()));
       Validator validator = schema.newValidator();
