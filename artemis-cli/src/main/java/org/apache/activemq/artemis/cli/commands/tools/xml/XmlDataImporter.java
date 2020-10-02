@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.cli.commands.tools.xml;
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.validation.Schema;
@@ -173,7 +174,7 @@ public final class XmlDataImporter extends ActionAbstract {
    public void process(InputStream inputStream,
                        ClientSession session,
                        ClientSession managementSession) throws Exception {
-      reader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
+      reader = createXMLStreamReader(inputStream);
       messageReader = new XMLMessageImporter(reader, session);
       messageReader.setOldPrefixTranslation(oldPrefixTranslation);
 
@@ -217,13 +218,23 @@ public final class XmlDataImporter extends ActionAbstract {
    }
 
    public void validate(InputStream inputStream) throws Exception {
-      XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
+      XMLStreamReader reader = createXMLStreamReader(inputStream);
       SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
       Schema schema = factory.newSchema(XmlDataImporter.findResource("schema/artemis-import-export.xsd"));
 
       Validator validator = schema.newValidator();
       validator.validate(new StAXSource(reader));
       reader.close();
+   }
+
+   private XMLStreamReader createXMLStreamReader(InputStream inputStream) throws XMLStreamException {
+      XMLInputFactory factory = XMLInputFactory.newInstance();
+      // This disables DTDs entirely for that factory
+      factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      // disable external entities
+      factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+
+      return factory.createXMLStreamReader(inputStream);
    }
 
    private static URL findResource(final String resourceName) {

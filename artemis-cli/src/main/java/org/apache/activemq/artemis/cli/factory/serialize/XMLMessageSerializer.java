@@ -87,7 +87,13 @@ public class XMLMessageSerializer implements MessageSerializer {
 
    @Override
    public void setInput(InputStream inputStream, Session session) throws Exception {
-      XMLStreamReader streamReader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
+      XMLInputFactory factory = XMLInputFactory.newInstance();
+      // This disables DTDs entirely for that factory
+      factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      // disable external entities
+      factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+
+      XMLStreamReader streamReader = factory.createXMLStreamReader(inputStream);
       this.clientSession = ((ActiveMQSession) session).getCoreSession();
       this.reader = new XMLMessageImporter(streamReader, clientSession);
    }

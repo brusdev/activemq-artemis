@@ -73,7 +73,16 @@ public class XmlUtil {
 
    }
 
-   private static final XMLInputFactory factory = XMLInputFactory.newInstance();
+   private static final XMLInputFactory factory;
+
+   static {
+      factory = XMLInputFactory.newInstance();
+      // This disables DTDs entirely for that factory
+      factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      // disable external entities
+      factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+   }
+
 
    public static <T> T decode(Class<T> clazz, File configuration) throws Exception {
       return decode(clazz, configuration, null, null, null);
