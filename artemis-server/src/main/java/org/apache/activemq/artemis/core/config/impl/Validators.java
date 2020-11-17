@@ -23,6 +23,7 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
+import org.apache.activemq.artemis.core.server.reload.ReloadCheckType;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.DeletionPolicy;
 import org.apache.activemq.artemis.core.settings.impl.SlowConsumerPolicy;
@@ -255,6 +256,16 @@ public final class Validators {
          int val = (Integer) value;
          if (val < -1) {
             throw ActiveMQMessageBundle.BUNDLE.invalidMaxConsumers(name, val);
+         }
+      }
+   };
+
+   public static final Validator RELOAD_CHECK_TYPE = new Validator() {
+      @Override
+      public void validate(final String name, final Object value) {
+         String val = (String) value;
+         if (val == null || !EnumSet.allOf(ReloadCheckType.class).contains(ReloadCheckType.valueOf(val))) {
+            throw ActiveMQMessageBundle.BUNDLE.invalidReloadCheckType(val);
          }
       }
    };

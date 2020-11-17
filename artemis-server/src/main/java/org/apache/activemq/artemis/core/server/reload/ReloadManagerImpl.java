@@ -17,8 +17,19 @@
 
 package org.apache.activemq.artemis.core.server.reload;
 
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.security.DigestInputStream;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.artemis.core.server.ActiveMQScheduledComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
+import org.apache.activemq.artemis.utils.XMLUtil;
 import org.jboss.logging.Logger;
 
 public class ReloadManagerImpl extends ActiveMQScheduledComponent implements ReloadManager {
@@ -39,8 +51,11 @@ public class ReloadManagerImpl extends ActiveMQScheduledComponent implements Rel
 
    private final Map<URL, ReloadRegistry> registry = new HashMap<>();
 
-   public ReloadManagerImpl(ScheduledExecutorService scheduledExecutorService, Executor executor, long checkPeriod) {
+   private ReloadCheckType checkType;
+
+   public ReloadManagerImpl(ScheduledExecutorService scheduledExecutorService, Executor executor, long checkPeriod, ReloadCheckType checkType) {
       super(scheduledExecutorService, executor, checkPeriod, TimeUnit.MILLISECONDS, false);
+      this.checkType = checkType;
    }
 
    @Override
@@ -87,6 +102,7 @@ public class ReloadManagerImpl extends ActiveMQScheduledComponent implements Rel
 
       private File file;
       private final URL uri;
+      private byte[] lastDigest;
       private long lastModified;
 
       private final List<ReloadCallback> callbacks = new LinkedList<>();
@@ -105,20 +121,63 @@ public class ReloadManagerImpl extends ActiveMQScheduledComponent implements Rel
             ActiveMQServerLogger.LOGGER.fileDoesNotExist(file.toString());
          }
 
-         this.lastModified = file.lastModified();
          this.uri = uri;
+         this.lastDigest = null;
+         this.lastModified = 0;
+
+         this.check();
       }
 
       public void check() {
 
-         long fileModified = file.lastModified();
+         boolean reload = false;
 
-         if (logger.isDebugEnabled()) {
-            logger.debug("Validating lastModified " + lastModified + " modified = " + fileModified + " on " + uri);
+         if (checkType == ReloadCheckType.LAST_MODIFIED) {
+            long fileModified = file.lastModified();
+
+            if (logger.isDebugEnabled()) {
+               logger.debug("Validating lastModified " + lastModified + " modified = " + fileModified + " on " + uri);
+            }
+
+            reload = lastModified > 0 && fileModified > lastModified;
+
+            this.lastModified = fileModified;
+         } else if (checkType == ReloadCheckType.MD5_DIGEST) {
+            try {
+               MessageDigest md5MessageDigest = MessageDigest.getInstance("MD5");
+
+               if (this.uri.getPath().toUpperCase().endsWith("XML")) {
+                  try (InputStream inputStream = new FileInputStream(file);
+                       DigestOutputStream digestOutputStream = new DigestOutputStream(new OutputStream() {
+                          @Override public void write(int b) throws IOException { } }, md5MessageDigest)) {
+                     StreamResult streamResult = new StreamResult(digestOutputStream);
+                     TransformerFactory.newInstance().newTransformer().transform(
+                        new DOMSource(XMLUtil.streamToElement(inputStream)), streamResult);
+                  }
+               } else {
+                  byte[] buffer = new byte[1024];
+                  try (DigestInputStream digestInputStream = new DigestInputStream(new FileInputStream(file), md5MessageDigest)) {
+                     while (digestInputStream.read(buffer) != -1) {
+                        // Read the input stream until EOF.
+                     }
+                  }
+               }
+
+               byte[] fileDigest = md5MessageDigest.digest();
+
+               if (logger.isDebugEnabled()) {
+                  logger.debug("Validating lastDigest " + lastDigest + " modified = " + fileDigest + " on " + uri);
+               }
+
+               reload = lastDigest != null && !Arrays.equals(lastDigest, fileDigest);
+
+               lastDigest = fileDigest;
+            } catch (Throwable e) {
+               ActiveMQServerLogger.LOGGER.configurationReloadCheckFailed(e);
+            }
          }
 
-         if (lastModified > 0 && fileModified > lastModified) {
-
+         if (reload) {
             for (ReloadCallback callback : callbacks) {
                try {
                   callback.reload(uri);
@@ -127,8 +186,6 @@ public class ReloadManagerImpl extends ActiveMQScheduledComponent implements Rel
                }
             }
          }
-
-         this.lastModified = fileModified;
       }
 
       public List<ReloadCallback> getCallbacks() {

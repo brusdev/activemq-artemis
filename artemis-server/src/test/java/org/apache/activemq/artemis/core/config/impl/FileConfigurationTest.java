@@ -60,6 +60,7 @@ import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
 import org.apache.activemq.artemis.core.server.metrics.plugins.SimpleMetricsPlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerBasePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
+import org.apache.activemq.artemis.core.server.reload.ReloadCheckType;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.settings.impl.SlowConsumerPolicy;
 import org.apache.activemq.artemis.utils.RandomUtil;
@@ -150,6 +151,7 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       Assert.assertEquals(false, conf.isRejectEmptyValidatedUser());
       Assert.assertEquals(98765, conf.getConnectionTtlCheckInterval());
       Assert.assertEquals(1234567, conf.getConfigurationFileRefreshPeriod());
+      Assert.assertEquals(ReloadCheckType.MD5_DIGEST, conf.getConfigurationFileRefreshCheck());
       Assert.assertEquals("TEMP", conf.getTemporaryQueueNamespace());
 
       Assert.assertEquals("127.0.0.1", conf.getNetworkCheckList());

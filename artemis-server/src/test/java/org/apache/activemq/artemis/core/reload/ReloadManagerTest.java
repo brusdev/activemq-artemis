@@ -20,6 +20,7 @@ package org.apache.activemq.artemis.core.reload;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,6 +28,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.artemis.core.server.reload.ReloadCallback;
+import org.apache.activemq.artemis.core.server.reload.ReloadCheckType;
 import org.apache.activemq.artemis.core.server.reload.ReloadManagerImpl;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.activemq.artemis.utils.ReusableLatch;
@@ -34,7 +36,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class ReloadManagerTest extends ActiveMQTestBase {
 
    private ScheduledExecutorService scheduledExecutorService;
@@ -43,11 +48,22 @@ public class ReloadManagerTest extends ActiveMQTestBase {
 
    private ReloadManagerImpl manager;
 
+   private final ReloadCheckType reloadCheckType;
+
+   @Parameterized.Parameters(name = "reloadCheckType={0}")
+   public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][]{{ReloadCheckType.LAST_MODIFIED}, {ReloadCheckType.MD5_DIGEST}});
+   }
+
+   public ReloadManagerTest(ReloadCheckType reloadCheckType) {
+      this.reloadCheckType = reloadCheckType;
+   }
+
    @Before
    public void startScheduled() {
       scheduledExecutorService = new ScheduledThreadPoolExecutor(5);
       executorService = Executors.newSingleThreadExecutor();
-      manager = new ReloadManagerImpl(scheduledExecutorService, executorService, 100);
+      manager = new ReloadManagerImpl(scheduledExecutorService, executorService, 100, reloadCheckType);
    }
 
    @After

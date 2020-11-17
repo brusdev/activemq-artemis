@@ -82,6 +82,7 @@ import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerMessagePlugi
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerQueuePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerResourcePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerSessionPlugin;
+import org.apache.activemq.artemis.core.server.reload.ReloadCheckType;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.settings.impl.ResourceLimitSettings;
 import org.apache.activemq.artemis.utils.Env;
@@ -96,6 +97,8 @@ public class ConfigurationImpl implements Configuration, Serializable {
    private static final Logger logger = Logger.getLogger(ConfigurationImpl.class);
 
    public static final JournalType DEFAULT_JOURNAL_TYPE = JournalType.ASYNCIO;
+
+   public static final ReloadCheckType DEFAULT_RELOAD_CHECK_TYPE = ReloadCheckType.LAST_MODIFIED;
 
    private static final int DEFAULT_JMS_MESSAGE_SIZE = 1864;
 
@@ -320,6 +323,8 @@ public class ConfigurationImpl implements Configuration, Serializable {
    private URL configurationUrl;
 
    private long configurationFileRefreshPeriod = ActiveMQDefaultConfiguration.getDefaultConfigurationFileRefreshPeriod();
+
+   private ReloadCheckType configurationFileRefreshCheck = ConfigurationImpl.DEFAULT_RELOAD_CHECK_TYPE;
 
    private Long globalMaxSize;
 
@@ -2317,6 +2322,17 @@ public class ConfigurationImpl implements Configuration, Serializable {
    @Override
    public ConfigurationImpl setConfigurationFileRefreshPeriod(long configurationFileRefreshPeriod) {
       this.configurationFileRefreshPeriod = configurationFileRefreshPeriod;
+      return this;
+   }
+
+   @Override
+   public ReloadCheckType getConfigurationFileRefreshCheck() {
+      return configurationFileRefreshCheck;
+   }
+
+   @Override
+   public ConfigurationImpl setConfigurationFileRefreshCheck(ReloadCheckType configurationFileRefreshCheck) {
+      this.configurationFileRefreshCheck = configurationFileRefreshCheck;
       return this;
    }
 
