@@ -24,11 +24,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -42,6 +44,7 @@ import org.apache.activemq.artemis.api.core.Pair;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.FailoverEventListener;
 import org.apache.activemq.artemis.api.core.client.FailoverEventType;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
@@ -119,7 +122,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
    private final double retryIntervalMultiplier; // For exponential backoff
 
-   private final CountDownLatch latchFinalTopology = new CountDownLatch(1);
+   private final CompletableFuture<ClientSessionFactory> topologyFuture = new CompletableFuture<>();
 
    private final long maxRetryInterval;
 
@@ -492,10 +495,16 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    @Override
    public boolean waitForTopology(long timeout, TimeUnit unit) {
       try {
-         return latchFinalTopology.await(timeout, unit);
+         topologyFuture.get(timeout, unit);
+         return true;
       } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
          ActiveMQClientLogger.LOGGER.unableToReceiveClusterTopology(e);
+         return false;
+      } catch (ExecutionException e) {
+         ActiveMQClientLogger.LOGGER.unableToReceiveClusterTopology(e);
+         return false;
+      } catch (TimeoutException ignore) {
          return false;
       }
    }
@@ -678,6 +687,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       // This needs to be outside the failover lock to prevent deadlock
       if (connection != null) {
          callSessionFailureListeners(me, true, true);
+
+         // If connection is null it means we didn't succeed in failing over or reconnecting
+         // so we complete waiting for topology exceptionally
+         topologyFuture.completeExceptionally(me);
       }
       if (sessionsToClose != null) {
          // If connection is null it means we didn't succeed in failing over or reconnecting
@@ -1444,7 +1457,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
             serverLocator.notifyNodeUp(uniqueEventID, nodeID, backupGroupName, scaleDownGroupName, connectorPair, isLast);
          } finally {
             if (isLast) {
-               latchFinalTopology.countDown();
+               topologyFuture.complete(ClientSessionFactoryImpl.this);
             }
          }
 
