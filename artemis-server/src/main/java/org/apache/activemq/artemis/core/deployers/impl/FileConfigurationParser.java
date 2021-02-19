@@ -68,7 +68,10 @@ import org.apache.activemq.artemis.core.config.federation.FederationQueuePolicyC
 import org.apache.activemq.artemis.core.config.federation.FederationStreamConfiguration;
 import org.apache.activemq.artemis.core.config.federation.FederationTransformerConfiguration;
 import org.apache.activemq.artemis.core.config.federation.FederationUpstreamConfiguration;
+import org.apache.activemq.artemis.core.config.ha.ReplicationBackupPolicyConfiguration;
+import org.apache.activemq.artemis.core.config.ha.ReplicationPrimaryPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ColocatedPolicyConfiguration;
+import org.apache.activemq.artemis.core.config.ha.DistributedPrimitiveManagerConfiguration;
 import org.apache.activemq.artemis.core.config.ha.LiveOnlyPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicaPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicatedPolicyConfiguration;
@@ -1544,6 +1547,16 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
                   Element colocatedNode = (Element) colocatedNodeList.item(0);
                   mainConfig.setHAPolicyConfiguration(createColocatedHaPolicy(colocatedNode, true));
                }
+               NodeList primaryNodeList = e.getElementsByTagName("primary");
+               if (primaryNodeList.getLength() > 0) {
+                  Element primaryNode = (Element) primaryNodeList.item(0);
+                  mainConfig.setHAPolicyConfiguration(createReplicationPrimaryHaPolicy(primaryNode));
+               }
+               NodeList backupNodeList = e.getElementsByTagName("backup");
+               if (backupNodeList.getLength() > 0) {
+                  Element backupNode = (Element) backupNodeList.item(0);
+                  mainConfig.setHAPolicyConfiguration(createReplicationBackupHaPolicy(backupNode));
+               }
             } else if (haNode.getTagName().equals("shared-store")) {
                NodeList masterNodeList = e.getElementsByTagName("master");
                if (masterNodeList.getLength() > 0) {
@@ -1634,6 +1647,76 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       configuration.setQuorumSize(getInteger(policyNode, "quorum-size", configuration.getQuorumSize(), Validators.MINUS_ONE_OR_GT_ZERO));
 
       return configuration;
+   }
+
+   private ReplicationPrimaryPolicyConfiguration createReplicationPrimaryHaPolicy(Element policyNode) {
+      ReplicationPrimaryPolicyConfiguration configuration = ReplicationPrimaryPolicyConfiguration.withDefault();
+
+      configuration.setQuorumVoteWait(getInteger(policyNode, "quorum-vote-wait", ActiveMQDefaultConfiguration.getDefaultQuorumVoteWait(), Validators.GT_ZERO));
+
+      configuration.setCheckForLiveServer(getBoolean(policyNode, "check-for-live-server", configuration.isCheckForLiveServer()));
+
+      configuration.setGroupName(getString(policyNode, "group-name", configuration.getGroupName(), Validators.NO_CHECK));
+
+      configuration.setClusterName(getString(policyNode, "cluster-name", configuration.getClusterName(), Validators.NO_CHECK));
+
+      configuration.setInitialReplicationSyncTimeout(getLong(policyNode, "initial-replication-sync-timeout", configuration.getInitialReplicationSyncTimeout(), Validators.GT_ZERO));
+
+      configuration.setVoteRetries(getInteger(policyNode, "vote-retries", configuration.getVoteRetries(), Validators.MINUS_ONE_OR_GE_ZERO));
+
+      configuration.setVoteRetryWait(getLong(policyNode, "vote-retry-wait", configuration.getVoteRetryWait(), Validators.GT_ZERO));
+
+      configuration.setRetryReplicationWait(getLong(policyNode, "retry-replication-wait", configuration.getVoteRetryWait(), Validators.GT_ZERO));
+
+      configuration.setDistributedManagerConfiguration(createDistributedPrimitiveManagerConfiguration(policyNode));
+
+      return configuration;
+   }
+
+   private ReplicationBackupPolicyConfiguration createReplicationBackupHaPolicy(Element policyNode) {
+
+      ReplicationBackupPolicyConfiguration configuration = ReplicationBackupPolicyConfiguration.withDefault();
+
+      configuration.setQuorumVoteWait(getInteger(policyNode, "quorum-vote-wait", ActiveMQDefaultConfiguration.getDefaultQuorumVoteWait(), Validators.GT_ZERO));
+
+      configuration.setGroupName(getString(policyNode, "group-name", configuration.getGroupName(), Validators.NO_CHECK));
+
+      configuration.setAllowFailBack(getBoolean(policyNode, "allow-failback", configuration.isAllowFailBack()));
+
+      configuration.setInitialReplicationSyncTimeout(getLong(policyNode, "initial-replication-sync-timeout", configuration.getInitialReplicationSyncTimeout(), Validators.GT_ZERO));
+
+      configuration.setClusterName(getString(policyNode, "cluster-name", configuration.getClusterName(), Validators.NO_CHECK));
+
+      configuration.setMaxSavedReplicatedJournalsSize(getInteger(policyNode, "max-saved-replicated-journals-size", configuration.getMaxSavedReplicatedJournalsSize(), Validators.MINUS_ONE_OR_GE_ZERO));
+
+      configuration.setVoteRetries(getInteger(policyNode, "vote-retries", configuration.getVoteRetries(), Validators.MINUS_ONE_OR_GE_ZERO));
+
+      configuration.setVoteRetryWait(getLong(policyNode, "vote-retry-wait", configuration.getVoteRetryWait(), Validators.GT_ZERO));
+
+      configuration.setRetryReplicationWait(getLong(policyNode, "retry-replication-wait", configuration.getVoteRetryWait(), Validators.GT_ZERO));
+
+      configuration.setDistributedManagerConfiguration(createDistributedPrimitiveManagerConfiguration(policyNode));
+
+      return configuration;
+   }
+
+   private DistributedPrimitiveManagerConfiguration createDistributedPrimitiveManagerConfiguration(Element policyNode) {
+      final Element managerNode = (Element) policyNode.getElementsByTagName("manager").item(0);
+      final String className = getString(managerNode, "class-name",
+                                         ActiveMQDefaultConfiguration.getDefaultDistributedPrimitiveManagerClassName(),
+                                         Validators.NO_CHECK);
+      if (!parameterExists(managerNode, "properties")) {
+
+      }
+      final NodeList propertyNodeList = managerNode.getElementsByTagName("property");
+      final Map<String, String> properties = new HashMap<>(propertyNodeList.getLength());
+      for (int i = 0; i < propertyNodeList.getLength(); i++) {
+         final Element propertyNode = (Element) propertyNodeList.item(i);
+         final String propertyName = propertyNode.getAttributeNode("key").getValue();
+         final String propertyValue = propertyNode.getAttributeNode("value").getValue();
+         properties.put(propertyName, propertyValue);
+      }
+      return new DistributedPrimitiveManagerConfiguration(className, properties);
    }
 
    private SharedStoreMasterPolicyConfiguration createSharedStoreMasterHaPolicy(Element policyNode) {

@@ -627,6 +627,8 @@ public final class ActiveMQDefaultConfiguration {
 
    public static final String DEFAULT_TEMPORARY_QUEUE_NAMESPACE = "";
 
+   private static final String DEFAULT_DISTRIBUTED_PRIMITIVE_MANAGER_CLASS_NAME = "org.apache.activemq.artemis.quorum.atomix.AtomixDistributedPrimitiveManager";
+
    // Number of concurrent workers for a core bridge
    public static int DEFAULT_BRIDGE_CONCURRENCY = 1;
 
@@ -1716,6 +1718,10 @@ public final class ActiveMQDefaultConfiguration {
 
    public static String getDefaultTemporaryQueueNamespace() {
       return DEFAULT_TEMPORARY_QUEUE_NAMESPACE;
+   }
+
+   public static String getDefaultDistributedPrimitiveManagerClassName() {
+      return DEFAULT_DISTRIBUTED_PRIMITIVE_MANAGER_CLASS_NAME;
    }
 
    public static int getDefaultBridgeConcurrency() {
