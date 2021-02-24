@@ -92,10 +92,6 @@
       </dependency>
       <dependency>
          <groupId>org.jboss.resteasy</groupId>
-         <artifactId>resteasy-jackson-provider</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.jboss.resteasy</groupId>
          <artifactId>tjws</artifactId>
          <scope>provided</scope>
       </dependency>
