@@ -58,8 +58,8 @@
          <version>${netty.version}</version>
       </dependency>
       <dependency>
-         <groupId>org.apache.geronimo.specs</groupId>
-         <artifactId>geronimo-jms_2.0_spec</artifactId>
+         <groupId>jakarta.jms</groupId>
+         <artifactId>jakarta.jms-api</artifactId>
       </dependency>
       <dependency>
          <groupId>org.apache.activemq</groupId>
@@ -72,8 +72,8 @@
          <version>${deltaspike.version}</version>
       </dependency>
       <dependency>
-         <groupId>javax.enterprise</groupId>
-         <artifactId>cdi-api</artifactId>
+         <groupId>jakarta.enterprise</groupId>
+         <artifactId>jakarta.enterprise.cdi-api</artifactId>
       </dependency>
       <dependency>
          <groupId>org.apache.deltaspike.core</groupId>
@@ -225,9 +225,9 @@
                         <version>${project.version}</version>
                      </dependency>
                      <dependency>
-                        <groupId>javax.enterprise</groupId>
-                        <artifactId>cdi-api</artifactId>
-                        <version>${cdi-api.version}</version>
+                        <groupId>jakarta.enterprise</groupId>
+                        <artifactId>jakarta.enterprise.cdi-api</artifactId>
+                        <version>${jakarta.enterprise.cdi-api.version}</version>
                      </dependency>
                      <dependency>
                         <groupId>org.apache.openwebbeans</groupId>

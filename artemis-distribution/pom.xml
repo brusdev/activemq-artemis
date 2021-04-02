@@ -231,16 +231,16 @@
          <artifactId>netty-all</artifactId>
       </dependency>
        <dependency>
-           <groupId>org.apache.geronimo.specs</groupId>
-           <artifactId>geronimo-json_1.0_spec</artifactId>
+          <groupId>jakarta.json</groupId>
+          <artifactId>jakarta.json-api</artifactId>
        </dependency>
        <dependency>
            <groupId>org.apache.johnzon</groupId>
            <artifactId>johnzon-core</artifactId>
        </dependency>
       <dependency>
-         <groupId>org.apache.geronimo.specs</groupId>
-         <artifactId>geronimo-jaspic_1.0_spec</artifactId>
+         <groupId>jakarta.security.auth.message</groupId>
+         <artifactId>jakarta.security.auth.message-api</artifactId>
       </dependency>
    </dependencies>
 
