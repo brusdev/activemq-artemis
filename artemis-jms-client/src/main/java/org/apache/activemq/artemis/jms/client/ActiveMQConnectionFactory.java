@@ -214,7 +214,7 @@ public class ActiveMQConnectionFactory extends JNDIStorable implements Connectio
    /**
     * This will use a default URI from {@link DefaultConnectionProperties}
     */
-   public ActiveMQConnectionFactory() {
+   public  ActiveMQConnectionFactory() {
       this(DefaultConnectionProperties.DEFAULT_BROKER_URL);
    }
 

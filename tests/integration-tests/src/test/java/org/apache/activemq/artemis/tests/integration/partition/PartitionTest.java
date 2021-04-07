@@ -1,0 +1,104 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.activemq.artemis.tests.integration.partition;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
+import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
+import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
+import org.apache.activemq.artemis.tests.util.Wait;
+import org.apache.qpid.jms.JmsConnectionFactory;
+import org.junit.Assert;
+import org.junit.Test;
+
+public class PartitionTest extends ClusterTestBase {
+
+   protected final String groupAddress = ActiveMQTestBase.getUDPDiscoveryAddress();
+
+   protected final int groupPort = ActiveMQTestBase.getUDPDiscoveryPort();
+
+   @Test
+   public void testSimple() throws Exception {
+      final SimpleString queueName = new SimpleString("PartitionTestQueue");
+
+
+      setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
+      setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);
+      setupLiveServerWithDiscovery(2, groupAddress, groupPort, true, true, false);
+
+      startServers(0, 1, 2);
+
+      ConnectionFactory connectionFactory = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
+      //ConnectionFactory connectionFactory1 = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 1);
+      //ConnectionFactory connectionFactory2 = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 2);
+
+      try (Connection connection = connectionFactory.createConnection()) {
+         connection.start();
+         try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+            javax.jms.Queue queue = session.createQueue(queueName.toString());
+            try (MessageProducer producer = session.createProducer(queue)) {
+               producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+               TextMessage msg = session.createTextMessage("hello");
+               msg.setIntProperty("mycount", 0);
+               producer.send(msg);
+            }
+         }
+      }
+
+      try (Connection connection = connectionFactory.createConnection()) {
+         connection.start();
+         try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+            javax.jms.Queue queue = session.createQueue(queueName.toString());
+
+            try (MessageConsumer consumer = session.createConsumer(queue)) {
+
+               TextMessage message = (TextMessage) consumer.receive(1000);
+               Assert.assertNotNull(message);
+               Assert.assertEquals(0, message.getIntProperty("mycount"));
+               Assert.assertEquals("hello", message.getText());
+            }
+         }
+      }
+   }
+
+   private ConnectionFactory createFactory(int protocol, String host, int port) {
+      switch (protocol) {
+         case 1: ActiveMQConnectionFactory coreCF = new ActiveMQConnectionFactory("tcp://" + host + ":" + port);// core protocol
+            coreCF.setCompressLargeMessage(true);
+            coreCF.setMinLargeMessageSize(10 * 1024);
+            return coreCF;
+         case 2: return new JmsConnectionFactory("amqp://" + host + ":" + port); // amqp
+         case 3: return new org.apache.activemq.ActiveMQConnectionFactory("tcp://" + host + ":" + port); // openwire
+         default: return null;
+      }
+   }
+
+
+
+
+}
