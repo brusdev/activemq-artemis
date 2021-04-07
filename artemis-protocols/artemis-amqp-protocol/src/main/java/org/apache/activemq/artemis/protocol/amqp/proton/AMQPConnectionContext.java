@@ -60,6 +60,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.amqp.transaction.Coordinator;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
@@ -469,6 +470,18 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
       } catch (Exception e) {
          log.error("Error init connection", e);
       }
+
+      if (protocolManager.getServer().getConfiguration().getName().equals("")) {
+         Map<Symbol, Object> connProp = new HashMap<>();
+         connProp.put(AmqpSupport.CONNECTION_OPEN_FAILED, "true");
+         connection.setProperties(connProp);
+         connection.getCondition().setCondition(AmqpError.INVALID_FIELD);
+         Map<Symbol, Symbol> info = new HashMap<>();
+         info.put(AmqpSupport.INVALID_FIELD, AmqpSupport.CONTAINER_ID);
+         connection.getCondition().setInfo(info);
+         connection.close();
+      }
+
       if (!validateConnection(connection)) {
          connection.close();
       } else {
