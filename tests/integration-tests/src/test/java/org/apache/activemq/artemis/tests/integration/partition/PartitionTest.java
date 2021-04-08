@@ -26,6 +26,8 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.management.QueueControl;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
@@ -52,7 +54,7 @@ public class PartitionTest extends ClusterTestBase {
 
       startServers(0, 1, 2);
 
-      ConnectionFactory connectionFactory = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
+      ConnectionFactory connectionFactory = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
       //ConnectionFactory connectionFactory1 = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 1);
       //ConnectionFactory connectionFactory2 = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 2);
 
@@ -69,6 +71,13 @@ public class PartitionTest extends ClusterTestBase {
             }
          }
       }
+
+      Assert.assertNull(getServer(0).getManagementService().getResource(ResourceNames.QUEUE + queueName));
+      Assert.assertNull(getServer(2).getManagementService().getResource(ResourceNames.QUEUE + queueName));
+
+      QueueControl queueControl = (QueueControl)getServer(1).getManagementService().getResource(ResourceNames.QUEUE + queueName);
+
+      Assert.assertEquals(1, queueControl.countMessages());
 
       try (Connection connection = connectionFactory.createConnection()) {
          connection.start();
@@ -92,7 +101,7 @@ public class PartitionTest extends ClusterTestBase {
             coreCF.setCompressLargeMessage(true);
             coreCF.setMinLargeMessageSize(10 * 1024);
             return coreCF;
-         case 2: return new JmsConnectionFactory("amqp://" + host + ":" + port); // amqp
+         case 2: return new JmsConnectionFactory("failover:(amqp://" + host + ":" + port + ")"); // amqp
          case 3: return new org.apache.activemq.ActiveMQConnectionFactory("tcp://" + host + ":" + port); // openwire
          default: return null;
       }

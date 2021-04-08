@@ -61,6 +61,7 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.amqp.transaction.Coordinator;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
+import org.apache.qpid.proton.amqp.transport.ConnectionError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
@@ -471,26 +472,43 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          log.error("Error init connection", e);
       }
 
-      if (protocolManager.getServer().getConfiguration().getName().equals("")) {
+      if (protocolManager.getServer().getConfiguration().getJournalDirectory().contains("journal0")) {
+         /*
          Map<Symbol, Object> connProp = new HashMap<>();
          connProp.put(AmqpSupport.CONNECTION_OPEN_FAILED, "true");
          connection.setProperties(connProp);
-         connection.getCondition().setCondition(AmqpError.INVALID_FIELD);
+         connection.getCondition().setCondition(ConnectionError.REDIRECT);
          Map<Symbol, Symbol> info = new HashMap<>();
-         info.put(AmqpSupport.INVALID_FIELD, AmqpSupport.CONTAINER_ID);
+         info.put(AmqpSupport.HOSTNAME, Symbol.valueOf("localhost"));
+         info.put(AmqpSupport.NETWORK_HOST, Symbol.valueOf("localhost"));
+         info.put(AmqpSupport.PORT, Symbol.valueOf("61617"));
          connection.getCondition().setInfo(info);
+         */
+
+
+         ErrorCondition error = new ErrorCondition();
+         error.setCondition(ConnectionError.REDIRECT);
+         error.setDescription(ConnectionError.REDIRECT.toString());
+         Map<Symbol, String> info = new HashMap<>();
+         info.put(AmqpSupport.NETWORK_HOST, "localhost");
+         info.put(AmqpSupport.PORT, "61617");
+         error.setInfo(info);
+         connection.setCondition(error);
+
          connection.close();
+      }
+      else {
+         if (!validateConnection(connection)) {
+            connection.close();
+         } else {
+            connection.setContext(AMQPConnectionContext.this);
+            connection.setContainer(containerId);
+            connection.setProperties(connectionProperties);
+            connection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
+            connection.open();
+         }
       }
 
-      if (!validateConnection(connection)) {
-         connection.close();
-      } else {
-         connection.setContext(AMQPConnectionContext.this);
-         connection.setContainer(containerId);
-         connection.setProperties(connectionProperties);
-         connection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
-         connection.open();
-      }
       initialize();
 
       /*
