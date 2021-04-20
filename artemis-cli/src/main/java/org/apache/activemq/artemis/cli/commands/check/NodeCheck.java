@@ -138,7 +138,7 @@ public class NodeCheck extends CheckAbstract {
    }
 
    private void checkNodeUp(final CheckContext context) throws Exception {
-      if (!context.getManagementProxy().invokeOperation(Boolean.class, "broker", "isStarted")) {
+      if (!(boolean)context.getManagementProxy().getAttribute("broker", "Started", 0)) {
          throw new CheckException("The node isn't started.");
       }
    }
@@ -185,21 +185,21 @@ public class NodeCheck extends CheckAbstract {
       int thresholdValue;
 
       if (diskUsage == -1) {
-         thresholdValue = context.getManagementProxy().invokeOperation(
-            int.class, "broker", "getMaxDiskUsage");
+         thresholdValue = (int)context.getManagementProxy().
+            getAttribute("broker", "MaxDiskUsage", 0);
       } else {
          thresholdValue = diskUsage;
       }
 
-      checkNodeUsage(context, "getDiskStoreUsage", thresholdValue);
+      checkNodeUsage(context, "DiskStoreUsage", thresholdValue);
    }
 
    private void checkNodeMemoryUsage(final CheckContext context) throws Exception {
-      checkNodeUsage(context, "getAddressMemoryUsagePercentage", memoryUsage);
+      checkNodeUsage(context, "AddressMemoryUsagePercentage", memoryUsage);
    }
 
    private void checkNodeUsage(final CheckContext context, final String name, final int thresholdValue) throws Exception {
-      int usageValue = context.getManagementProxy().invokeOperation(int.class, "broker", name);
+      int usageValue = (int)context.getManagementProxy().getAttribute("broker", name, 0);
 
       if (usageValue > thresholdValue) {
          throw new CheckException("The " + (name.startsWith("get") ? name.substring(3) : name) +
