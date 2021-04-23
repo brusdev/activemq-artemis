@@ -975,7 +975,7 @@ public class NettyConnector extends AbstractConnector {
 
          // No acceptor on a client connection
          Listener connectionListener = new Listener();
-         NettyConnection conn = new NettyConnection(configuration, ch, connectionListener, !httpEnabled && batchDelay > 0, false);
+         NettyConnection conn = new NettyConnection(configuration, ch, connectionListener, !httpEnabled && batchDelay > 0, false, false);
          connectionListener.connectionCreated(null, conn, protocolManager);
          return conn;
       } else {

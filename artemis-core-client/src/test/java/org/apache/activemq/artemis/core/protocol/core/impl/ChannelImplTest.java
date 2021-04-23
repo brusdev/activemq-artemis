@@ -446,6 +446,11 @@ public class ChannelImplTest {
             public boolean isSameTarget(TransportConfiguration... configs) {
                return false;
             }
+
+            @Override
+            public boolean isRedirectEnabled() {
+               return false;
+            }
          };
       }
 

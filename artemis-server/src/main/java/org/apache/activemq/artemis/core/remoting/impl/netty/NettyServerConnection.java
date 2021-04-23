@@ -27,8 +27,9 @@ public class NettyServerConnection extends NettyConnection {
                                 Channel channel,
                                 ServerConnectionLifeCycleListener listener,
                                 boolean batchingEnabled,
-                                boolean directDeliver) {
-      super(configuration, channel, listener, batchingEnabled, directDeliver);
+                                boolean directDeliver,
+                                boolean redirectEnabled) {
+      super(configuration, channel, listener, batchingEnabled, directDeliver, redirectEnabled);
    }
 
 }

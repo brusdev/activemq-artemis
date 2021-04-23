@@ -38,6 +38,7 @@ import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
 import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.jboss.logging.Logger;
 
+
 public class InVMConnection implements Connection {
 
    private static final Logger logger = Logger.getLogger(InVMConnection.class);
@@ -318,5 +319,10 @@ public class InVMConnection implements Connection {
          }
       }
       return result;
+   }
+
+   @Override
+   public boolean isRedirectEnabled() {
+      return false;
    }
 }
