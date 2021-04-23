@@ -173,6 +173,7 @@ import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerMessagePlugi
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerQueuePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerResourcePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerSessionPlugin;
+import org.apache.activemq.artemis.core.server.redirection.RedirectManager;
 import org.apache.activemq.artemis.core.server.reload.ReloadManager;
 import org.apache.activemq.artemis.core.server.reload.ReloadManagerImpl;
 import org.apache.activemq.artemis.core.server.transformer.Transformer;
@@ -289,6 +290,8 @@ public class ActiveMQServerImpl implements ActiveMQServer {
    private volatile StorageManager storageManager;
 
    private volatile RemotingService remotingService;
+
+   private volatile RedirectManager redirectManager;
 
    private final List<ProtocolManagerFactory> protocolManagerFactories = new ArrayList<>();
 
@@ -1214,6 +1217,8 @@ public class ActiveMQServerImpl implements ActiveMQServer {
                activation.sendLiveIsStopping();
             }
          }
+
+         stopComponent(redirectManager);
 
          stopComponent(connectorsService);
 
@@ -3156,6 +3161,8 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       resourceManager.start();
 
+      redirectManager = new RedirectManager();
+
       deploySecurityFromConfiguration();
 
       deployGroupingHandlerConfiguration(configuration.getGroupingHandlerConfiguration());
@@ -3288,6 +3295,8 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
             federationManager.start();
          }
+
+         redirectManager.start();
 
          startProtocolServices();
 

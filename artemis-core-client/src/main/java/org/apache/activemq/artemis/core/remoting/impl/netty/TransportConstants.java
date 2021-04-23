@@ -359,6 +359,10 @@ public class TransportConstants {
 
    public static final boolean DEFAULT_PROXY_REMOTE_DNS = false;
 
+   public static final String REDIRECT_ENABLED = "redirectEnabled";
+
+   public static final boolean DEFAULT_REDIRECT_ENABLED = false;
+
    private static int parseDefaultVariable(String variableName, int defaultValue) {
       try {
          String variable = System.getProperty(TransportConstants.class.getName() + "." + variableName);

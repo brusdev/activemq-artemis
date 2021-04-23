@@ -54,7 +54,7 @@ public class PartitionTest extends ClusterTestBase {
 
       startServers(0, 1, 2);
 
-      ConnectionFactory connectionFactory = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
+      ConnectionFactory connectionFactory = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
       //ConnectionFactory connectionFactory1 = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 1);
       //ConnectionFactory connectionFactory2 = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 2);
 

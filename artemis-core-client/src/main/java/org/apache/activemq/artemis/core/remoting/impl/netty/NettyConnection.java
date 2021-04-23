@@ -63,6 +63,7 @@ public class NettyConnection implements Connection {
    private final FastThreadLocal<ArrayList<ReadyListener>> localListenersPool = new FastThreadLocal<>();
 
    private final boolean batchingEnabled;
+   private final boolean redirectEnabled;
 
    private boolean closed;
    private RemotingConnection protocolConnection;
@@ -73,7 +74,8 @@ public class NettyConnection implements Connection {
                           final Channel channel,
                           final BaseConnectionLifeCycleListener<?> listener,
                           boolean batchingEnabled,
-                          boolean directDeliver) {
+                          boolean directDeliver,
+                          boolean redirectEnabled) {
       this.configuration = configuration;
 
       this.channel = channel;
@@ -83,6 +85,8 @@ public class NettyConnection implements Connection {
       this.directDeliver = directDeliver;
 
       this.batchingEnabled = batchingEnabled;
+
+      this.redirectEnabled = redirectEnabled;
    }
 
    private static void waitFor(ChannelPromise promise, long millis) {
@@ -403,6 +407,11 @@ public class NettyConnection implements Connection {
    @Override
    public final boolean isDirectDeliver() {
       return directDeliver;
+   }
+
+   @Override
+   public final boolean isRedirectEnabled() {
+      return redirectEnabled;
    }
 
    //never allow this
