@@ -1658,6 +1658,11 @@ public class ActiveMQServerImpl implements ActiveMQServer {
       return clusterManager;
    }
 
+   @Override
+   public RedirectManager getRedirectManager() {
+      return redirectManager;
+   }
+
    public BackupManager getBackupManager() {
       return backupManager;
    }
@@ -3131,6 +3136,10 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       federationManager.deploy();
 
+      redirectManager = new RedirectManager(this, configuration);
+
+      redirectManager.deploy();
+
       remotingService = new RemotingServiceImpl(clusterManager, configuration, this, managementService, scheduledPool, protocolManagerFactories, executorFactory.getExecutor(), serviceRegistry);
 
       messagingServerControl = managementService.registerServer(postOffice, securityStore, storageManager, configuration, addressSettingsRepository, securityRepository, resourceManager, remotingService, this, queueFactory, scheduledPool, pagingManager, haPolicy.isBackup());
@@ -3160,8 +3169,6 @@ public class ActiveMQServerImpl implements ActiveMQServer {
       managementService.start();
 
       resourceManager.start();
-
-      redirectManager = new RedirectManager();
 
       deploySecurityFromConfiguration();
 

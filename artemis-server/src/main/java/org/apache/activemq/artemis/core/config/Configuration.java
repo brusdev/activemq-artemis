@@ -467,6 +467,18 @@ public interface Configuration {
    Configuration addDivertConfiguration(DivertConfiguration config);
 
    /**
+    * Returns the redirects configured for this server.
+    */
+   List<RedirectConfiguration> getRedirectConfigurations();
+
+   /**
+    * Sets the redirects configured for this server.
+    */
+   Configuration setRedirectConfigurations(List<RedirectConfiguration> configs);
+
+   Configuration addRedirectConfiguration(RedirectConfiguration config);
+
+   /**
     * Returns the cluster connections configured for this server.
     * <p>
     * Modifying the returned list will modify the list of {@link ClusterConnectionConfiguration}

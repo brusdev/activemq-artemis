@@ -17,14 +17,39 @@
 
 package org.apache.activemq.artemis.core.server.redirection;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
+import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.jboss.logging.Logger;
 
 public class RedirectManager implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(RedirectManager.class);
 
+   private final ActiveMQServer server;
+   private final Configuration configuration;
+
+   private Map<String, RedirectController> redirectControllers = new HashMap<>();
+
+
+   public RedirectManager(final ActiveMQServer server, final Configuration configuration) {
+      this.server = server;
+      this.configuration = configuration;
+   }
+
+   public void deploy() {
+      for (RedirectConfiguration config : configuration.getRedirectConfigurations()) {
+         redirectControllers.put(config.getName(), new RedirectController(config));
+      }
+   }
+
    @Override
    public void start() throws Exception {
+
 
 
 
@@ -49,5 +74,15 @@ public class RedirectManager implements ActiveMQComponent {
    @Override
    public boolean isStarted() {
       return false;
+   }
+
+   public TransportConfiguration getRedirectConnector(RedirectingConnection connection) {
+      for (RedirectController redirectController : redirectControllers.values()) {
+         if (redirectController.match(connection)) {
+            return redirectController.getRedirectConnector(connection);
+         }
+      }
+
+      return  null;
    }
 }

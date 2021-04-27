@@ -504,6 +504,20 @@
             </xsd:complexType>
          </xsd:element>
 
+         <xsd:element name="redirects" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  a list of redirects to use
+               </xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element name="redirect" type="redirectType" maxOccurs="unbounded" minOccurs="0"/>
+               </xsd:sequence>
+               <xsd:attributeGroup ref="xml:specialAttrs"/>
+            </xsd:complexType>
+         </xsd:element>
+
          <!-- QUEUES -->
          <xsd:element name="queues" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
@@ -2525,6 +2539,103 @@
       </xsd:attribute>
       <xsd:attributeGroup ref="xml:specialAttrs"/>
    </xsd:complexType>
+
+   <!-- REDIRECT CONFIGURATION TYPE -->
+   <xsd:complexType name="redirectType">
+      <xsd:sequence>
+         <xsd:element name="algorithm" default="HASH" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  how should connections be load balanced between servers
+               </xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="FIRST"/>
+                  <xsd:enumeration value="HASH"/>
+                  <xsd:enumeration value="ROUND_ROBIN"/>
+               </xsd:restriction>
+            </xsd:simpleType>
+         </xsd:element>
+         <xsd:element name="key" default="USER" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  how should connections be load balanced between servers
+               </xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="SOURCE_IP"/>
+                  <xsd:enumeration value="USER"/>
+               </xsd:restriction>
+            </xsd:simpleType>
+         </xsd:element>
+         <xsd:choice>
+            <xsd:element name="static-connectors" maxOccurs="1" minOccurs="1">
+               <xsd:complexType>
+                  <xsd:sequence>
+                     <xsd:element name="connector-ref" type="xsd:string" maxOccurs="unbounded" minOccurs="1"/>
+                  </xsd:sequence>
+                  <xsd:attributeGroup ref="xml:specialAttrs"/>
+               </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="discovery-group-ref" maxOccurs="1" minOccurs="1">
+               <xsd:complexType>
+                  <xsd:attribute name="discovery-group-name" type="xsd:IDREF" use="required">
+                     <xsd:annotation>
+                        <xsd:documentation>
+                           name of discovery group used by this bridge
+                        </xsd:documentation>
+                     </xsd:annotation>
+                  </xsd:attribute>
+                  <xsd:attributeGroup ref="xml:specialAttrs"/>
+               </xsd:complexType>
+            </xsd:element>
+         </xsd:choice>
+      </xsd:sequence>
+
+      <xsd:attribute name="name" type="xsd:ID" use="required">
+         <xsd:annotation>
+            <xsd:documentation>
+               a unique name for the divert
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="sourceIP" type="xsd:string" use="required">
+         <xsd:annotation>
+            <xsd:documentation>
+               pattern for matching redirects against incoming connection by sourceIP
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="user" type="xsd:string" use="required">
+         <xsd:annotation>
+            <xsd:documentation>
+               pattern for matching redirects against incoming connection by user
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="userRole" type="xsd:string" use="required">
+         <xsd:annotation>
+            <xsd:documentation>
+               pattern for matching redirects against incoming connection by userRole
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attributeGroup ref="xml:specialAttrs"/>
+   </xsd:complexType>
+
+
+
+
+
+
+
+
+
+
+
+
 
    <xsd:complexType name="storeType">
       <xsd:choice>

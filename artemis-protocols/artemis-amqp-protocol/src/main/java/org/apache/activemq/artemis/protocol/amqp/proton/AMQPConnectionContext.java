@@ -34,10 +34,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
 import org.apache.activemq.artemis.api.core.ActiveMQSecurityException;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
+import org.apache.activemq.artemis.core.server.redirection.RedirectingConnection;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
@@ -55,12 +57,12 @@ import org.apache.activemq.artemis.protocol.amqp.sasl.SASLResult;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
 import org.apache.activemq.artemis.utils.ByteUtil;
+import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.VersionLoader;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.amqp.transaction.Coordinator;
-import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ConnectionError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
@@ -472,32 +474,32 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          log.error("Error init connection", e);
       }
 
-      if (protocolManager.getServer().getConfiguration().getJournalDirectory().contains("journal0")) {
-         /*
-         Map<Symbol, Object> connProp = new HashMap<>();
-         connProp.put(AmqpSupport.CONNECTION_OPEN_FAILED, "true");
-         connection.setProperties(connProp);
-         connection.getCondition().setCondition(ConnectionError.REDIRECT);
-         Map<Symbol, Symbol> info = new HashMap<>();
-         info.put(AmqpSupport.HOSTNAME, Symbol.valueOf("localhost"));
-         info.put(AmqpSupport.NETWORK_HOST, Symbol.valueOf("localhost"));
-         info.put(AmqpSupport.PORT, Symbol.valueOf("61617"));
-         connection.getCondition().setInfo(info);
-         */
+      boolean connectionRedirected = false;
+      if (connectionCallback.getTransportConnection().isRedirectEnabled()) {
+         RedirectingConnection redirectingConnection = new RedirectingConnection()
+            .setSourceIP(connectionCallback.getTransportConnection().getRemoteAddress())
+            .setUser(handler.getSASLResult().getUser()).setSubject(handler.getSASLResult().getSubject());
+         TransportConfiguration redirectConnector = protocolManager.getServer().getRedirectManager().getRedirectConnector(redirectingConnection);
+         String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, redirectConnector.getParams());
+         int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, redirectConnector.getParams());
 
+         if (redirectConnector != null) {
+            connectionRedirected = true;
 
-         ErrorCondition error = new ErrorCondition();
-         error.setCondition(ConnectionError.REDIRECT);
-         error.setDescription(ConnectionError.REDIRECT.toString());
-         Map<Symbol, String> info = new HashMap<>();
-         info.put(AmqpSupport.NETWORK_HOST, "localhost");
-         info.put(AmqpSupport.PORT, "61617");
-         error.setInfo(info);
-         connection.setCondition(error);
+            ErrorCondition error = new ErrorCondition();
+            error.setCondition(ConnectionError.REDIRECT);
+            error.setDescription(ConnectionError.REDIRECT.toString());
+            Map<Symbol, String> info = new HashMap<>();
+            info.put(AmqpSupport.NETWORK_HOST, host);
+            info.put(AmqpSupport.PORT, Integer.toString(port));
+            error.setInfo(info);
+            connection.setCondition(error);
 
-         connection.close();
+            connection.close();
+         }
       }
-      else {
+
+      if (!connectionRedirected) {
          if (!validateConnection(connection)) {
             connection.close();
          } else {

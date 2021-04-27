@@ -46,6 +46,7 @@ import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.config.FileDeploymentManager;
 import org.apache.activemq.artemis.core.config.HAPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.MetricsConfiguration;
+import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.config.ha.LiveOnlyPolicyConfiguration;
 import org.apache.activemq.artemis.core.journal.impl.JournalImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
@@ -256,6 +257,24 @@ public class FileConfigurationTest extends ConfigurationImplTest {
             Assert.assertEquals("org.foo.DivertTransformer3", dic.getTransformerConfiguration().getClassName());
             Assert.assertEquals("divertTransformerValue1", dic.getTransformerConfiguration().getProperties().get("divertTransformerKey1"));
             Assert.assertEquals("divertTransformerValue2", dic.getTransformerConfiguration().getProperties().get("divertTransformerKey2"));
+         }
+      }
+
+      Assert.assertEquals(2, conf.getRedirectConfigurations().size());
+      for (RedirectConfiguration rc : conf.getRedirectConfigurations()) {
+         if (rc.getName().equals("redirect1")) {
+            Assert.assertEquals("*", rc.getSourceIP());
+            Assert.assertEquals("*", rc.getUser());
+            Assert.assertEquals("REDIRECT", rc.getUserRole());
+            Assert.assertEquals("connector1", rc.getStaticConnectors().get(0));
+            Assert.assertEquals(null, rc.getDiscoveryGroupName());
+         } else {
+            Assert.assertEquals("redirect2", rc.getName());
+            Assert.assertEquals("*", rc.getSourceIP());
+            Assert.assertEquals("*", rc.getUser());
+            Assert.assertEquals("REDIRECT", rc.getUserRole());
+            Assert.assertEquals(Collections.emptyList(), rc.getStaticConnectors());
+            Assert.assertEquals("dg1", rc.getDiscoveryGroupName());
          }
       }
 

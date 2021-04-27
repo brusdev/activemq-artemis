@@ -152,6 +152,20 @@
             <exclusive>false</exclusive>
          </divert>
       </diverts>
+      <redirects>
+         <redirect name="redirect1" sourceIP="*" user="*" userRole="REDIRECT">
+            <algorithm>HASH</algorithm>
+            <key>USER</key>
+            <static-connectors>
+               <connector-ref>connector1</connector-ref>
+            </static-connectors>
+         </redirect>
+         <redirect name="redirect2" sourceIP="*" user="*" userRole="REDIRECT">
+            <algorithm>HASH</algorithm>
+            <key>USER</key>
+            <discovery-group-ref discovery-group-name="dg1"/>
+         </redirect>
+      </redirects>
       <amqp-use-core-subscription-naming>true</amqp-use-core-subscription-naming>
       <queues>
          <queue name="queue1">
