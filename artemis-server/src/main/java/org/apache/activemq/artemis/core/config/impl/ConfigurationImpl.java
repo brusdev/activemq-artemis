@@ -47,6 +47,7 @@ import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
@@ -165,6 +166,8 @@ public class ConfigurationImpl implements Configuration, Serializable {
    protected List<BridgeConfiguration> bridgeConfigurations = new ArrayList<>();
 
    protected List<DivertConfiguration> divertConfigurations = new ArrayList<>();
+
+   protected List<RedirectConfiguration> redirectConfigurations = new ArrayList<>();
 
    protected List<ClusterConnectionConfiguration> clusterConfigurations = new ArrayList<>();
 
@@ -817,6 +820,23 @@ public class ConfigurationImpl implements Configuration, Serializable {
    @Override
    public ConfigurationImpl addDivertConfiguration(final DivertConfiguration config) {
       divertConfigurations.add(config);
+      return this;
+   }
+
+   @Override
+   public List<RedirectConfiguration> getRedirectConfigurations() {
+      return redirectConfigurations;
+   }
+
+   @Override
+   public ConfigurationImpl setRedirectConfigurations(final List<RedirectConfiguration> configs) {
+      redirectConfigurations = configs;
+      return this;
+   }
+
+   @Override
+   public ConfigurationImpl addRedirectConfiguration(final RedirectConfiguration config) {
+      redirectConfigurations.add(config);
       return this;
    }
 

@@ -46,6 +46,7 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.UDPBroadcastEndpointFactory;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
@@ -89,6 +90,8 @@ import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancing
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
+import org.apache.activemq.artemis.core.server.redirection.RedirectAlgorithm;
+import org.apache.activemq.artemis.core.server.redirection.RedirectKey;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.settings.impl.DeletionPolicy;
@@ -620,6 +623,21 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
 
          parseDivertConfiguration(dvNode, config);
       }
+
+      NodeList ccRedirects = e.getElementsByTagName("redirects");
+
+      if (ccRedirects != null) {
+         NodeList ccRedirect = e.getElementsByTagName("redirect");
+
+         if (ccRedirect != null) {
+            for (int i = 0; i < ccRedirect.getLength(); i++) {
+               Element ccNode = (Element) ccRedirect.item(i);
+
+               parseRedirectConfiguration(ccNode, config);
+            }
+         }
+      }
+
       // Persistence config
 
       config.setLargeMessagesDirectory(getString(e, "large-messages-directory", config.getLargeMessagesDirectory(), Validators.NOT_NULL_OR_EMPTY));
@@ -2539,7 +2557,36 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       mainConfig.getDivertConfigurations().add(config);
    }
 
-   /**
+   private void parseRedirectConfiguration(final Element e, final Configuration mainConfig) {
+      String name = e.getAttribute("name");
+      String sourceIP = e.getAttribute("sourceIP");
+      String user = e.getAttribute("user");
+      String userRole = e.getAttribute("userRole");
+
+      RedirectAlgorithm algorithm = RedirectAlgorithm.valueOf(getString(e, "algorithm", ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm(), Validators.REDIRECT_ALGORITHM));
+
+      RedirectKey key = RedirectKey.valueOf(getString(e, "key", ActiveMQDefaultConfiguration.getDefaultRedirectKey(), Validators.REDIRECT_KEY));
+
+      String discoveryGroupName = null;
+      List<String> staticConnectorNames = new ArrayList<>();
+      NodeList children = e.getChildNodes();
+
+      for (int j = 0; j < children.getLength(); j++) {
+         Node child = children.item(j);
+
+         if (child.getNodeName().equals("discovery-group-ref")) {
+            discoveryGroupName = child.getAttributes().getNamedItem("discovery-group-name").getNodeValue();
+         } else if (child.getNodeName().equals("static-connectors")) {
+            getStaticConnectors(staticConnectorNames, child);
+         }
+      }
+
+      RedirectConfiguration config = new RedirectConfiguration().setName(name).setSourceIP(sourceIP).setUser(user).setUserRole(userRole).setAlgorithm(algorithm).setKey(key).setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
+
+      mainConfig.getRedirectConfigurations().add(config);
+   }
+
+   /**RedirectConfiguration
     * @param e
     */
    protected void parseWildcardConfiguration(final Element e, final Configuration mainConfig) {

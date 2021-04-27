@@ -74,6 +74,13 @@ public class NettyConnection implements Connection {
                           final Channel channel,
                           final BaseConnectionLifeCycleListener<?> listener,
                           boolean batchingEnabled,
+                          boolean directDeliver) {
+      this(configuration, channel, listener, batchingEnabled, directDeliver, TransportConstants.DEFAULT_REDIRECT_ENABLED);
+   }
+   public NettyConnection(final Map<String, Object> configuration,
+                          final Channel channel,
+                          final BaseConnectionLifeCycleListener<?> listener,
+                          boolean batchingEnabled,
                           boolean directDeliver,
                           boolean redirectEnabled) {
       this.configuration = configuration;

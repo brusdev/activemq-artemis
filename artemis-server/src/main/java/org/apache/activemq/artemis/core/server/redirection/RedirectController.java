@@ -17,6 +17,38 @@
 
 package org.apache.activemq.artemis.core.server.redirection;
 
+import java.util.HashMap;
+
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.config.RedirectConfiguration;
+import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
+import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
+
 public class RedirectController {
 
+   private final RedirectConfiguration config;
+
+   public RedirectController(final RedirectConfiguration config) {
+      this.config = config;
+   }
+
+   public TransportConfiguration getRedirectConnector(RedirectingConnection connection) {
+
+
+
+
+
+
+
+      HashMap<String, Object> params = new HashMap<>();
+      params.put(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST);
+      params.put(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT);
+      return new TransportConfiguration(null, params);
+   }
+
+   public boolean match(RedirectingConnection connection) {
+      return config.getSourceIP() != null && config.getSourceIP().equals(connection.getSourceIP()) &&
+         config.getUser() != null && config.getUser().equals(connection.getUser()) &&
+         config.getUserRole() != null && new RolePrincipal(config.getUserRole()).implies(connection.getSubject());
+   }
 }
