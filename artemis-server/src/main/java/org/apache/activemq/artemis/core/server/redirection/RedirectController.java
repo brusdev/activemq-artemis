@@ -40,6 +40,7 @@ public class RedirectController {
 
 
 
+
       HashMap<String, Object> params = new HashMap<>();
       params.put(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST);
       params.put(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT);
