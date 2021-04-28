@@ -582,4 +582,10 @@ public interface ActiveMQClientLogger extends BasicLogger {
    @Message(id = 214033, value = "Cannot resolve host ",
            format = Message.Format.MESSAGE_FORMAT)
    void unableToResolveHost(@Cause UnknownHostException e);
+
+   @LogMessage(level = Logger.Level.ERROR)
+   @Message(id = 214034,
+      value = "Cannot parse the redirect connector URI ",
+      format = Message.Format.MESSAGE_FORMAT)
+   void parseRedirectConnectorURIException(@Cause Exception e);
 }

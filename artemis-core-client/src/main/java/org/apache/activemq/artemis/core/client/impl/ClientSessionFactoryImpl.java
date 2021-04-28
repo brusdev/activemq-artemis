@@ -37,6 +37,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQInterruptedException;
 import org.apache.activemq.artemis.api.core.ActiveMQNotConnectedException;
+import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.Interceptor;
 import org.apache.activemq.artemis.api.core.Pair;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
@@ -63,6 +64,7 @@ import org.apache.activemq.artemis.spi.core.remoting.Connector;
 import org.apache.activemq.artemis.spi.core.remoting.ConnectorFactory;
 import org.apache.activemq.artemis.spi.core.remoting.SessionContext;
 import org.apache.activemq.artemis.spi.core.remoting.TopologyResponseHandler;
+import org.apache.activemq.artemis.uri.ConnectorTransportConfigurationParser;
 import org.apache.activemq.artemis.utils.ClassloadingUtil;
 import org.apache.activemq.artemis.utils.ConfirmationWindowWarning;
 import org.apache.activemq.artemis.utils.ExecutorFactory;
@@ -1040,11 +1042,13 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    public class CloseRunnable implements Runnable {
 
       private final RemotingConnection conn;
-      private final String scaleDownTargetNodeID;
+      private final DisconnectReason disconnectReason;
+      private final String handoverReference;
 
-      public CloseRunnable(RemotingConnection conn, String scaleDownTargetNodeID) {
+      public CloseRunnable(RemotingConnection conn, DisconnectReason disconnectReason, String handoverReference) {
          this.conn = conn;
-         this.scaleDownTargetNodeID = scaleDownTargetNodeID;
+         this.disconnectReason = disconnectReason;
+         this.handoverReference = handoverReference;
       }
 
       // Must be executed on new thread since cannot block the Netty thread for a long time and fail
@@ -1053,10 +1057,29 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       public void run() {
          try {
             CLOSE_RUNNABLES.add(this);
-            if (scaleDownTargetNodeID == null) {
-               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected());
+
+            if (disconnectReason == DisconnectReason.SCALE_DOWN) {
+               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected(), handoverReference);
             } else {
-               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected(), scaleDownTargetNodeID);
+               if (disconnectReason == DisconnectReason.REDIRECT) {
+                  ConnectorTransportConfigurationParser parser = new ConnectorTransportConfigurationParser();
+
+                  List<TransportConfiguration> transportConfiguration = null;
+                  try {
+                     transportConfiguration = parser.newObject(
+                        parser.expandURI(handoverReference), DisconnectReason.REDIRECT.toString());
+                  } catch (Exception e) {
+                     ActiveMQClientLogger.LOGGER.parseRedirectConnectorURIException(e);
+                  }
+
+                  if (transportConfiguration.size() > 0) {
+                     currentConnectorConfig = transportConfiguration.get(0);
+                  }
+                  if (transportConfiguration.size() > 1) {
+                     backupConfig = transportConfiguration.get(1);
+                  }
+               }
+               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected());
             }
          } finally {
             CLOSE_RUNNABLES.remove(this);
@@ -1417,7 +1440,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    class SessionFactoryTopologyHandler implements TopologyResponseHandler {
 
       @Override
-      public void nodeDisconnected(RemotingConnection conn, String nodeID, String scaleDownTargetNodeID) {
+      public void nodeDisconnected(RemotingConnection conn, String nodeID, DisconnectReason disconnectReason, String handoverReference) {
 
          if (logger.isTraceEnabled()) {
             logger.trace("Disconnect being called on client:" +
@@ -1425,12 +1448,13 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                             serverLocator +
                             " notifying node " +
                             nodeID +
-                            " as down", new Exception("trace"));
+                            " as down with reason " +
+                            disconnectReason, new Exception("trace"));
          }
 
          serverLocator.notifyNodeDown(System.currentTimeMillis(), nodeID);
 
-         closeExecutor.execute(new CloseRunnable(conn, scaleDownTargetNodeID));
+         closeExecutor.execute(new CloseRunnable(conn, disconnectReason, handoverReference));
 
       }
 
