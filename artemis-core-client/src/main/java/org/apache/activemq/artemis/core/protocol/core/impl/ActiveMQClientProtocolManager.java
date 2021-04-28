@@ -484,20 +484,11 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
          }
       }
 
-      private void handleDisconnect(SimpleString nodeId, DisconnectReason disconnectReason, SimpleString handoverReference) {
-         final DisconnectMessage msg = (DisconnectMessage) packet;
-         String scaleDownTargetNodeID = null;
-
-         SimpleString nodeID = msg.getNodeID();
-
-         if (packet instanceof DisconnectMessage_V2) {
-            final DisconnectMessage_V2 msg_v2 = (DisconnectMessage_V2) packet;
-            scaleDownTargetNodeID = msg_v2.getScaleDownNodeID() == null ? null : msg_v2.getScaleDownNodeID().toString();
+      private void handleDisconnect(SimpleString nodeID, DisconnectReason disconnectReason, SimpleString handoverReference) {
+         if (topologyResponseHandler != null) {
+            topologyResponseHandler.nodeDisconnected(conn, nodeID == null ? null : nodeID.toString(), disconnectReason,
+                                                     handoverReference == null ? null : handoverReference.toString());
          }
-
-         if (topologyResponseHandler != null)
-            topologyResponseHandler.nodeDisconnected(conn, nodeID == null ? null : nodeID.toString(), scaleDownTargetNodeID);
-
       }
 
       /**
