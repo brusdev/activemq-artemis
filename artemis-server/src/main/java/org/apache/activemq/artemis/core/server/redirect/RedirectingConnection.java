@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirection;
+package org.apache.activemq.artemis.core.server.redirect;
 
 import javax.security.auth.Subject;
 

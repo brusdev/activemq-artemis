@@ -15,32 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirection;
+package org.apache.activemq.artemis.core.server.redirect.algorithms;
 
-public enum RedirectKey {
-   SOURCE_IP, USER;
+import java.util.List;
 
-   public static final String validValues;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
 
-   static {
-      StringBuffer stringBuffer = new StringBuffer();
-      for (RedirectKey type : RedirectKey.values()) {
-
-         if (stringBuffer.length() != 0) {
-            stringBuffer.append(",");
-         }
-
-         stringBuffer.append(type.name());
-      }
-
-      validValues = stringBuffer.toString();
-   }
-
-   public static RedirectKey getType(String type) {
-      switch (type) {
-         case "SOURCE_IP": return SOURCE_IP;
-         case "USER" : return USER;
-         default: throw new IllegalStateException("Invalid RedirectKey:" + type + " valid Types: " + validValues);
-      }
-   }
+public abstract class RedirectAlgorithm {
+   public abstract TransportConfiguration selectConnector(RedirectingConnection connection, List<TransportConfiguration> connectors);
 }

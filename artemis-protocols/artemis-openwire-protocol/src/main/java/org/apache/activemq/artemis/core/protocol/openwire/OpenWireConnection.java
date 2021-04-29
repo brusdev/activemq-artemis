@@ -446,7 +446,7 @@ public class OpenWireConnection extends AbstractRemotingConnection implements Se
 
    @Override
    public void disconnect(boolean criticalError) {
-      this.disconnect(null, null, criticalError);
+      this.internalDisconnect(null, null, criticalError);
    }
 
    @Override
@@ -630,7 +630,7 @@ public class OpenWireConnection extends AbstractRemotingConnection implements Se
       }
    }
 
-   private void disconnect(ActiveMQException me, String reason, boolean fail) {
+   private void internalDisconnect(ActiveMQException me, String reason, boolean fail) {
 
       if (context == null || destroyed) {
          return;

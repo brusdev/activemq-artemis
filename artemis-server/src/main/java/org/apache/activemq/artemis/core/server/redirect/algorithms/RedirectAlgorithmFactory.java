@@ -15,8 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirection;
+package org.apache.activemq.artemis.core.server.redirect.algorithms;
 
-public class RedirectInfo {
+import org.apache.activemq.artemis.core.server.redirect.RedirectAlgorithmType;
 
+public final class RedirectAlgorithmFactory {
+   public static RedirectAlgorithm getAlgorithm(RedirectAlgorithmType algorithmType) {
+      switch (algorithmType) {
+         case FIRST:
+            return new FirstRedirectAlgorithm();
+         case HASH:
+            return new HashRedirectAlgorithm();
+         case ROUND_ROBIN:
+            return new RoundRobinRedirectAlgorithm();
+         default:
+            throw new IllegalStateException("Unexpected value: " + algorithmType);
+      }
+   }
 }

@@ -15,33 +15,24 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirection;
+package org.apache.activemq.artemis.core.server.redirect.algorithms;
 
-public enum RedirectAlgorithm {
-   FIRST, HASH, ROUND_ROBIN;
+import java.util.List;
 
-   public static final String validValues;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
+import org.apache.activemq.artemis.utils.RandomUtil;
 
-   static {
-      StringBuffer stringBuffer = new StringBuffer();
-      for (RedirectAlgorithm type : RedirectAlgorithm.values()) {
+public class RoundRobinRedirectAlgorithm extends RedirectAlgorithm {
 
-         if (stringBuffer.length() != 0) {
-            stringBuffer.append(",");
-         }
+   private int pos = RandomUtil.randomInt();
 
-         stringBuffer.append(type.name());
+   @Override
+   public TransportConfiguration selectConnector(RedirectingConnection connection, List<TransportConfiguration> connectors) {
+      if (connectors.size() > 0) {
+         pos = pos % connectors.size();
+         return connectors.get(pos++);
       }
-
-      validValues = stringBuffer.toString();
-   }
-
-   public static RedirectAlgorithm getType(String type) {
-      switch (type) {
-         case "FIRST": return FIRST;
-         case "HASH" : return HASH;
-         case "ROUND_ROBIN" : return ROUND_ROBIN;
-         default: throw new IllegalStateException("Invalid RedirectAlgorithm:" + type + " valid Types: " + validValues);
-      }
+      return null;
    }
 }
