@@ -21,6 +21,7 @@ import java.util.concurrent.Future;
 
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.remoting.CloseListener;
@@ -182,6 +183,17 @@ public interface RemotingConnection extends BufferHandler {
     * Disconnect the connection, closing all channels
     */
    void disconnect(String scaleDownNodeID, boolean criticalError);
+
+   /**
+    * Disconnect the connection, closing all channels
+    */
+   default void disconnect(DisconnectReason disconnectReason, String handoverReference, final boolean criticalError) {
+      if (disconnectReason == DisconnectReason.SCALE_DOWN) {
+         disconnect(handoverReference, criticalError);
+      } else {
+         disconnect(criticalError);
+      }
+   }
 
    /**
     * returns true if any data has been received since the last time this method was called.

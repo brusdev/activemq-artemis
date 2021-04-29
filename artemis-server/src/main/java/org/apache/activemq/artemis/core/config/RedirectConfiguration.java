@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
-import org.apache.activemq.artemis.core.server.redirection.RedirectAlgorithm;
-import org.apache.activemq.artemis.core.server.redirection.RedirectKey;
+import org.apache.activemq.artemis.core.server.redirect.RedirectAlgorithmType;
+import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 
 public class RedirectConfiguration implements Serializable {
 
@@ -30,8 +30,8 @@ public class RedirectConfiguration implements Serializable {
    private String sourceIP = null;
    private String user = null;
    private String userRole = null;
-   private RedirectAlgorithm algorithm = RedirectAlgorithm.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm());
-   private RedirectKey key = RedirectKey.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectKey());
+   private RedirectAlgorithmType algorithm = RedirectAlgorithmType.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm());
+   private RedirectKeyType key = RedirectKeyType.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectKey());
    private List<String> staticConnectors = Collections.emptyList();
    private String discoveryGroupName = null;
 
@@ -71,20 +71,20 @@ public class RedirectConfiguration implements Serializable {
       return this;
    }
 
-   public RedirectAlgorithm getAlgorithm() {
+   public RedirectAlgorithmType getAlgorithm() {
       return algorithm;
    }
 
-   public RedirectConfiguration setAlgorithm(RedirectAlgorithm algorithm) {
+   public RedirectConfiguration setAlgorithm(RedirectAlgorithmType algorithm) {
       this.algorithm = algorithm;
       return this;
    }
 
-   public RedirectKey getKey() {
+   public RedirectKeyType getKey() {
       return key;
    }
 
-   public RedirectConfiguration setKey(RedirectKey key) {
+   public RedirectConfiguration setKey(RedirectKeyType key) {
       this.key = key;
       return this;
    }

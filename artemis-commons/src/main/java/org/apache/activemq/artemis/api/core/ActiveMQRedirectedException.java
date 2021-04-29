@@ -16,32 +16,19 @@
  */
 package org.apache.activemq.artemis.api.core;
 
-public enum DisconnectReason {
-   REDIRECT, SCALE_DOWN, SCALE_DOWN_ON_CRITICAL_ERROR, SHOUT_DOWN;
+/**
+ * A client was redirected.
+ */
+public final class ActiveMQRedirectedException extends ActiveMQException {
 
-   public byte getType() {
-      switch (this) {
-         case REDIRECT:
-            return 0;
-         case SCALE_DOWN:
-            return 2;
-         case SHOUT_DOWN:
-            return 3;
-         default:
-            return -1;
-      }
+   private static final long serialVersionUID = 7414966383933311627L;
+
+   public ActiveMQRedirectedException() {
+      super(ActiveMQExceptionType.REDIRECTED);
    }
 
-   public static DisconnectReason getType(byte type) {
-      switch (type) {
-         case 0:
-            return REDIRECT;
-         case 1:
-            return SCALE_DOWN;
-         case 2:
-            return SHOUT_DOWN;
-         default:
-            return null;
-      }
+   public ActiveMQRedirectedException(String message) {
+      super(ActiveMQExceptionType.REDIRECTED, message);
    }
 }
+

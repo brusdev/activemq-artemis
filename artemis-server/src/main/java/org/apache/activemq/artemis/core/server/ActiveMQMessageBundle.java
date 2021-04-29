@@ -39,6 +39,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQInvalidTransientQueueUseExce
 import org.apache.activemq.artemis.api.core.ActiveMQNonExistentQueueException;
 import org.apache.activemq.artemis.api.core.ActiveMQQueueExistsException;
 import org.apache.activemq.artemis.api.core.ActiveMQQueueMaxConsumerLimitReached;
+import org.apache.activemq.artemis.api.core.ActiveMQRedirectedException;
 import org.apache.activemq.artemis.api.core.ActiveMQReplicationTimeooutException;
 import org.apache.activemq.artemis.api.core.ActiveMQSecurityException;
 import org.apache.activemq.artemis.api.core.ActiveMQSessionCreationException;
@@ -504,4 +505,7 @@ public interface ActiveMQMessageBundle {
 
    @Message(id = 229235, value = "Invalid redirect key {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidRedirectKey(String val);
+
+   @Message(id = 229236, value = "Connection redirected")
+   ActiveMQRedirectedException connectionRedirected();
 }

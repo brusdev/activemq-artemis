@@ -90,8 +90,8 @@ import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancing
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
-import org.apache.activemq.artemis.core.server.redirection.RedirectAlgorithm;
-import org.apache.activemq.artemis.core.server.redirection.RedirectKey;
+import org.apache.activemq.artemis.core.server.redirect.RedirectAlgorithmType;
+import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.settings.impl.DeletionPolicy;
@@ -2553,9 +2553,9 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       String user = e.getAttribute("user");
       String userRole = e.getAttribute("userRole");
 
-      RedirectAlgorithm algorithm = RedirectAlgorithm.valueOf(getString(e, "algorithm", ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm(), Validators.REDIRECT_ALGORITHM));
+      RedirectAlgorithmType algorithm = RedirectAlgorithmType.valueOf(getString(e, "algorithm", ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm(), Validators.REDIRECT_ALGORITHM));
 
-      RedirectKey key = RedirectKey.valueOf(getString(e, "key", ActiveMQDefaultConfiguration.getDefaultRedirectKey(), Validators.REDIRECT_KEY));
+      RedirectKeyType key = RedirectKeyType.valueOf(getString(e, "key", ActiveMQDefaultConfiguration.getDefaultRedirectKey(), Validators.REDIRECT_KEY));
 
       String discoveryGroupName = null;
       List<String> staticConnectorNames = new ArrayList<>();

@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQRemoteDisconnectException;
+import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.Interceptor;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
@@ -38,6 +39,7 @@ import org.apache.activemq.artemis.core.protocol.core.impl.ChannelImpl.CHANNEL_I
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectConsumerWithKillMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectMessage_V2;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectMessage_V3;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.spi.core.protocol.AbstractRemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
@@ -250,11 +252,16 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
 
    @Override
    public void disconnect(final boolean criticalError) {
-      disconnect(null, criticalError);
+      disconnect(DisconnectReason.SHOUT_DOWN, null, criticalError);
    }
 
    @Override
    public void disconnect(String scaleDownNodeID, final boolean criticalError) {
+      disconnect(DisconnectReason.SCALE_DOWN, scaleDownNodeID, criticalError);
+   }
+
+   @Override
+   public void disconnect(DisconnectReason disconnectReason, String handoverReference, final boolean criticalError) {
       Channel channel0 = getChannel(ChannelImpl.CHANNEL_ID.PING.id, -1);
 
       // And we remove all channels from the connection, this ensures no more packets will be processed after this
@@ -280,8 +287,10 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
       }
       Packet disconnect;
 
-      if (channel0.supports(PacketImpl.DISCONNECT_V2)) {
-         disconnect = new DisconnectMessage_V2(nodeID, scaleDownNodeID);
+      if (channel0.supports(PacketImpl.DISCONNECT_V3)) {
+         disconnect = new DisconnectMessage_V3(nodeID, disconnectReason, SimpleString.toSimpleString(handoverReference));
+      } else if (channel0.supports(PacketImpl.DISCONNECT_V2)) {
+         disconnect = new DisconnectMessage_V2(nodeID, disconnectReason == DisconnectReason.SCALE_DOWN ? handoverReference : null);
       } else {
          disconnect = new DisconnectMessage(nodeID);
       }

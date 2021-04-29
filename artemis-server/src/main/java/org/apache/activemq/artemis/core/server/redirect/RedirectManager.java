@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirection;
+package org.apache.activemq.artemis.core.server.redirect;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,32 +43,22 @@ public class RedirectManager implements ActiveMQComponent {
 
    public void deploy() {
       for (RedirectConfiguration config : configuration.getRedirectConfigurations()) {
-         redirectControllers.put(config.getName(), new RedirectController(config));
+         redirectControllers.put(config.getName(), new RedirectController(server, config));
       }
    }
 
    @Override
    public void start() throws Exception {
-
-
-
-
-      //per ogni redirect-setting instanzializza un RedirectController
-
-
-
-
-
-
-
-
-      //Start DisoveryGroup
-
+      for (RedirectController redirectController : redirectControllers.values()) {
+         redirectController.start();
+      }
    }
 
    @Override
    public void stop() throws Exception {
-
+      for (RedirectController redirectController : redirectControllers.values()) {
+         redirectController.stop();
+      }
    }
 
    @Override
@@ -76,10 +66,10 @@ public class RedirectManager implements ActiveMQComponent {
       return false;
    }
 
-   public TransportConfiguration getRedirectConnector(RedirectingConnection connection) {
+   public TransportConfiguration getConnector(RedirectingConnection connection) {
       for (RedirectController redirectController : redirectControllers.values()) {
          if (redirectController.match(connection)) {
-            return redirectController.getRedirectConnector(connection);
+            return redirectController.getConnector(connection);
          }
       }
 
