@@ -2549,9 +2549,9 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
 
    private void parseRedirectConfiguration(final Element e, final Configuration mainConfig) {
       String name = e.getAttribute("name");
-      String sourceIP = e.getAttribute("sourceIP");
-      String user = e.getAttribute("user");
-      String userRole = e.getAttribute("userRole");
+      String sourceIP = e.hasAttribute("sourceIP") ? e.getAttribute("sourceIP") : null;
+      String user = e.hasAttribute("user") ? e.getAttribute("user") : null;
+      String userRole = e.hasAttribute("userRole") ? e.getAttribute("userRole") : null;
 
       RedirectAlgorithmType algorithm = RedirectAlgorithmType.valueOf(getString(e, "algorithm", ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm(), Validators.REDIRECT_ALGORITHM));
 

@@ -2601,21 +2601,21 @@
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="sourceIP" type="xsd:string" use="required">
+      <xsd:attribute name="sourceIP" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                pattern for matching redirects against incoming connection by sourceIP
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="user" type="xsd:string" use="required">
+      <xsd:attribute name="user" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                pattern for matching redirects against incoming connection by user
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="userRole" type="xsd:string" use="required">
+      <xsd:attribute name="userRole" type="xsd:string" use="optional">
          <xsd:annotation>
             <xsd:documentation>
                pattern for matching redirects against incoming connection by userRole

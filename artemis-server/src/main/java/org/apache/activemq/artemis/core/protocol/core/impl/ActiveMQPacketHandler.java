@@ -166,11 +166,11 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             RedirectingConnection redirectingConnection = new RedirectingConnection().setSourceIP(connection.getTransportConnection().getRemoteAddress()).setUser(request.getUsername());
             TransportConfiguration redirectConnector = server.getRedirectManager().getConnector(redirectingConnection);
             if (redirectConnector != null) {
-               String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, redirectConnector.getParams());
-               int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, redirectConnector.getParams());
-               connection.disconnect(DisconnectReason.REDIRECT, String.format("tcp://%s:%d", host, port), false);
+               String handoverReference = redirectConnector.toJson().toString();
 
-               throw ActiveMQMessageBundle.BUNDLE.connectionRedirected();
+               connection.disconnect(DisconnectReason.REDIRECT, handoverReference, false);
+
+               throw ActiveMQMessageBundle.BUNDLE.connectionRedirected("from" + connection.getTransportConnection().getLocalAddress() + " to " + handoverReference);
             }
          }
 

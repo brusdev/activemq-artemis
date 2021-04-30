@@ -304,7 +304,8 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
                if (!isAlive())
                   throw cause;
 
-               if (cause.getType() == ActiveMQExceptionType.UNBLOCKED) {
+               if (cause.getType() == ActiveMQExceptionType.UNBLOCKED ||
+                       cause.getType() == ActiveMQExceptionType.REDIRECTED) {
                   // This means the thread was blocked on create session and failover unblocked it
                   // so failover could occur
 

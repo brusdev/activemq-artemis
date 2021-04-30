@@ -506,6 +506,6 @@ public interface ActiveMQMessageBundle {
    @Message(id = 229235, value = "Invalid redirect key {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidRedirectKey(String val);
 
-   @Message(id = 229236, value = "Connection redirected")
-   ActiveMQRedirectedException connectionRedirected();
+   @Message(id = 229236, value = "Connection redirected {0}", format = Message.Format.MESSAGE_FORMAT)
+   ActiveMQRedirectedException connectionRedirected(String info);
 }
