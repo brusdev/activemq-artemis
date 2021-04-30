@@ -91,7 +91,6 @@ public class RedirectTest extends ClusterTestBase {
       QueueControl queueControl1 = (QueueControl)getServer(1).getManagementService().getResource(ResourceNames.QUEUE + queueName);
       QueueControl queueControl2 = (QueueControl)getServer(2).getManagementService().getResource(ResourceNames.QUEUE + queueName);
 
-      /*
       Assert.assertNull(queueControl0);
       Assert.assertTrue(queueControl1 == null ^ queueControl2 == null);
       if (queueControl1 != null) {
@@ -114,7 +113,6 @@ public class RedirectTest extends ClusterTestBase {
             }
          }
       }
-      */
    }
 
    private ConnectionFactory createFactory(int protocol, String host, int port) {

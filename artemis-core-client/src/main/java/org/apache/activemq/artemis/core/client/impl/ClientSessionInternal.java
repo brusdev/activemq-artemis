@@ -68,9 +68,7 @@ public interface ClientSessionInternal extends ClientSession {
 
    boolean handleFailover(RemotingConnection backupConnection, ActiveMQException cause);
 
-   default void postHandleFailover(RemotingConnection connection, boolean successful) {
-
-   }
+   void postHandleFailover(RemotingConnection connection, boolean successful);
 
    RemotingConnection getConnection();
 

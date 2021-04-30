@@ -64,7 +64,6 @@ import org.apache.activemq.artemis.spi.core.remoting.Connector;
 import org.apache.activemq.artemis.spi.core.remoting.ConnectorFactory;
 import org.apache.activemq.artemis.spi.core.remoting.SessionContext;
 import org.apache.activemq.artemis.spi.core.remoting.TopologyResponseHandler;
-import org.apache.activemq.artemis.uri.ConnectorTransportConfigurationParser;
 import org.apache.activemq.artemis.utils.ClassloadingUtil;
 import org.apache.activemq.artemis.utils.ConfirmationWindowWarning;
 import org.apache.activemq.artemis.utils.ExecutorFactory;

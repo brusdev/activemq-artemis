@@ -42,7 +42,6 @@ import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSess
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionResponseMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ReattachSessionMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ReattachSessionResponseMessage;
-import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
@@ -53,7 +52,6 @@ import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
-import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.jboss.logging.Logger;
 
 /**
