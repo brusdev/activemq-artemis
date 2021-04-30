@@ -634,10 +634,19 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
                connector = null;
 
+               HashSet<ClientSessionInternal> sessionsToFailover;
+               synchronized (sessions) {
+                  sessionsToFailover = new HashSet<>(sessions);
+               }
+
+               for (ClientSessionInternal session : sessionsToFailover) {
+                  session.preHandleFailover(connection);
+               }
+
                boolean allSessionReconnected;
                int failedReconnectSessionsCounter = 0;
                do {
-                  allSessionReconnected = reconnectSessions(oldConnection, reconnectAttempts, me);
+                  allSessionReconnected = reconnectSessions(oldConnection, reconnectAttempts, me, sessionsToFailover);
                   if (oldConnection != null) {
                      oldConnection.destroy();
                   }
@@ -646,9 +655,15 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                      failedReconnectSessionsCounter++;
                      oldConnection = connection;
                      connection = null;
+
+                     waitForRetry(retryInterval);
                   }
                }
                while ((reconnectAttempts == -1 || failedReconnectSessionsCounter < reconnectAttempts) && !allSessionReconnected);
+
+               for (ClientSessionInternal session : sessionsToFailover) {
+                  session.postHandleFailover(connection, allSessionReconnected);
+               }
 
                if (oldConnection != null) {
                   oldConnection.destroy();
@@ -767,17 +782,9 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
     * Re-attach sessions all pre-existing sessions to the new remoting connection
     */
    private boolean reconnectSessions(final RemotingConnection oldConnection,
-                                  final int reconnectAttempts,
-                                  final ActiveMQException cause) {
-      HashSet<ClientSessionInternal> sessionsToFailover;
-      synchronized (sessions) {
-         sessionsToFailover = new HashSet<>(sessions);
-      }
-
-      for (ClientSessionInternal session : sessionsToFailover) {
-         session.preHandleFailover(connection);
-      }
-
+                                     final int reconnectAttempts,
+                                     final ActiveMQException cause,
+                                     final Set<ClientSessionInternal> sessionsToFailover) {
       getConnectionWithRetry(reconnectAttempts, oldConnection);
 
       if (connection == null) {
@@ -1042,13 +1049,11 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    public class CloseRunnable implements Runnable {
 
       private final RemotingConnection conn;
-      private final DisconnectReason disconnectReason;
-      private final String handoverReference;
+      private final String scaleDownTargetNodeID;
 
-      public CloseRunnable(RemotingConnection conn, DisconnectReason disconnectReason, String handoverReference) {
+      public CloseRunnable(RemotingConnection conn, String scaleDownTargetNodeID) {
          this.conn = conn;
-         this.disconnectReason = disconnectReason;
-         this.handoverReference = handoverReference;
+         this.scaleDownTargetNodeID = scaleDownTargetNodeID;
       }
 
       // Must be executed on new thread since cannot block the Netty thread for a long time and fail
@@ -1057,29 +1062,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       public void run() {
          try {
             CLOSE_RUNNABLES.add(this);
-
-            if (disconnectReason == DisconnectReason.SCALE_DOWN) {
-               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected(), handoverReference);
-            } else {
-               if (disconnectReason == DisconnectReason.REDIRECT) {
-                  ConnectorTransportConfigurationParser parser = new ConnectorTransportConfigurationParser();
-
-                  List<TransportConfiguration> transportConfiguration = null;
-                  try {
-                     transportConfiguration = parser.newObject(
-                        parser.expandURI(handoverReference), DisconnectReason.REDIRECT.toString());
-                  } catch (Exception e) {
-                     ActiveMQClientLogger.LOGGER.parseRedirectConnectorURIException(e);
-                  }
-
-                  if (transportConfiguration.size() > 0) {
-                     currentConnectorConfig = transportConfiguration.get(0);
-                  }
-                  if (transportConfiguration.size() > 1) {
-                     backupConfig = transportConfiguration.get(1);
-                  }
-               }
+            if (scaleDownTargetNodeID == null) {
                conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected());
+            } else {
+               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected(), scaleDownTargetNodeID);
             }
          } finally {
             CLOSE_RUNNABLES.remove(this);
@@ -1454,7 +1440,15 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
          serverLocator.notifyNodeDown(System.currentTimeMillis(), nodeID);
 
-         closeExecutor.execute(new CloseRunnable(conn, disconnectReason, handoverReference));
+         String scaleDownTargetNodeID = null;
+         if (disconnectReason == DisconnectReason.REDIRECT) {
+            backupConfig = currentConnectorConfig;
+            currentConnectorConfig = TransportConfiguration.fromJson(handoverReference);
+         } else if (disconnectReason == DisconnectReason.SCALE_DOWN) {
+            scaleDownTargetNodeID = handoverReference;
+         }
+
+         closeExecutor.execute(new CloseRunnable(conn, scaleDownTargetNodeID));
 
       }
 

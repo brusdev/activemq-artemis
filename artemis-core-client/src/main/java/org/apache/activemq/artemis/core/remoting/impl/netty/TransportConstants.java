@@ -439,6 +439,7 @@ public class TransportConstants {
       allowableAcceptorKeys.add(TransportConstants.QUIET_PERIOD);
       allowableAcceptorKeys.add(TransportConstants.DISABLE_STOMP_SERVER_HEADER);
       allowableAcceptorKeys.add(TransportConstants.AUTO_START);
+      allowableAcceptorKeys.add(TransportConstants.REDIRECT_ENABLED);
 
       ALLOWABLE_ACCEPTOR_KEYS = Collections.unmodifiableSet(allowableAcceptorKeys);
 

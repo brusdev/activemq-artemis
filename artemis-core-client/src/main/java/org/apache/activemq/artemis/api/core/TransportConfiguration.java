@@ -18,6 +18,7 @@ package org.apache.activemq.artemis.api.core;
 
 import javax.json.JsonObject;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,8 +63,30 @@ public class TransportConfiguration implements Serializable {
 
    private static final byte TYPE_STRING = 3;
 
+   public static final String NAME = "name";
+   public static final String FACTORY_CLASSNAME = "factoryClassName";
+   public static final String PARAMS = "params";
+   public static final String EXTRA_PROPS = "extraProps";
+
+
    public JsonObject toJson() {
-      return JsonLoader.createObjectBuilder().add("name", name).add("factoryClassName", factoryClassName).add("params", JsonUtil.toJsonObject(params)).add("extraProps", JsonUtil.toJsonObject(extraProps)).build();
+      return JsonLoader.createObjectBuilder().add(NAME, name).add(FACTORY_CLASSNAME, factoryClassName).add(PARAMS, JsonUtil.toJsonObject(params)).add(EXTRA_PROPS, JsonUtil.toJsonObject(extraProps)).build();
+   }
+
+   public static TransportConfiguration fromJson(String jsonString) {
+      JsonObject json = JsonLoader.readObject(new StringReader(jsonString));
+
+      String name = json.getString(NAME);
+
+      String factoryClassName = json.getString(FACTORY_CLASSNAME);
+
+      Map<String, Object> params = new HashMap<>();
+      json.getJsonObject(PARAMS).forEach((k, v) -> params.put(k, v.toString()));
+
+      Map<String, Object> extraProps = new HashMap<>();
+      json.getJsonObject(EXTRA_PROPS).forEach((k, v) -> params.put(k, v.toString()));
+
+      return new TransportConfiguration(factoryClassName, params, name, extraProps);
    }
 
    /**

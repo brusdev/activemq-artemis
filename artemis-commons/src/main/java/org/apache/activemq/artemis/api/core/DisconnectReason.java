@@ -17,7 +17,7 @@
 package org.apache.activemq.artemis.api.core;
 
 public enum DisconnectReason {
-   REDIRECT, SCALE_DOWN, SCALE_DOWN_ON_CRITICAL_ERROR, SHOUT_DOWN;
+   REDIRECT, SCALE_DOWN, SHOUT_DOWN;
 
    public byte getType() {
       switch (this) {
