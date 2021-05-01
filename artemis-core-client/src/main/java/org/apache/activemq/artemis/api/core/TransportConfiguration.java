@@ -70,21 +70,17 @@ public class TransportConfiguration implements Serializable {
 
 
    public JsonObject toJson() {
-      return JsonLoader.createObjectBuilder().add(NAME, name).add(FACTORY_CLASSNAME, factoryClassName).add(PARAMS, JsonUtil.toJsonObject(params)).add(EXTRA_PROPS, JsonUtil.toJsonObject(extraProps)).build();
+      return JsonLoader.createObjectBuilder().add(NAME, name).add(FACTORY_CLASSNAME, factoryClassName)
+              .add(PARAMS, JsonUtil.toJsonObject(params)).add(EXTRA_PROPS, JsonUtil.toJsonObject(extraProps)).build();
    }
 
    public static TransportConfiguration fromJson(String jsonString) {
       JsonObject json = JsonLoader.readObject(new StringReader(jsonString));
 
       String name = json.getString(NAME);
-
       String factoryClassName = json.getString(FACTORY_CLASSNAME);
-
-      Map<String, Object> params = new HashMap<>();
-      json.getJsonObject(PARAMS).forEach((k, v) -> params.put(k, v.toString()));
-
-      Map<String, Object> extraProps = new HashMap<>();
-      json.getJsonObject(EXTRA_PROPS).forEach((k, v) -> params.put(k, v.toString()));
+      Map<String, Object> params = JsonUtil.fromJsonParams(json.getJsonObject(PARAMS));
+      Map<String, Object> extraProps = JsonUtil.fromJsonParams(json.getJsonObject(EXTRA_PROPS));
 
       return new TransportConfiguration(factoryClassName, params, name, extraProps);
    }
