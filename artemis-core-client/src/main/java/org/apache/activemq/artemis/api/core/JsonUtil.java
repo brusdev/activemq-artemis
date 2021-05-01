@@ -137,14 +137,6 @@ public final class JsonUtil {
       return array;
    }
 
-   public static Map<String, Object> fromJsonParams(final JsonObject jsonObject) {
-      Map<String, Object> params = new HashMap<>();
-      jsonObject.forEach((k, v) -> {
-         params.put(k, v.getValueType() == JsonValue.ValueType.STRING ? ((JsonString)v).getString() : v.toString());
-      });
-      return params;
-   }
-
    public static JsonValue nullSafe(String input) {
       return new NullableJsonString(input);
    }

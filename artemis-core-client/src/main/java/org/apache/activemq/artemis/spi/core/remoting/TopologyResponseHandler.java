@@ -24,7 +24,7 @@ import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 public interface TopologyResponseHandler {
 
    // This is sent when the server is telling the client the node is being disconnected
-   void nodeDisconnected(RemotingConnection conn, String nodeID, DisconnectReason disconnectReason, String handoverReference);
+   void nodeDisconnected(RemotingConnection conn, String nodeID, DisconnectReason reason, String targetNodeID, TransportConfiguration tagetConnector);
 
    void notifyNodeUp(long uniqueEventID,
                      String backupGroupName,
