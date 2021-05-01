@@ -47,6 +47,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQUnexpectedRoutingTypeForAddr
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.io.SequentialFile;
 import org.apache.activemq.artemis.core.postoffice.Binding;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ReplicationSyncFileMessage;
@@ -509,6 +510,6 @@ public interface ActiveMQMessageBundle {
    @Message(id = 229236, value = "Invalid redirect key {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidRedirectKey(String val);
 
-   @Message(id = 229236, value = "Connection redirected {0}", format = Message.Format.MESSAGE_FORMAT)
-   ActiveMQRedirectedException connectionRedirected(String info);
+   @Message(id = 229236, value = "Connection redirected to {0}", format = Message.Format.MESSAGE_FORMAT)
+   ActiveMQRedirectedException redirectConnection(TransportConfiguration connector);
 }

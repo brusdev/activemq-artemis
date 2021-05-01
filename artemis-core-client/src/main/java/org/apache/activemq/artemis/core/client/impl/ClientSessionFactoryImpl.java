@@ -1425,26 +1425,26 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    class SessionFactoryTopologyHandler implements TopologyResponseHandler {
 
       @Override
-      public void nodeDisconnected(RemotingConnection conn, String nodeID, DisconnectReason disconnectReason, String handoverReference) {
+      public void nodeDisconnected(RemotingConnection conn, String nodeID, DisconnectReason reason, String targetNodeID, TransportConfiguration tagetConnector) {
 
          if (logger.isTraceEnabled()) {
             logger.trace("Disconnect being called on client:" +
-                            " server locator = " +
-                            serverLocator +
-                            " notifying node " +
-                            nodeID +
-                            " as down with reason " +
-                            disconnectReason, new Exception("trace"));
+                    " server locator = " +
+                    serverLocator +
+                    " notifying node " +
+                    nodeID +
+                    " as down with reason " +
+                    reason, new Exception("trace"));
          }
 
          serverLocator.notifyNodeDown(System.currentTimeMillis(), nodeID);
 
          String scaleDownTargetNodeID = null;
-         if (disconnectReason == DisconnectReason.REDIRECT) {
+         if (reason == DisconnectReason.REDIRECT) {
             backupConfig = currentConnectorConfig;
-            currentConnectorConfig = TransportConfiguration.fromJson(handoverReference);
-         } else if (disconnectReason == DisconnectReason.SCALE_DOWN) {
-            scaleDownTargetNodeID = handoverReference;
+            currentConnectorConfig = tagetConnector;
+         } else if (reason == DisconnectReason.SCALE_DOWN) {
+            scaleDownTargetNodeID = targetNodeID;
          }
 
          closeExecutor.execute(new CloseRunnable(conn, scaleDownTargetNodeID));

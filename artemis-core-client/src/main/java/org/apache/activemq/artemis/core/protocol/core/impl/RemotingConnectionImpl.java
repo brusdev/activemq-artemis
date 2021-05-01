@@ -30,6 +30,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQRemoteDisconnectException;
 import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.Interceptor;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.client.ActiveMQClientLogger;
 import org.apache.activemq.artemis.core.protocol.core.Channel;
@@ -252,16 +253,16 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
 
    @Override
    public void disconnect(final boolean criticalError) {
-      disconnect(DisconnectReason.SHOUT_DOWN, null, criticalError);
+      disconnect(DisconnectReason.SHOUT_DOWN, null, null, criticalError);
    }
 
    @Override
    public void disconnect(String scaleDownNodeID, final boolean criticalError) {
-      disconnect(DisconnectReason.SCALE_DOWN, scaleDownNodeID, criticalError);
+      disconnect(DisconnectReason.SCALE_DOWN, scaleDownNodeID, null, criticalError);
    }
 
    @Override
-   public void disconnect(DisconnectReason disconnectReason, String handoverReference, final boolean criticalError) {
+   public void disconnect(DisconnectReason reason, String targetNodeID, TransportConfiguration targetConnector, final boolean criticalError) {
       Channel channel0 = getChannel(ChannelImpl.CHANNEL_ID.PING.id, -1);
 
       // And we remove all channels from the connection, this ensures no more packets will be processed after this
@@ -288,9 +289,9 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
       Packet disconnect;
 
       if (channel0.supports(PacketImpl.DISCONNECT_V3)) {
-         disconnect = new DisconnectMessage_V3(nodeID, disconnectReason, SimpleString.toSimpleString(handoverReference));
+         disconnect = new DisconnectMessage_V3(nodeID, reason, SimpleString.toSimpleString(targetNodeID), targetConnector);
       } else if (channel0.supports(PacketImpl.DISCONNECT_V2)) {
-         disconnect = new DisconnectMessage_V2(nodeID, disconnectReason == DisconnectReason.SCALE_DOWN ? handoverReference : null);
+         disconnect = new DisconnectMessage_V2(nodeID, reason == DisconnectReason.SCALE_DOWN ? targetNodeID : null);
       } else {
          disconnect = new DisconnectMessage(nodeID);
       }

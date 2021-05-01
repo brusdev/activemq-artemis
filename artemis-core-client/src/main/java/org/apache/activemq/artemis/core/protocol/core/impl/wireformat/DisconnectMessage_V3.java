@@ -19,20 +19,27 @@ package org.apache.activemq.artemis.core.protocol.core.impl.wireformat;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
 public class DisconnectMessage_V3 extends DisconnectMessage {
 
-   private DisconnectReason disconnectReason;
-   private SimpleString handoverReference;
+   private DisconnectReason reason;
+   private SimpleString targetNodeID;
+   private TransportConfiguration targetConnector;
 
-   public DisconnectMessage_V3(final SimpleString nodeID, final DisconnectReason disconnectReason, final SimpleString handoverReference) {
+   public DisconnectMessage_V3(final SimpleString nodeID,
+                               final DisconnectReason reason,
+                               final SimpleString targetNodeID,
+                               final TransportConfiguration targetConnector) {
       super(DISCONNECT_V3);
 
       this.nodeID = nodeID;
 
-      this.disconnectReason = disconnectReason;
+      this.reason = reason;
 
-      this.handoverReference = handoverReference;
+      this.targetNodeID = targetNodeID;
+
+      this.targetConnector = targetConnector;
    }
 
    public DisconnectMessage_V3() {
@@ -41,34 +48,52 @@ public class DisconnectMessage_V3 extends DisconnectMessage {
 
    // Public --------------------------------------------------------
 
-   public DisconnectReason getDisconnectReason() {
-      return disconnectReason;
+   public DisconnectReason getReason() {
+      return reason;
    }
 
-   public SimpleString getHandoverReference() {
-      return handoverReference;
+   public SimpleString getTargetNodeID() {
+      return targetNodeID;
+   }
+
+   public TransportConfiguration getTargetConnector() {
+      return targetConnector;
    }
 
    @Override
    public void encodeRest(final ActiveMQBuffer buffer) {
       super.encodeRest(buffer);
-      buffer.writeByte(disconnectReason == null ? -1 : disconnectReason.getType());
-      buffer.writeNullableSimpleString(handoverReference);
+      buffer.writeByte(reason == null ? -1 : reason.getType());
+      buffer.writeNullableSimpleString(targetNodeID);
+      if (targetConnector != null) {
+         buffer.writeBoolean(true);
+         targetConnector.encode(buffer);
+      } else {
+         buffer.writeBoolean(false);
+      }
    }
 
    @Override
    public void decodeRest(final ActiveMQBuffer buffer) {
       super.decodeRest(buffer);
-      disconnectReason = DisconnectReason.getType(buffer.readByte());
-      handoverReference = buffer.readNullableSimpleString();
+      reason = DisconnectReason.getType(buffer.readByte());
+      targetNodeID = buffer.readNullableSimpleString();
+      boolean hasTargetConnector = buffer.readBoolean();
+      if (hasTargetConnector) {
+         targetConnector = new TransportConfiguration();
+         targetConnector.decode(buffer);
+      } else {
+         targetConnector = null;
+      }
    }
 
    @Override
    public String toString() {
       StringBuffer buf = new StringBuffer(getParentString());
       buf.append(", nodeID=" + nodeID);
-      buf.append(", disconnectReason=" + disconnectReason);
-      buf.append(", handoverReference=" + handoverReference);
+      buf.append(", reason=" + reason);
+      buf.append(", targetNodeID=" + targetNodeID);
+      buf.append(", targetConnector=" + targetConnector);
       buf.append("]");
       return buf.toString();
    }
@@ -77,8 +102,9 @@ public class DisconnectMessage_V3 extends DisconnectMessage {
    public int hashCode() {
       final int prime = 31;
       int result = super.hashCode();
-      result = prime * result + (disconnectReason.getType());
-      result = prime * result + ((handoverReference == null) ? 0 : handoverReference.hashCode());
+      result = prime * result + (reason.getType());
+      result = prime * result + ((targetNodeID == null) ? 0 : targetNodeID.hashCode());
+      result = prime * result + ((targetConnector == null) ? 0 : targetConnector.hashCode());
       return result;
    }
 
@@ -94,16 +120,16 @@ public class DisconnectMessage_V3 extends DisconnectMessage {
          return false;
       }
       DisconnectMessage_V3 other = (DisconnectMessage_V3) obj;
-      if (disconnectReason == null) {
-         if (other.disconnectReason != null)
+      if (reason == null) {
+         if (other.reason != null)
             return false;
-      } else if (!disconnectReason.equals(other.disconnectReason))
+      } else if (!reason.equals(other.reason))
          return false;
-      if (handoverReference == null) {
-         if (other.handoverReference != null) {
+      if (targetNodeID == null) {
+         if (other.targetNodeID != null) {
             return false;
          }
-      } else if (!handoverReference.equals(other.handoverReference)) {
+      } else if (!targetNodeID.equals(other.targetNodeID)) {
          return false;
       }
       return true;

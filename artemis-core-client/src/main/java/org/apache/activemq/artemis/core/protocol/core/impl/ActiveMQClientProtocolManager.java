@@ -464,13 +464,13 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
 
          if (type == PacketImpl.DISCONNECT) {
             final DisconnectMessage disMessage = (DisconnectMessage) packet;
-            handleDisconnect(disMessage.getNodeID(), null, null);
+            handleDisconnect(disMessage.getNodeID(), null, null, null);
          } else if (type == PacketImpl.DISCONNECT_V2) {
             final DisconnectMessage_V2 disMessage = (DisconnectMessage_V2) packet;
-            handleDisconnect(disMessage.getNodeID(), DisconnectReason.SCALE_DOWN, disMessage.getScaleDownNodeID());
+            handleDisconnect(disMessage.getNodeID(), DisconnectReason.SCALE_DOWN, disMessage.getScaleDownNodeID(), null);
          } else if (type == PacketImpl.DISCONNECT_V3) {
             final DisconnectMessage_V3 disMessage = (DisconnectMessage_V3) packet;
-            handleDisconnect(disMessage.getNodeID(), disMessage.getDisconnectReason(), disMessage.getHandoverReference());
+            handleDisconnect(disMessage.getNodeID(), disMessage.getReason(), disMessage.getTargetNodeID(), disMessage.getTargetConnector());
          } else if (type == PacketImpl.CLUSTER_TOPOLOGY) {
             ClusterTopologyChangeMessage topMessage = (ClusterTopologyChangeMessage) packet;
             notifyTopologyChange(updateTransportConfiguration(topMessage));
@@ -485,10 +485,10 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
          }
       }
 
-      private void handleDisconnect(SimpleString nodeID, DisconnectReason disconnectReason, SimpleString handoverReference) {
+      private void handleDisconnect(SimpleString nodeID, DisconnectReason reason, SimpleString targetNodeID, TransportConfiguration tagetConnector) {
          if (topologyResponseHandler != null) {
-            topologyResponseHandler.nodeDisconnected(conn, nodeID == null ? null : nodeID.toString(), disconnectReason,
-                                                     handoverReference == null ? null : handoverReference.toString());
+            topologyResponseHandler.nodeDisconnected(conn, nodeID == null ? null : nodeID.toString(), reason,
+                    targetNodeID == null ? null : targetNodeID.toString(), tagetConnector);
          }
       }
 
