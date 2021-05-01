@@ -646,10 +646,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                   session.preHandleFailover(connection);
                }
 
-               boolean allSessionReconnected;
+               boolean allSessionReconnected = false;
                int failedReconnectSessionsCounter = 0;
                do {
-                  allSessionReconnected = reconnectSessions(oldConnection, reconnectAttempts, me, sessionsToFailover);
+                  allSessionReconnected = reconnectSessions(sessionsToFailover,oldConnection, reconnectAttempts, me);
                   if (oldConnection != null) {
                      oldConnection.destroy();
                   }
@@ -659,7 +659,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                      oldConnection = connection;
                      connection = null;
 
-                     waitForRetry(retryInterval);
+                     // Wait for retry when the connection is established but not all session are reconnected.
+                     if ((reconnectAttempts == -1 || failedReconnectSessionsCounter < reconnectAttempts) && oldConnection != null) {
+                        waitForRetry(retryInterval);
+                     }
                   }
                }
                while ((reconnectAttempts == -1 || failedReconnectSessionsCounter < reconnectAttempts) && !allSessionReconnected);
@@ -784,10 +787,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    /*
     * Re-attach sessions all pre-existing sessions to the new remoting connection
     */
-   private boolean reconnectSessions(final RemotingConnection oldConnection,
+   private boolean reconnectSessions(final Set<ClientSessionInternal> sessionsToFailover,
+                                     final RemotingConnection oldConnection,
                                      final int reconnectAttempts,
-                                     final ActiveMQException cause,
-                                     final Set<ClientSessionInternal> sessionsToFailover) {
+                                     final ActiveMQException cause) {
       getConnectionWithRetry(reconnectAttempts, oldConnection);
 
       if (connection == null) {

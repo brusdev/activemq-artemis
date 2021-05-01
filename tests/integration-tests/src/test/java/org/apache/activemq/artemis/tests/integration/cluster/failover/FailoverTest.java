@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.artemis.api.core.ActiveMQDuplicateIdException;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
@@ -50,8 +51,14 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.client.SessionFailureListener;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryImpl;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryInternal;
+<<<<<<< HEAD
 import org.apache.activemq.artemis.core.protocol.core.Channel;
 import org.apache.activemq.artemis.core.protocol.core.Packet;
+=======
+import org.apache.activemq.artemis.core.client.impl.ClientSessionInternal;
+import org.apache.activemq.artemis.core.protocol.core.Channel;
+import org.apache.activemq.artemis.core.protocol.core.impl.ActiveMQSessionContext;
+>>>>>>> 62f581d1a4... ARTEMIS-3275 Lock CORE client communication during failover retries
 import org.apache.activemq.artemis.core.protocol.core.impl.ChannelImpl;
 import org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl;
 import org.apache.activemq.artemis.core.protocol.core.impl.RemotingConnectionImpl;
@@ -1920,12 +1927,47 @@ public class FailoverTest extends FailoverTestBase {
    }
 
    @Test(timeout = 120000)
-   public void testMultipleSessionFailover() throws Exception {
-      final String address = "TEST";
+   public void testChannelStateDuringFailover() throws Exception {
       locator.setBlockOnNonDurableSend(true).setBlockOnDurableSend(true).setBlockOnAcknowledge(true).setReconnectAttempts(300).setRetryInterval(100);
 
       sf = createSessionFactoryAndWaitForTopology(locator, 2);
 
+      ClientSession session = createSession(sf, true, true, 0);
+
+      CountDownLatch latch = new CountDownLatch(1);
+      final AtomicBoolean isFailingOver = new AtomicBoolean(false);
+
+      backupServer.addInterceptor((packet, connection) -> {
+         if (latch.getCount() > 0 && packet.getType() == PacketImpl.CREATESESSION) {
+            sf.getConnection().addCloseListener(() -> {
+               try {
+                  ActiveMQSessionContext sessionContext = (ActiveMQSessionContext)((ClientSessionInternal)session).getSessionContext();
+                  isFailingOver.set(((ChannelImpl)sessionContext.getSessionChannel()).isFailingOver());
+               } finally {
+                  latch.countDown();
+               }
+            });
+
+            // Fail creating session
+            Channel sessionChannel = ((RemotingConnectionImpl)connection).getChannel(ChannelImpl.CHANNEL_ID.SESSION.id, -1);
+            sessionChannel.send(new ActiveMQExceptionMessage(new ActiveMQInternalErrorException()));
+            return false;
+         }
+         return true;
+      });
+
+      session.start();
+
+      crash(session);
+
+      latch.await();
+
+      Assert.assertTrue(isFailingOver.get());
+   }
+
+   @Test(timeout = 120000)
+   public void testMultipleSessionFailover() throws Exception {
+      final String address = "TEST";
       ClientSession session1 = createSession(sf, true, true, 0);
       ClientSession session2 = createSession(sf, true, true, 0);
 

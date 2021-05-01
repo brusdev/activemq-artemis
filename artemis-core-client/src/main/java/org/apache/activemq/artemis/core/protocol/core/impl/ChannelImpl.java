@@ -864,4 +864,8 @@ public final class ChannelImpl implements Channel {
    public String toString() {
       return "Channel[id=" + CHANNEL_ID.idToString(id) + ", RemotingConnectionID=" + (connection == null ? "NULL" : connection.getID()) + ", handler=" + handler + "]";
    }
+
+   public boolean isFailingOver() {
+      return failingOver;
+   }
 }
