@@ -17,20 +17,15 @@
 
 package org.apache.activemq.artemis.core.server.redirect;
 
-import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
-import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.redirect.algorithms.RedirectAlgorithm;
 import org.apache.activemq.artemis.core.server.redirect.algorithms.RedirectAlgorithmFactory;
+import org.apache.activemq.artemis.core.server.redirect.pools.DiscoveryRedirectPool;
+import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
+import org.apache.activemq.artemis.core.server.redirect.pools.StaticRedirectPool;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class RedirectController implements ActiveMQComponent {
 
@@ -38,9 +33,7 @@ public class RedirectController implements ActiveMQComponent {
    private final RedirectConfiguration config;
    private final RedirectAlgorithm algorithm;
    private final RedirectKeyType key;
-   private final List<TransportConfiguration> connectors;
-
-   private DiscoveryGroup discoveryGroup;
+   private final RedirectPool pool;
 
    public RedirectController(final ActiveMQServer server, final RedirectConfiguration config) {
       this.server = server;
@@ -49,37 +42,21 @@ public class RedirectController implements ActiveMQComponent {
       algorithm = RedirectAlgorithmFactory.getAlgorithm(config.getAlgorithm());
       key = config.getKey();
 
-      connectors = new ArrayList<>();
-      discoveryGroup = null;
+      if (config.getDiscoveryGroupName() != null) {
+         pool = new DiscoveryRedirectPool(server, config.getDiscoveryGroupName());
+      } else {
+         pool = new StaticRedirectPool(server, config.getStaticConnectors());
+      }
    }
 
    @Override
    public void start() throws Exception {
-      if (config.getDiscoveryGroupName() != null) {
-         DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().getDiscoveryGroupConfigurations().get(config.getDiscoveryGroupName());
-         discoveryGroup = new DiscoveryGroup(server.getNodeID().toString(), config.getName(), discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
-         discoveryGroup.registerListener(newConnectors -> {
-            connectors.clear();
-            for (DiscoveryEntry newConnector : newConnectors) {
-               connectors.add(newConnector.getConnector());
-            }
-         });
-         discoveryGroup.start();
-      } else {
-         Map<String, TransportConfiguration> connectorConfigurations =
-            server.getConfiguration().getConnectorConfigurations();
-
-         for (String connectorRef : config.getStaticConnectors()) {
-            connectors.add(connectorConfigurations.get(connectorRef));
-         }
-      }
+      pool.start();
    }
 
    @Override
    public void stop() throws Exception {
-      if (discoveryGroup != null) {
-         discoveryGroup.stop();
-      }
+      pool.stop();
    }
 
    @Override
@@ -89,11 +66,11 @@ public class RedirectController implements ActiveMQComponent {
 
    public boolean match(RedirectingConnection connection) {
       return (config.getSourceIP() == null || config.getSourceIP().equals(connection.getSourceIP())) &&
-         (config.getUser() == null || config.getUser().equals(connection.getUser())) &&
-         (config.getUserRole() == null || new RolePrincipal(config.getUserRole()).implies(connection.getSubject()));
+            (config.getUser() == null || config.getUser().equals(connection.getUser())) &&
+            (config.getUserRole() == null || new RolePrincipal(config.getUserRole()).implies(connection.getSubject()));
    }
 
-   public TransportConfiguration getConnector(RedirectingConnection connection) {
-      return algorithm.selectConnector(connection, connectors);
+   public RedirectTarget getTarget(RedirectingConnection connection) {
+      return algorithm.selectTarget(connection, pool);
    }
 }

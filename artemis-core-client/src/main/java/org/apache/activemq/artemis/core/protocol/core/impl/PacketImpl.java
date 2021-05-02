@@ -38,6 +38,8 @@ public class PacketImpl implements Packet {
    public static final int CONSUMER_PRIORITY_CHANGE_VERSION = ARTEMIS_2_7_0_VERSION;
    public static final int FQQN_CHANGE_VERSION = ARTEMIS_2_7_0_VERSION;
 
+   // 2.18.0
+   public static final int ARTEMIS_2_18_0_VERSION = 131;
 
    public static final SimpleString OLD_QUEUE_PREFIX = new SimpleString("jms.queue.");
    public static final SimpleString OLD_TEMP_QUEUE_PREFIX = new SimpleString("jms.tempqueue.");

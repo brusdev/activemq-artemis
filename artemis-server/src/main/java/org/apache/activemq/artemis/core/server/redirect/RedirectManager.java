@@ -20,7 +20,6 @@ package org.apache.activemq.artemis.core.server.redirect;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
@@ -66,13 +65,13 @@ public class RedirectManager implements ActiveMQComponent {
       return false;
    }
 
-   public TransportConfiguration getConnector(RedirectingConnection connection) {
+   public RedirectTarget getTarget(RedirectingConnection connection) {
       for (RedirectController redirectController : redirectControllers.values()) {
          if (redirectController.match(connection)) {
-            return redirectController.getConnector(connection);
+            return redirectController.getTarget(connection);
          }
       }
 
-      return  null;
+      return null;
    }
 }

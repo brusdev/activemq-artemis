@@ -187,12 +187,8 @@ public interface RemotingConnection extends BufferHandler {
    /**
     * Disconnect the connection, closing all channels
     */
-   default void disconnect(DisconnectReason reason, String targetNodeID, TransportConfiguration targetConnector, final boolean criticalError) {
-      if (reason == DisconnectReason.SCALE_DOWN) {
-         disconnect(targetNodeID, criticalError);
-      } else {
-         disconnect(criticalError);
-      }
+   default void disconnect(DisconnectReason reason, String targetNodeID, TransportConfiguration targetConnector) {
+      disconnect(reason.isScaleDown() ? targetNodeID : null, reason.isCriticalError());
    }
 
    /**

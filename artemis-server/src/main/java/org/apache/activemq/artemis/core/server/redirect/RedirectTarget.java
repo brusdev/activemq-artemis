@@ -15,15 +15,33 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.algorithms;
+package org.apache.activemq.artemis.core.server.redirect;
 
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
-import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
-public class HashRedirectAlgorithm implements RedirectAlgorithm {
+public class RedirectTarget {
+   private final String nodeID;
+   private final TransportConfiguration connector;
+
+   public String getNodeID() {
+      return nodeID;
+   }
+
+   public TransportConfiguration getConnector() {
+      return connector;
+   }
+
+   public RedirectTarget(String nodeID, TransportConfiguration connector) {
+      this.nodeID = nodeID;
+      this.connector = connector;
+   }
+
    @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
-      throw new UnsupportedOperationException();
+   public String toString() {
+      StringBuilder stringBuilder = new StringBuilder(RedirectTarget.class.getSimpleName());
+      stringBuilder.append("(nodeID=" + nodeID);
+      stringBuilder.append(", connector=" + connector);
+      stringBuilder.append(") ");
+      return stringBuilder.toString();
    }
 }

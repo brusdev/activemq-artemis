@@ -17,11 +17,10 @@
 
 package org.apache.activemq.artemis.core.server.redirect.algorithms;
 
-import java.util.List;
-
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
+import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
 
-public abstract class RedirectAlgorithm {
-   public abstract TransportConfiguration selectConnector(RedirectingConnection connection, List<TransportConfiguration> connectors);
+public interface RedirectAlgorithm {
+   RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool);
 }

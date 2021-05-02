@@ -17,19 +17,39 @@
 package org.apache.activemq.artemis.api.core;
 
 public enum DisconnectReason {
-   REDIRECT, SCALE_DOWN, SHOUT_DOWN;
+   REDIRECT((byte)0, false),
+   REDIRECT_ON_CRITICAL_ERROR((byte)1, true),
+   SCALE_DOWN((byte)2, false),
+   SCALE_DOWN_ON_CRITICAL_ERROR((byte)3, true),
+   SHOUT_DOWN((byte)4, false),
+   SHOUT_DOWN_ON_CRITICAL_ERROR((byte)5, true);
+
+   private final byte type;
+   private final boolean criticalError;
+
+   DisconnectReason(byte type, boolean criticalError) {
+      this.type = type;
+      this.criticalError = criticalError;
+   }
 
    public byte getType() {
-      switch (this) {
-         case REDIRECT:
-            return 0;
-         case SCALE_DOWN:
-            return 2;
-         case SHOUT_DOWN:
-            return 3;
-         default:
-            return -1;
-      }
+      return type;
+   }
+
+   public boolean isCriticalError() {
+      return criticalError;
+   }
+
+   public boolean isRedirect() {
+      return this == REDIRECT || this == REDIRECT_ON_CRITICAL_ERROR;
+   }
+
+   public boolean isScaleDown() {
+      return this == SCALE_DOWN || this == SCALE_DOWN_ON_CRITICAL_ERROR;
+   }
+
+   public boolean isShutDown() {
+      return this == SHOUT_DOWN || this == SHOUT_DOWN_ON_CRITICAL_ERROR;
    }
 
    public static DisconnectReason getType(byte type) {
@@ -37,9 +57,15 @@ public enum DisconnectReason {
          case 0:
             return REDIRECT;
          case 1:
-            return SCALE_DOWN;
+            return REDIRECT_ON_CRITICAL_ERROR;
          case 2:
+            return SCALE_DOWN;
+         case 3:
+            return SCALE_DOWN_ON_CRITICAL_ERROR;
+         case 4:
             return SHOUT_DOWN;
+         case 5:
+            return SHOUT_DOWN_ON_CRITICAL_ERROR;
          default:
             return null;
       }

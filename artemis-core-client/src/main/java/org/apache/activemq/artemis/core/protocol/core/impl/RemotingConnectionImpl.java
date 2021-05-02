@@ -253,16 +253,16 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
 
    @Override
    public void disconnect(final boolean criticalError) {
-      disconnect(DisconnectReason.SHOUT_DOWN, null, null, criticalError);
+      disconnect(criticalError ? DisconnectReason.SHOUT_DOWN_ON_CRITICAL_ERROR : DisconnectReason.SHOUT_DOWN, null, null);
    }
 
    @Override
    public void disconnect(String scaleDownNodeID, final boolean criticalError) {
-      disconnect(DisconnectReason.SCALE_DOWN, scaleDownNodeID, null, criticalError);
+      disconnect(criticalError ? DisconnectReason.SCALE_DOWN_ON_CRITICAL_ERROR : DisconnectReason.SCALE_DOWN, scaleDownNodeID, null);
    }
 
    @Override
-   public void disconnect(DisconnectReason reason, String targetNodeID, TransportConfiguration targetConnector, final boolean criticalError) {
+   public void disconnect(DisconnectReason reason, String targetNodeID, TransportConfiguration targetConnector) {
       Channel channel0 = getChannel(ChannelImpl.CHANNEL_ID.PING.id, -1);
 
       // And we remove all channels from the connection, this ensures no more packets will be processed after this
@@ -271,7 +271,7 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
 
       Set<Channel> allChannels = new HashSet<>(channels.values());
 
-      if (!criticalError) {
+      if (!reason.isCriticalError()) {
          removeAllChannels();
       } else {
          // We can't hold a lock if a critical error is happening...
@@ -281,7 +281,7 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
 
       // Now we are 100% sure that no more packets will be processed we can flush then send the disconnect
 
-      if (!criticalError) {
+      if (!reason.isCriticalError()) {
          for (Channel channel : allChannels) {
             channel.flushConfirmations();
          }
@@ -291,7 +291,7 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
       if (channel0.supports(PacketImpl.DISCONNECT_V3)) {
          disconnect = new DisconnectMessage_V3(nodeID, reason, SimpleString.toSimpleString(targetNodeID), targetConnector);
       } else if (channel0.supports(PacketImpl.DISCONNECT_V2)) {
-         disconnect = new DisconnectMessage_V2(nodeID, reason == DisconnectReason.SCALE_DOWN ? targetNodeID : null);
+         disconnect = new DisconnectMessage_V2(nodeID, reason.isScaleDown() ? targetNodeID : null);
       } else {
          disconnect = new DisconnectMessage(nodeID);
       }

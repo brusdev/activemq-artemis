@@ -38,10 +38,14 @@ public enum RedirectAlgorithmType {
 
    public static RedirectAlgorithmType getType(String type) {
       switch (type) {
-         case "FIRST": return FIRST;
-         case "HASH" : return HASH;
-         case "ROUND_ROBIN" : return ROUND_ROBIN;
-         default: throw new IllegalStateException("Invalid RedirectAlgorithm:" + type + " valid Types: " + validValues);
+         case "FIRST":
+            return FIRST;
+         case "HASH":
+            return HASH;
+         case "ROUND_ROBIN":
+            return ROUND_ROBIN;
+         default:
+            throw new IllegalStateException("Invalid RedirectAlgorithm:" + type + " valid Types: " + validValues);
       }
    }
 }
