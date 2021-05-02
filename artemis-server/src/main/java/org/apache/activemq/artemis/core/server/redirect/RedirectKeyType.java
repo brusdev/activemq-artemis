@@ -38,9 +38,12 @@ public enum RedirectKeyType {
 
    public static RedirectKeyType getType(String type) {
       switch (type) {
-         case "SOURCE_IP": return SOURCE_IP;
-         case "USER" : return USER;
-         default: throw new IllegalStateException("Invalid RedirectKey:" + type + " valid Types: " + validValues);
+         case "SOURCE_IP":
+            return SOURCE_IP;
+         case "USER":
+            return USER;
+         default:
+            throw new IllegalStateException("Invalid RedirectKey:" + type + " valid Types: " + validValues);
       }
    }
 }

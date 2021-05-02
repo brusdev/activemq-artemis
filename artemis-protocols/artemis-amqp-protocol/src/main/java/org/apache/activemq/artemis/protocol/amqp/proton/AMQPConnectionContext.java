@@ -34,11 +34,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoop;
 import org.apache.activemq.artemis.api.core.ActiveMQSecurityException;
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
+import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
@@ -479,13 +479,13 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          RedirectingConnection redirectingConnection = new RedirectingConnection()
             .setSourceIP(connectionCallback.getTransportConnection().getRemoteAddress())
             .setUser(handler.getSASLResult().getUser()).setSubject(handler.getSASLResult().getSubject());
-         TransportConfiguration redirectConnector = protocolManager.getServer().getRedirectManager().getConnector(redirectingConnection);
+         RedirectTarget redirectTarget = protocolManager.getServer().getRedirectManager().getTarget(redirectingConnection);
 
-         if (redirectConnector != null) {
+         if (redirectTarget != null) {
             connectionRedirected = true;
 
-            String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, redirectConnector.getParams());
-            int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, redirectConnector.getParams());
+            String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, redirectTarget.getConnector().getParams());
+            int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, redirectTarget.getConnector().getParams());
 
             ErrorCondition error = new ErrorCondition();
             error.setCondition(ConnectionError.REDIRECT);

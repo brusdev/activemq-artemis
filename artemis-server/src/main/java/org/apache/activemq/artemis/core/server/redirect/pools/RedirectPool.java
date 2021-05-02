@@ -15,15 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.algorithms;
+package org.apache.activemq.artemis.core.server.redirect.pools;
 
+import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
-import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
 
-public class HashRedirectAlgorithm implements RedirectAlgorithm {
-   @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
-      throw new UnsupportedOperationException();
-   }
+import java.util.List;
+
+public interface RedirectPool extends ActiveMQComponent {
+   List<RedirectTarget> getTargets();
 }

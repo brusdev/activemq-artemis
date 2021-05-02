@@ -17,21 +17,20 @@
 
 package org.apache.activemq.artemis.core.server.redirect.algorithms;
 
-import java.util.List;
-
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
+import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
-public class RoundRobinRedirectAlgorithm extends RedirectAlgorithm {
+public class RoundRobinRedirectAlgorithm implements RedirectAlgorithm {
 
    private int pos = RandomUtil.randomInt();
 
    @Override
-   public TransportConfiguration selectConnector(RedirectingConnection connection, List<TransportConfiguration> connectors) {
-      if (connectors.size() > 0) {
-         pos = pos % connectors.size();
-         return connectors.get(pos++);
+   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
+      if (pool.getTargets().size() > 0) {
+         pos = pos % pool.getTargets().size();
+         return pool.getTargets().get(pos++);
       }
       return null;
    }

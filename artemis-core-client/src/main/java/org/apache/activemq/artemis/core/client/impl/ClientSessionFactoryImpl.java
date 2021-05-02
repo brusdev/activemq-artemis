@@ -1440,10 +1440,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
          serverLocator.notifyNodeDown(System.currentTimeMillis(), nodeID);
 
          String scaleDownTargetNodeID = null;
-         if (reason == DisconnectReason.REDIRECT) {
+         if (reason.isRedirect()) {
             backupConfig = currentConnectorConfig;
             currentConnectorConfig = tagetConnector;
-         } else if (reason == DisconnectReason.SCALE_DOWN) {
+         } else if (reason.isScaleDown()) {
             scaleDownTargetNodeID = targetNodeID;
          }
 

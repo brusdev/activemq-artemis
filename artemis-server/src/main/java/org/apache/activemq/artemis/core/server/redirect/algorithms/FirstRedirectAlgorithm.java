@@ -17,16 +17,15 @@
 
 package org.apache.activemq.artemis.core.server.redirect.algorithms;
 
-import java.util.List;
-
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
+import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
 
-public class FirstRedirectAlgorithm extends RedirectAlgorithm {
+public class FirstRedirectAlgorithm implements RedirectAlgorithm {
    @Override
-   public TransportConfiguration selectConnector(RedirectingConnection connection, List<TransportConfiguration> connectors) {
-      if (connectors.size() > 0) {
-         return connectors.get(0);
+   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
+      if (pool.getTargets().size() > 0) {
+         return pool.getTargets().get(0);
       }
       return null;
    }

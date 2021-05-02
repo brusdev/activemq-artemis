@@ -27,7 +27,6 @@ import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.persistence.OperationContext;
 import org.apache.activemq.artemis.core.protocol.core.Channel;
 import org.apache.activemq.artemis.core.protocol.core.ChannelHandler;
@@ -49,6 +48,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
+import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
@@ -161,11 +161,15 @@ public class ActiveMQPacketHandler implements ChannelHandler {
          }
 
          if (connection.getTransportConnection().isRedirectEnabled()) {
+            if (!connection.isVersionSupportSupportRedirect()) {
+               throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
+            }
+
             RedirectingConnection redirectingConnection = new RedirectingConnection().setSourceIP(connection.getTransportConnection().getRemoteAddress()).setUser(request.getUsername());
-            TransportConfiguration redirectConnector = server.getRedirectManager().getConnector(redirectingConnection);
-            if (redirectConnector != null) {
-               connection.disconnect(DisconnectReason.REDIRECT, null, redirectConnector, false);
-               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(redirectConnector);
+            RedirectTarget redirectTarget = server.getRedirectManager().getTarget(redirectingConnection);
+            if (redirectTarget != null) {
+               connection.disconnect(DisconnectReason.REDIRECT, redirectTarget.getNodeID(), redirectTarget.getConnector());
+               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(redirectTarget);
             }
          }
 
