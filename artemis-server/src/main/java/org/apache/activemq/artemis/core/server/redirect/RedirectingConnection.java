@@ -23,6 +23,7 @@ public class RedirectingConnection {
    private String sourceIP = null;
    private String user = null;
    private Subject subject = null;
+   private String sniHostName = null;
 
    public String getSourceIP() {
       return sourceIP;
@@ -48,6 +49,15 @@ public class RedirectingConnection {
 
    public RedirectingConnection setSubject(Subject subject) {
       this.subject = subject;
+      return this;
+   }
+
+   public String getSniHostName() {
+      return sniHostName;
+   }
+
+   public RedirectingConnection setSniHostName(String sniHostName) {
+      this.sniHostName = sniHostName;
       return this;
    }
 }
