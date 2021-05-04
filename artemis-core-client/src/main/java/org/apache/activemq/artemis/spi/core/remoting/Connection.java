@@ -174,4 +174,8 @@ public interface Connection {
    boolean isSameTarget(TransportConfiguration... configs);
 
    boolean isRedirectEnabled();
+
+   default String getSNIHostName() {
+      return null;
+   }
 }

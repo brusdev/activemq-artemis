@@ -165,7 +165,9 @@ public class ActiveMQPacketHandler implements ChannelHandler {
                throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
             }
 
-            RedirectingConnection redirectingConnection = new RedirectingConnection().setSourceIP(connection.getTransportConnection().getRemoteAddress()).setUser(request.getUsername());
+            RedirectingConnection redirectingConnection = new RedirectingConnection().setUser(request.getUsername())
+               .setSourceIP(connection.getTransportConnection().getRemoteAddress())
+               .setSniHostName(connection.getTransportConnection().getSNIHostName());
             RedirectTarget redirectTarget = server.getRedirectManager().getTarget(redirectingConnection);
             if (redirectTarget != null) {
                connection.disconnect(DisconnectReason.REDIRECT, redirectTarget.getNodeID(), redirectTarget.getConnector());

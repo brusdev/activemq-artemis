@@ -464,6 +464,7 @@ public class NettyAcceptor extends AbstractAcceptor {
             if (sslEnabled) {
                final Pair<String, Integer> peerInfo = getPeerInfo(channel);
                try {
+                  pipeline.addLast("sni", new NettySNIHostnameHandler());
                   pipeline.addLast("ssl", getSslHandler(channel.alloc(), peerInfo.getA(), peerInfo.getB()));
                   pipeline.addLast("sslHandshakeExceptionHandler", new SslHandshakeExceptionHandler());
                } catch (Exception e) {
