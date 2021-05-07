@@ -60,4 +60,17 @@ public class RedirectingConnection {
       this.sniHostName = sniHostName;
       return this;
    }
+
+   public String getValue(RedirectKeyType keyType) {
+      switch (keyType) {
+         case SNIHostname:
+            return sniHostName;
+         case SOURCE_IP:
+            return sourceIP;
+         case USER:
+            return user;
+         default:
+            throw new IllegalStateException("Unexpected value: " + keyType);
+      }
+   }
 }

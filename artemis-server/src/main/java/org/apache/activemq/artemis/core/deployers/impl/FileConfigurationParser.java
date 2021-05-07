@@ -90,7 +90,7 @@ import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancing
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
-import org.apache.activemq.artemis.core.server.redirect.RedirectAlgorithmType;
+import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
@@ -2553,7 +2553,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       String user = e.hasAttribute("user") ? e.getAttribute("user") : null;
       String userRole = e.hasAttribute("userRole") ? e.getAttribute("userRole") : null;
 
-      RedirectAlgorithmType algorithm = RedirectAlgorithmType.valueOf(getString(e, "algorithm", ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm(), Validators.REDIRECT_ALGORITHM));
+      RedirectPolicyType algorithm = RedirectPolicyType.valueOf(getString(e, "policy", ActiveMQDefaultConfiguration.getDefaultRedirectPolicy(), Validators.REDIRECT_POLICY));
 
       RedirectKeyType key = RedirectKeyType.valueOf(getString(e, "key", ActiveMQDefaultConfiguration.getDefaultRedirectKey(), Validators.REDIRECT_KEY));
 
@@ -2571,7 +2571,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          }
       }
 
-      RedirectConfiguration config = new RedirectConfiguration().setName(name).setSourceIP(sourceIP).setUser(user).setUserRole(userRole).setAlgorithm(algorithm).setKey(key).setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
+      RedirectConfiguration config = new RedirectConfiguration().setName(name).setSourceIP(sourceIP).setUser(user).setUserRole(userRole).setPolicy(algorithm).setKey(key).setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
 
       mainConfig.getRedirectConfigurations().add(config);
    }

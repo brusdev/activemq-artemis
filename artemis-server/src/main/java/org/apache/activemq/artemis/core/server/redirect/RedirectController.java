@@ -17,30 +17,43 @@
 
 package org.apache.activemq.artemis.core.server.redirect;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.apache.activemq.artemis.core.config.RedirectConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.redirect.algorithms.RedirectAlgorithm;
-import org.apache.activemq.artemis.core.server.redirect.algorithms.RedirectAlgorithmFactory;
+import org.apache.activemq.artemis.core.server.redirect.policies.RedirectPolicy;
+import org.apache.activemq.artemis.core.server.redirect.policies.RedirectPolicyFactory;
 import org.apache.activemq.artemis.core.server.redirect.pools.DiscoveryRedirectPool;
 import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
 import org.apache.activemq.artemis.core.server.redirect.pools.StaticRedirectPool;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 public class RedirectController implements ActiveMQComponent {
 
    private final ActiveMQServer server;
    private final RedirectConfiguration config;
-   private final RedirectAlgorithm algorithm;
+   private final RedirectPolicy policy;
    private final RedirectKeyType key;
+   private final Cache<String, RedirectTarget> cache;
    private final RedirectPool pool;
+
+   public RedirectPool getPool() {
+      return pool;
+   }
 
    public RedirectController(final ActiveMQServer server, final RedirectConfiguration config) {
       this.server = server;
       this.config = config;
 
-      algorithm = RedirectAlgorithmFactory.getAlgorithm(config.getAlgorithm());
       key = config.getKey();
+      policy = RedirectPolicyFactory.getPolicy(config.getPolicy());
+
+      cache = CacheBuilder.newBuilder().expireAfterAccess(3000, TimeUnit.MILLISECONDS).build();
 
       if (config.getDiscoveryGroupName() != null) {
          pool = new DiscoveryRedirectPool(server, config.getDiscoveryGroupName());
@@ -52,10 +65,14 @@ public class RedirectController implements ActiveMQComponent {
    @Override
    public void start() throws Exception {
       pool.start();
+
+      this.policy.load(this);
    }
 
    @Override
    public void stop() throws Exception {
+      this.policy.unload();
+
       pool.stop();
    }
 
@@ -71,6 +88,17 @@ public class RedirectController implements ActiveMQComponent {
    }
 
    public RedirectTarget getTarget(RedirectingConnection connection) {
-      return algorithm.selectTarget(connection, pool);
+      try {
+         return cache.get(connection.getValue(key), new Callable<RedirectTarget>() {
+            @Override
+            public RedirectTarget call() throws Exception {
+               return policy.selectTarget(connection);
+            }
+         });
+      } catch (ExecutionException e) {
+         e.printStackTrace();
+      }
+
+      return null;
    }
 }

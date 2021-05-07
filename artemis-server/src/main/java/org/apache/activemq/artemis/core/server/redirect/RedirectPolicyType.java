@@ -17,14 +17,14 @@
 
 package org.apache.activemq.artemis.core.server.redirect;
 
-public enum RedirectAlgorithmType {
-   FIRST, HASH, ROUND_ROBIN;
+public enum RedirectPolicyType {
+   FIRST_ELEMENT, CONSISTENT_HASH, ROUND_ROBIN;
 
    public static final String validValues;
 
    static {
       StringBuffer stringBuffer = new StringBuffer();
-      for (RedirectAlgorithmType type : RedirectAlgorithmType.values()) {
+      for (RedirectPolicyType type : RedirectPolicyType.values()) {
 
          if (stringBuffer.length() != 0) {
             stringBuffer.append(",");
@@ -36,12 +36,12 @@ public enum RedirectAlgorithmType {
       validValues = stringBuffer.toString();
    }
 
-   public static RedirectAlgorithmType getType(String type) {
+   public static RedirectPolicyType getType(String type) {
       switch (type) {
-         case "FIRST":
-            return FIRST;
-         case "HASH":
-            return HASH;
+         case "FIRST_ELEMENT":
+            return FIRST_ELEMENT;
+         case "CONSISTENT_HASH":
+            return CONSISTENT_HASH;
          case "ROUND_ROBIN":
             return ROUND_ROBIN;
          default:

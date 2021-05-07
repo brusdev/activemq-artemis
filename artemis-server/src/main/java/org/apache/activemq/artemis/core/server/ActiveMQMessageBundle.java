@@ -501,8 +501,8 @@ public interface ActiveMQMessageBundle {
    @Message(id = 229233, value = "Cannot set ActiveMQSecurityManager during startup or while started")
    IllegalStateException cannotSetSecurityManager();
 
-   @Message(id = 229234, value = "Invalid redirect algorithm {0}", format = Message.Format.MESSAGE_FORMAT)
-   IllegalArgumentException invalidRedirectAlgorithm(String val);
+   @Message(id = 229234, value = "Invalid redirect policy {0}", format = Message.Format.MESSAGE_FORMAT)
+   IllegalArgumentException invalidRedirectPolicy(String val);
 
    @Message(id = 229235, value = "Invalid redirect key {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidRedirectKey(String val);

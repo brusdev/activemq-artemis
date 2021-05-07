@@ -630,7 +630,7 @@ public final class ActiveMQDefaultConfiguration {
    // Number of concurrent workers for a core bridge
    public static int DEFAULT_BRIDGE_CONCURRENCY = 1;
 
-   private static String DEFAULT_REDIRECT_ALGORITHM = "HASH";
+   private static String DEFAULT_REDIRECT_POLICY = "HASH";
 
    private static String DEFAULT_REDIRECT_KEY = "SOURCE_IP";
 
@@ -1726,8 +1726,8 @@ public final class ActiveMQDefaultConfiguration {
       return DEFAULT_BRIDGE_CONCURRENCY;
    }
 
-   public static String getDefaultRedirectAlgorithm() {
-      return DEFAULT_REDIRECT_ALGORITHM;
+   public static String getDefaultRedirectPolicy() {
+      return DEFAULT_REDIRECT_POLICY;
    }
 
    public static String getDefaultRedirectKey() {

@@ -18,7 +18,7 @@
 package org.apache.activemq.artemis.core.server.redirect;
 
 public enum RedirectKeyType {
-   SOURCE_IP, USER;
+   SNIHostname, SOURCE_IP, USER;
 
    public static final String validValues;
 
@@ -38,6 +38,8 @@ public enum RedirectKeyType {
 
    public static RedirectKeyType getType(String type) {
       switch (type) {
+         case "SNIHostname":
+            return SNIHostname;
          case "SOURCE_IP":
             return SOURCE_IP;
          case "USER":
