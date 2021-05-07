@@ -630,14 +630,12 @@ public final class ActiveMQDefaultConfiguration {
    // Number of concurrent workers for a core bridge
    public static int DEFAULT_BRIDGE_CONCURRENCY = 1;
 
-<<<<<<< HEAD
    // Whether or not to report Netty pool metrics
    private static final boolean DEFAULT_NETTY_POOL_METRICS = false;
-=======
-   private static String DEFAULT_REDIRECT_ALGORITHM = "HASH";
+
+   private static String DEFAULT_REDIRECT_POLICY = "HASH";
 
    private static String DEFAULT_REDIRECT_KEY = "SOURCE_IP";
->>>>>>> 1d9a96b156... Add redirect configuration and manager
 
    /**
     * If true then the ActiveMQ Artemis Server will make use of any Protocol Managers that are in available on the classpath. If false then only the core protocol will be available, unless in Embedded mode where users can inject their own Protocol Managers.
@@ -1738,8 +1736,8 @@ public final class ActiveMQDefaultConfiguration {
       return DEFAULT_NETTY_POOL_METRICS;
    }
 
-   public static String getDefaultRedirectAlgorithm() {
-      return DEFAULT_REDIRECT_ALGORITHM;
+   public static String getDefaultRedirectPolicy() {
+      return DEFAULT_REDIRECT_POLICY;
    }
 
    public static String getDefaultRedirectKey() {

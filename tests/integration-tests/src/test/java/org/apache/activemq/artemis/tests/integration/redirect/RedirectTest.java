@@ -31,7 +31,7 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.config.RedirectConfiguration;
-import org.apache.activemq.artemis.core.server.redirect.RedirectAlgorithmType;
+import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
@@ -50,7 +50,7 @@ public class RedirectTest extends ClusterTestBase {
    public void testSimple() throws Exception {
       final SimpleString queueName = new SimpleString("RedirectTestQueue");
       ArrayList<RedirectConfiguration> redirectConfigurations = new ArrayList<>();
-      redirectConfigurations.add(new RedirectConfiguration().setName("r1").setAlgorithm(RedirectAlgorithmType.FIRST).setKey(RedirectKeyType.SOURCE_IP).setDiscoveryGroupName("dg1"));
+      redirectConfigurations.add(new RedirectConfiguration().setName("r1").setPolicy(RedirectPolicyType.FIRST_ELEMENT).setKey(RedirectKeyType.SOURCE_IP).setDiscoveryGroupName("dg1"));
 
       setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);

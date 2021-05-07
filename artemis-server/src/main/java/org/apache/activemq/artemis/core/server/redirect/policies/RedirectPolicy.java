@@ -15,23 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.algorithms;
+package org.apache.activemq.artemis.core.server.redirect.policies;
 
+import org.apache.activemq.artemis.core.server.redirect.RedirectController;
 import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
 import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
-import org.apache.activemq.artemis.utils.RandomUtil;
 
-public class RoundRobinRedirectAlgorithm implements RedirectAlgorithm {
+import java.util.Map;
 
-   private int pos = RandomUtil.randomInt();
+public interface RedirectPolicy {
+   void init(Map<String, String> properties) throws Exception;
 
-   @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
-      if (pool.getTargets().size() > 0) {
-         pos = pos % pool.getTargets().size();
-         return pool.getTargets().get(pos++);
-      }
-      return null;
-   }
+   void load(RedirectController controller) throws Exception;
+
+   void unload() throws Exception;
+
+   RedirectTarget selectTarget(RedirectingConnection connection);
 }

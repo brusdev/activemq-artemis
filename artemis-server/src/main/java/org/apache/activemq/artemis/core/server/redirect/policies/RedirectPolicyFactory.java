@@ -15,15 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.algorithms;
+package org.apache.activemq.artemis.core.server.redirect.policies;
 
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
-import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
+import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
 
-public class HashRedirectAlgorithm implements RedirectAlgorithm {
-   @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
-      throw new UnsupportedOperationException();
+public final class RedirectPolicyFactory {
+   public static RedirectPolicy getPolicy(RedirectPolicyType algorithmType) {
+      switch (algorithmType) {
+         case FIRST_ELEMENT:
+            return new FirstElementRedirectPolicy();
+         case CONSISTENT_HASH:
+            return new ConsistentHashRedirectPolicy();
+         case ROUND_ROBIN:
+            return new RoundRobinRedirectPolicy();
+         default:
+            throw new IllegalStateException("Unexpected value: " + algorithmType);
+      }
    }
 }

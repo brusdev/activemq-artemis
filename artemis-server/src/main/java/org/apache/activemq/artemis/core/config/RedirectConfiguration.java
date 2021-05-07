@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
-import org.apache.activemq.artemis.core.server.redirect.RedirectAlgorithmType;
+import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 
 public class RedirectConfiguration implements Serializable {
@@ -30,7 +30,7 @@ public class RedirectConfiguration implements Serializable {
    private String sourceIP = null;
    private String user = null;
    private String userRole = null;
-   private RedirectAlgorithmType algorithm = RedirectAlgorithmType.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectAlgorithm());
+   private RedirectPolicyType policy = RedirectPolicyType.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectPolicy());
    private RedirectKeyType key = RedirectKeyType.valueOf(ActiveMQDefaultConfiguration.getDefaultRedirectKey());
    private List<String> staticConnectors = Collections.emptyList();
    private String discoveryGroupName = null;
@@ -71,12 +71,12 @@ public class RedirectConfiguration implements Serializable {
       return this;
    }
 
-   public RedirectAlgorithmType getAlgorithm() {
-      return algorithm;
+   public RedirectPolicyType getPolicy() {
+      return policy;
    }
 
-   public RedirectConfiguration setAlgorithm(RedirectAlgorithmType algorithm) {
-      this.algorithm = algorithm;
+   public RedirectConfiguration setPolicy(RedirectPolicyType policy) {
+      this.policy = policy;
       return this;
    }
 

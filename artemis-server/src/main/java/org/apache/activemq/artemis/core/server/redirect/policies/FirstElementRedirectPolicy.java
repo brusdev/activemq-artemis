@@ -15,15 +15,35 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.algorithms;
+package org.apache.activemq.artemis.core.server.redirect.policies;
 
+import org.apache.activemq.artemis.core.server.redirect.RedirectController;
 import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
 import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
 
-public class FirstRedirectAlgorithm implements RedirectAlgorithm {
+import java.util.Map;
+
+public class FirstElementRedirectPolicy implements RedirectPolicy {
+   private RedirectPool pool;
+
    @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection, RedirectPool pool) {
+   public void init(Map<String, String> properties) throws Exception {
+
+   }
+
+   @Override
+   public void load(RedirectController controller) throws Exception {
+      pool = controller.getPool();
+   }
+
+   @Override
+   public void unload() throws Exception {
+
+   }
+
+   @Override
+   public RedirectTarget selectTarget(RedirectingConnection connection) {
       if (pool.getTargets().size() > 0) {
          return pool.getTargets().get(0);
       }

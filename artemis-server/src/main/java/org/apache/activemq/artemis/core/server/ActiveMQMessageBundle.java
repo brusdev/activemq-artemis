@@ -504,12 +504,12 @@ public interface ActiveMQMessageBundle {
    @Message(id = 229234, value = "Invalid slow consumer threshold measurement unit {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidSlowConsumerThresholdMeasurementUnit(String val);
 
-   @Message(id = 229235, value = "Invalid redirect algorithm {0}", format = Message.Format.MESSAGE_FORMAT)
-   IllegalArgumentException invalidRedirectAlgorithm(String val);
+   @Message(id = 229235, value = "Invalid redirect policy {0}", format = Message.Format.MESSAGE_FORMAT)
+   IllegalArgumentException invalidRedirectPolicy(String val);
 
    @Message(id = 229236, value = "Invalid redirect key {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidRedirectKey(String val);
 
-   @Message(id = 229236, value = "Connection redirected to {0}", format = Message.Format.MESSAGE_FORMAT)
+   @Message(id = 229237, value = "Connection redirected to {0}", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQRedirectedException redirectConnection(RedirectTarget target);
 }
