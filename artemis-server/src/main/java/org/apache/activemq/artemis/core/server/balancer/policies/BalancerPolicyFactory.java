@@ -17,15 +17,10 @@
 
 package org.apache.activemq.artemis.core.server.balancer.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+public interface BalancerPolicyFactory {
+   String[] getSupportedPolicies();
 
-public interface BalancerPolicy {
-   String getName();
+   boolean supports(String name);
 
-   void load(BalancerController controller);
-
-   void unload();
-
-   BalancerTarget selectTarget(String key);
+   BalancerPolicy createPolicy(String name);
 }

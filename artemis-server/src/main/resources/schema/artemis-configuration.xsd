@@ -2086,31 +2086,12 @@
 
    <xsd:complexType name="brokerBalancerType">
       <xsd:sequence maxOccurs="unbounded">
-         <xsd:element name="policy-plugin" maxOccurs="unbounded" minOccurs="0">
-            <xsd:complexType>
-               <xsd:annotation>
-                  <xsd:documentation>
-                     a broker plugin
-                  </xsd:documentation>
-               </xsd:annotation>
-               <xsd:sequence>
-                  <xsd:element ref="property" maxOccurs="unbounded" minOccurs="0">
-                     <xsd:annotation>
-                        <xsd:documentation>
-                           properties to configure a plugin
-                        </xsd:documentation>
-                     </xsd:annotation>
-                  </xsd:element>
-               </xsd:sequence>
-               <xsd:attribute name="class-name" type="xsd:string" use="required">
-                  <xsd:annotation>
-                     <xsd:documentation>
-                        the name of the broker plugin class to instantiate
-                     </xsd:documentation>
-                  </xsd:annotation>
-               </xsd:attribute>
-               <xsd:attributeGroup ref="xml:specialAttrs"/>
-            </xsd:complexType>
+         <xsd:element name="policy-name" type="xsd:string" maxOccurs="1" minOccurs="1">
+            <xsd:annotation>
+               <xsd:documentation>
+                  optional name of policy
+               </xsd:documentation>
+            </xsd:annotation>
          </xsd:element>
          <xsd:choice>
             <xsd:element name="static-connectors" maxOccurs="1" minOccurs="1">

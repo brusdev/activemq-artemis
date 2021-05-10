@@ -23,39 +23,51 @@ import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicy;
+import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicyFactory;
 import org.apache.activemq.artemis.core.server.balancer.pools.DiscoveryBalancerPool;
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 import org.apache.activemq.artemis.core.server.balancer.pools.StaticBalancerPool;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.ServiceLoader;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BalancerController implements ActiveMQComponent {
 
-   private final ActiveMQServer server;
-   private final BalancerConfiguration config;
-   private final BalancerPolicy policy;
-   private final Cache<String, BalancerTarget> cache;
    private final BalancerPool pool;
+   private final BalancerPolicy policy;
+   private final Cache<String, BalancerTarget> affinityCache;
 
    public BalancerPool getPool() {
       return pool;
    }
 
-   public BalancerController(final ActiveMQServer server, final BalancerConfiguration config) {
-      this.server = server;
-      this.config = config;
+   public BalancerController(final BalancerConfiguration config, final ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
+      policy = createPolicy(config.getPolicyName());
 
-      policy = config.getPolicy();
-
-      cache = CacheBuilder.newBuilder().expireAfterAccess(3000, TimeUnit.MILLISECONDS).build();
+      affinityCache = CacheBuilder.newBuilder().expireAfterAccess(config.getAffinityTimeout(), TimeUnit.MILLISECONDS).build();
 
       if (config.getDiscoveryGroupName() != null) {
-         pool = new DiscoveryBalancerPool(server, config.getDiscoveryGroupName());
+         pool = new DiscoveryBalancerPool(config.getDiscoveryGroupName(), server, scheduledExecutor);
       } else {
-         pool = new StaticBalancerPool(server, config.getStaticConnectors());
+         pool = new StaticBalancerPool(config.getStaticConnectors(), server, scheduledExecutor);
       }
+   }
+
+   private BalancerPolicy createPolicy(String name) {
+      BalancerPolicy policy = null;
+
+      ServiceLoader<BalancerPolicyFactory> policyFactoryServiceLoader =
+         ServiceLoader.load(BalancerPolicyFactory.class, BalancerController.class.getClassLoader());
+
+      for (BalancerPolicyFactory policyFactory : policyFactoryServiceLoader) {
+         if (policyFactory.supports(name)) {
+            policy = policyFactory.createPolicy(name);
+            break;
+         }
+      }
+
+      return policy;
    }
 
    @Override
@@ -78,17 +90,16 @@ public class BalancerController implements ActiveMQComponent {
    }
 
    public BalancerTarget getTarget(String key) {
-      try {
-         return cache.get(key, new Callable<BalancerTarget>() {
-            @Override
-            public BalancerTarget call() throws Exception {
-               return policy.selectTarget(key);
-            }
-         });
-      } catch (ExecutionException e) {
-         e.printStackTrace();
+      BalancerTarget target = affinityCache.getIfPresent(key);
+
+      if (target == null) {
+         target = policy.selectTarget(key);
+
+         if (target != null) {
+            affinityCache.put(key, target);
+         }
       }
 
-      return null;
+      return target;
    }
 }

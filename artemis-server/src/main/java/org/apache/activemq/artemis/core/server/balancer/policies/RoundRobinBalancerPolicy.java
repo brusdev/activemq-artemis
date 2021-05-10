@@ -22,16 +22,15 @@ import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
-import java.util.Map;
-
 public class RoundRobinBalancerPolicy implements BalancerPolicy {
+   public static final String NAME = "ROUND_ROBIN";
 
    private BalancerPool pool;
    private int pos = RandomUtil.randomInt();
 
    @Override
-   public void init(Map<String, String> properties) {
-
+   public String getName() {
+      return NAME;
    }
 
    @Override

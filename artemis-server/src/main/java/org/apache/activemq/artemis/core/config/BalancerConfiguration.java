@@ -20,12 +20,11 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicy;
-
 public class BalancerConfiguration implements Serializable {
 
    private String name = null;
-   private BalancerPolicy policy = null;
+   private int affinityTimeout;
+   private String policyName = null;
    private List<String> staticConnectors = Collections.emptyList();
    private String discoveryGroupName = null;
 
@@ -38,12 +37,21 @@ public class BalancerConfiguration implements Serializable {
       return this;
    }
 
-   public BalancerPolicy getPolicy() {
-      return policy;
+   public int getAffinityTimeout() {
+      return affinityTimeout;
    }
 
-   public BalancerConfiguration setPolicy(BalancerPolicy policy) {
-      this.policy = policy;
+   public BalancerConfiguration setAffinityTimeout(int affinityTimeout) {
+      this.affinityTimeout = affinityTimeout;
+      return this;
+   }
+
+   public String getPolicyName() {
+      return policyName;
+   }
+
+   public BalancerConfiguration setPolicyName(String policyName) {
+      this.policyName = policyName;
       return this;
    }
 

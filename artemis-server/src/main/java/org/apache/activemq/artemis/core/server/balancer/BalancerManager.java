@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.core.server.balancer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.BalancerConfiguration;
@@ -29,33 +30,35 @@ import org.jboss.logging.Logger;
 public class BalancerManager implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BalancerManager.class);
 
+   private final Configuration config;
    private final ActiveMQServer server;
-   private final Configuration configuration;
+   private final ScheduledExecutorService scheduledExecutor;
 
-   private Map<String, BalancerController> redirectControllers = new HashMap<>();
+   private Map<String, BalancerController> balancerControllers = new HashMap<>();
 
 
-   public BalancerManager(final ActiveMQServer server, final Configuration configuration) {
+   public BalancerManager(final Configuration config, final ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
+      this.config = config;
       this.server = server;
-      this.configuration = configuration;
+      this.scheduledExecutor = scheduledExecutor;
    }
 
    public void deploy() {
-      for (BalancerConfiguration config : configuration.getBalancerConfigurations()) {
-         redirectControllers.put(config.getName(), new BalancerController(server, config));
+      for (BalancerConfiguration balancerConfig : config.getBalancerConfigurations()) {
+         balancerControllers.put(balancerConfig.getName(), new BalancerController(balancerConfig, server, scheduledExecutor));
       }
    }
 
    @Override
    public void start() throws Exception {
-      for (BalancerController balancerController : redirectControllers.values()) {
+      for (BalancerController balancerController : balancerControllers.values()) {
          balancerController.start();
       }
    }
 
    @Override
    public void stop() throws Exception {
-      for (BalancerController balancerController : redirectControllers.values()) {
+      for (BalancerController balancerController : balancerControllers.values()) {
          balancerController.stop();
       }
    }
@@ -66,6 +69,6 @@ public class BalancerManager implements ActiveMQComponent {
    }
 
    public BalancerController getBalancer(String name) {
-      return redirectControllers.get(name);
+      return balancerControllers.get(name);
    }
 }

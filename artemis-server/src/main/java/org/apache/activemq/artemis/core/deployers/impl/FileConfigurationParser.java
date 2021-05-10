@@ -2554,41 +2554,22 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       List<String> staticConnectorNames = new ArrayList<>();
       NodeList children = e.getChildNodes();
 
+      String policyName = getString(e, "policy-name", null, Validators.NO_CHECK);
+
       for (int j = 0; j < children.getLength(); j++) {
          Node child = children.item(j);
 
-         if (child.getNodeName().equals("policy-plugin")) {
-            policy = parseBalancerPolicyPlugin(child, config);
-         } else if (child.getNodeName().equals("discovery-group-ref")) {
+         if (child.getNodeName().equals("discovery-group-ref")) {
             discoveryGroupName = child.getAttributes().getNamedItem("discovery-group-name").getNodeValue();
          } else if (child.getNodeName().equals("static-connectors")) {
             getStaticConnectors(staticConnectorNames, child);
          }
       }
 
-      BalancerConfiguration balancerConfiguration = new BalancerConfiguration().setName(name).setPolicy(policy).
+      BalancerConfiguration balancerConfiguration = new BalancerConfiguration().setName(name).setPolicyName(policyName).
          setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
 
       config.getBalancerConfigurations().add(balancerConfiguration);
-   }
-
-   private BalancerPolicy parseBalancerPolicyPlugin(final Node item, final Configuration config) {
-      final String clazz = item.getAttributes().getNamedItem("class-name").getNodeValue();
-
-      Map<String, String> properties = getMapOfChildPropertyElements(item);
-
-      BalancerPolicy policyPlugin = AccessController.doPrivileged(new PrivilegedAction<BalancerPolicy>() {
-         @Override
-         public BalancerPolicy run() {
-            return (BalancerPolicy) ClassloadingUtil.newInstanceFromClassLoader(FileConfigurationParser.class, clazz);
-         }
-      });
-
-      ActiveMQServerLogger.LOGGER.initializingBalancerPolicyPlugin(clazz, properties.toString());
-
-      policyPlugin.init(properties);
-
-      return policyPlugin;
    }
 
    /**RedirectConfiguration

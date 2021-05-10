@@ -49,9 +49,9 @@ import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
-import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
 /**
@@ -165,25 +165,12 @@ public class ActiveMQPacketHandler implements ChannelHandler {
                throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
             }
 
-            Connection transportConnection = connection.getTransportConnection();
-
-            String redirectKeyValue;
-            switch (transportConnection.getRedirectKey()) {
-               case SNI_HOST:
-                  redirectKeyValue = connection.getTransportConnection().getSNIHostName();
-                  break;
-               case SOURCE_IP:
-                  redirectKeyValue = connection.getTransportConnection().getRemoteAddress();
-                  break;
-               case USER_NAME:
-                  redirectKeyValue = request.getUsername();
-                  break;
-               default:
-                  throw new IllegalStateException("Unexpected value: " + connection.getTransportConnection().getRedirectKey());
-            }
+            RedirectKeyBuilder redirectKeyBuilder = new RedirectKeyBuilder()
+               .setConnection(connection.getTransportConnection())
+               .setUsername(request.getUsername());
 
             BalancerTarget balancerTarget = server.getBalancerManager().getBalancer(
-               transportConnection.getRedirectTo()).getTarget(redirectKeyValue);
+               connection.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
             if (balancerTarget != null) {
                ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), balancerTarget.getConnector());

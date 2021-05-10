@@ -26,11 +26,13 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 public class ConsistentHashBalancerPolicy implements BalancerPolicy {
+   public static final String NAME = "CONSISTENT_HASH";
+
    private BalancerPool pool;
 
    @Override
-   public void init(Map<String, String> properties) {
-
+   public String getName() {
+      return NAME;
    }
 
    @Override

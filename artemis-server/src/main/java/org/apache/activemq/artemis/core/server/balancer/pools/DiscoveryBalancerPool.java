@@ -25,6 +25,7 @@ import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class DiscoveryBalancerPool implements BalancerPool {
    private final ActiveMQServer server;
@@ -33,7 +34,7 @@ public class DiscoveryBalancerPool implements BalancerPool {
 
    private DiscoveryGroup discoveryGroup;
 
-   public DiscoveryBalancerPool(ActiveMQServer server, String discoveryGroupName) {
+   public DiscoveryBalancerPool(String discoveryGroupName, ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
       this.server = server;
       this.discoveryGroupName = discoveryGroupName;
    }

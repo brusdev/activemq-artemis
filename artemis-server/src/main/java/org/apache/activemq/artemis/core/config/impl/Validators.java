@@ -18,7 +18,7 @@ package org.apache.activemq.artemis.core.config.impl;
 
 import java.util.EnumSet;
 
-import org.apache.activemq.artemis.core.remoting.RedirectKey;
+import org.apache.activemq.artemis.core.server.redirect.RedirectKey;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType;
 import org.apache.activemq.artemis.core.server.JournalType;

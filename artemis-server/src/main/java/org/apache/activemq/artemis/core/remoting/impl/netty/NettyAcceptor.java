@@ -80,7 +80,6 @@ import org.apache.activemq.artemis.api.core.management.CoreNotificationType;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryImpl;
 import org.apache.activemq.artemis.core.config.impl.Validators;
 import org.apache.activemq.artemis.core.protocol.ProtocolHandler;
-import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.remoting.impl.AbstractAcceptor;
 import org.apache.activemq.artemis.core.remoting.impl.ssl.SSLSupport;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;

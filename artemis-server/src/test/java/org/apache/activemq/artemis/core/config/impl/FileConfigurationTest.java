@@ -265,12 +265,12 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       Assert.assertEquals(2, conf.getBalancerConfigurations().size());
       for (BalancerConfiguration bc : conf.getBalancerConfigurations()) {
          if (bc.getName().equals("redirect1")) {
-            Assert.assertTrue(bc.getPolicy() instanceof FirstElementBalancerPolicy);
+            Assert.assertEquals(bc.getPolicyName(), FirstElementBalancerPolicy.NAME);
             Assert.assertEquals("connector1", bc.getStaticConnectors().get(0));
             Assert.assertEquals(null, bc.getDiscoveryGroupName());
          } else {
             Assert.assertEquals("redirect2", bc.getName());
-            Assert.assertTrue(bc.getPolicy() instanceof RoundRobinBalancerPolicy);
+            Assert.assertEquals(bc.getPolicyName(), RoundRobinBalancerPolicy.NAME);
             Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
             Assert.assertEquals("dg1", bc.getDiscoveryGroupName());
          }
