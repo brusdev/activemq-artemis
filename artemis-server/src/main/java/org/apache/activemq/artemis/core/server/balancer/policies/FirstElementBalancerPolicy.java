@@ -21,14 +21,14 @@ import org.apache.activemq.artemis.core.server.balancer.BalancerController;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 
-import java.util.Map;
-
 public class FirstElementBalancerPolicy implements BalancerPolicy {
+   public static final String NAME = "FIRST_ELEMENT";
+
    private BalancerPool pool;
 
    @Override
-   public void init(Map<String, String> properties) {
-
+   public String getName() {
+      return NAME;
    }
 
    @Override

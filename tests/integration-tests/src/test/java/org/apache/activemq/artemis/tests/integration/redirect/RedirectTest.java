@@ -49,7 +49,8 @@ public class RedirectTest extends ClusterTestBase {
    public void testSimple() throws Exception {
       final SimpleString queueName = new SimpleString("RedirectTestQueue");
       ArrayList<BalancerConfiguration> balancerConfigurations = new ArrayList<>();
-      balancerConfigurations.add(new BalancerConfiguration().setName("r1").setPolicy(new FirstElementBalancerPolicy()).setDiscoveryGroupName("dg1"));
+      balancerConfigurations.add(new BalancerConfiguration().setName("r1").
+         setPolicyName(FirstElementBalancerPolicy.NAME).setDiscoveryGroupName("dg1"));
 
       setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);

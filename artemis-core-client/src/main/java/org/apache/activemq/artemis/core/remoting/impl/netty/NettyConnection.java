@@ -36,7 +36,6 @@ import org.apache.activemq.artemis.api.core.ActiveMQInterruptedException;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.buffers.impl.ChannelBufferWrapper;
 import org.apache.activemq.artemis.core.client.ActiveMQClientLogger;
-import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
@@ -430,8 +429,8 @@ public class NettyConnection implements Connection {
    }
 
    @Override
-   public RedirectKey getRedirectKey() {
-      return RedirectKey.valueOf(ConfigurationHelper.getStringProperty(TransportConstants.REDIRECT_KEY, TransportConstants.DEFAULT_REDIRECT_KEY, configuration));
+   public String getRedirectKey() {
+      return ConfigurationHelper.getStringProperty(TransportConstants.REDIRECT_KEY, TransportConstants.DEFAULT_REDIRECT_KEY, configuration);
    }
 
    //never allow this

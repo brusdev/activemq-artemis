@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import io.netty.channel.ChannelFutureListener;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 
@@ -178,7 +177,7 @@ public interface Connection {
 
    String getRedirectTo();
 
-   RedirectKey getRedirectKey();
+   String getRedirectKey();
 
    default String getSNIHostName() {
       return null;

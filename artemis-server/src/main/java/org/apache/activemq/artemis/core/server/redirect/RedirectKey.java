@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.remoting;
+package org.apache.activemq.artemis.core.server.redirect;
 
 public enum RedirectKey {
    SNI_HOST, SOURCE_IP, USER_NAME;

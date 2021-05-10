@@ -24,11 +24,21 @@ import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class StaticBalancerPool implements BalancerPool {
+   private final List<String> staticConnectors;
+   private final ScheduledExecutorService scheduledExecutor;
    private final ArrayList<BalancerTarget> targets = new ArrayList<>();
 
-   public StaticBalancerPool(ActiveMQServer server, List<String> staticConnectors) {
+   private ScheduledFuture checkScheduledFuture;
+
+   public StaticBalancerPool(List<String> staticConnectors, ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
+      this.staticConnectors = staticConnectors;
+      this.scheduledExecutor = scheduledExecutor;
+
       Map<String, TransportConfiguration> connectorConfigurations =
             server.getConfiguration().getConnectorConfigurations();
 
@@ -39,12 +49,25 @@ public class StaticBalancerPool implements BalancerPool {
 
    @Override
    public void start() throws Exception {
+      checkScheduledFuture = this.scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
+         @Override
+         public void run() {
+
+
+
+
+
+
+         }
+      }, 0, 0, TimeUnit.MILLISECONDS);
 
    }
 
    @Override
    public void stop() throws Exception {
-
+      if (checkScheduledFuture != null) {
+         checkScheduledFuture.cancel(true);
+      }
    }
 
    @Override

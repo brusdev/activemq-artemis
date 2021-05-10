@@ -3136,7 +3136,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       federationManager.deploy();
 
-      balancerManager = new BalancerManager(this, configuration);
+      balancerManager = new BalancerManager(configuration, this, scheduledPool);
 
       balancerManager.deploy();
 
