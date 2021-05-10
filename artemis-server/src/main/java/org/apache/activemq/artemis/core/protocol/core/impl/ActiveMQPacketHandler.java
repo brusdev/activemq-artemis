@@ -48,10 +48,10 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
+import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
 /**
@@ -165,13 +165,31 @@ public class ActiveMQPacketHandler implements ChannelHandler {
                throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
             }
 
-            RedirectingConnection redirectingConnection = new RedirectingConnection().setUser(request.getUsername())
-               .setSourceIP(connection.getTransportConnection().getRemoteAddress())
-               .setSniHostName(connection.getTransportConnection().getSNIHostName());
-            RedirectTarget redirectTarget = server.getRedirectManager().getTarget(redirectingConnection);
-            if (redirectTarget != null) {
-               connection.disconnect(DisconnectReason.REDIRECT, redirectTarget.getNodeID(), redirectTarget.getConnector());
-               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(redirectTarget);
+            Connection transportConnection = connection.getTransportConnection();
+
+            String redirectKeyValue;
+            switch (transportConnection.getRedirectKey()) {
+               case SNI_HOST:
+                  redirectKeyValue = connection.getTransportConnection().getSNIHostName();
+                  break;
+               case SOURCE_IP:
+                  redirectKeyValue = connection.getTransportConnection().getRemoteAddress();
+                  break;
+               case USER_NAME:
+                  redirectKeyValue = request.getUsername();
+                  break;
+               default:
+                  throw new IllegalStateException("Unexpected value: " + connection.getTransportConnection().getRedirectKey());
+            }
+
+            BalancerTarget balancerTarget = server.getBalancerManager().getBalancer(
+               transportConnection.getRedirectTo()).getTarget(redirectKeyValue);
+
+            if (balancerTarget != null) {
+               ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), balancerTarget.getConnector());
+
+               connection.disconnect(DisconnectReason.REDIRECT, balancerTarget.getNodeID(), balancerTarget.getConnector());
+               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(balancerTarget);
             }
          }
 

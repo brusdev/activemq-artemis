@@ -30,6 +30,7 @@ import io.netty.channel.Channel;
 import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
 import org.apache.activemq.artemis.api.core.Pair;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.client.impl.ServerLocatorInternal;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.io.IOCallback;
@@ -47,6 +48,7 @@ import org.apache.activemq.artemis.core.server.cluster.qourum.ServerConnectVote;
 import org.apache.activemq.artemis.core.server.impl.ActiveMQServerImpl;
 import org.apache.activemq.artemis.core.server.impl.ServerSessionImpl;
 import org.apache.activemq.artemis.core.server.management.Notification;
+import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -450,6 +452,14 @@ public interface ActiveMQServerLogger extends BasicLogger {
    @LogMessage(level = Logger.Level.INFO)
    @Message(id = 221084, value = "Requested {0} quorum votes", format = Message.Format.MESSAGE_FORMAT)
    void requestedQuorumVotes(int vote);
+
+   @LogMessage(level = Logger.Level.INFO)
+   @Message(id = 221086, value = "Initializing balancer policy plugin {0} with properties: {1}", format = Message.Format.MESSAGE_FORMAT)
+   void initializingBalancerPolicyPlugin(String clazz, String properties);
+
+   @LogMessage(level = Logger.Level.INFO)
+   @Message(id = 221085, value = "Client connection {0} redirected to {1}", format = Message.Format.MESSAGE_FORMAT)
+   void clientConnectionRedirected(Connection connection, TransportConfiguration targetConnector);
 
    @LogMessage(level = Logger.Level.WARN)
    @Message(id = 222000, value = "ActiveMQServer is being finalized and has not been stopped. Please remember to stop the server before letting it go out of scope",

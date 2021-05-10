@@ -78,7 +78,9 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.management.CoreNotificationType;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryImpl;
+import org.apache.activemq.artemis.core.config.impl.Validators;
 import org.apache.activemq.artemis.core.protocol.ProtocolHandler;
+import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.remoting.impl.AbstractAcceptor;
 import org.apache.activemq.artemis.core.remoting.impl.ssl.SSLSupport;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
@@ -375,7 +377,12 @@ public class NettyAcceptor extends AbstractAcceptor {
 
       autoStart = ConfigurationHelper.getBooleanProperty(TransportConstants.AUTO_START, TransportConstants.DEFAULT_AUTO_START, configuration);
 
-      redirectEnabled = ConfigurationHelper.getBooleanProperty(TransportConstants.REDIRECT_ENABLED, TransportConstants.DEFAULT_REDIRECT_ENABLED, configuration);
+      redirectEnabled = ConfigurationHelper.getStringProperty(TransportConstants.REDIRECT_TO, TransportConstants.DEFAULT_REDIRECT_TO, configuration) != null;
+
+      if (redirectEnabled) {
+         Validators.REDIRECT_KEY.validate(TransportConstants.REDIRECT_KEY, ConfigurationHelper.getStringProperty(
+            TransportConstants.REDIRECT_KEY, TransportConstants.DEFAULT_REDIRECT_KEY, configuration));
+      }
    }
 
    private Object loadSSLContext() {

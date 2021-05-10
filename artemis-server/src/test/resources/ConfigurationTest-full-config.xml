@@ -152,20 +152,18 @@
             <exclusive>false</exclusive>
          </divert>
       </diverts>
-      <redirects>
-         <redirect name="redirect1" sourceIP="*" user="*" userRole="REDIRECT">
-            <algorithm>HASH</algorithm>
-            <key>USER</key>
+      <broker-balancers>
+         <broker-balancer name="redirect1">
+            <policy-plugin class-name="org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy"/>
             <static-connectors>
                <connector-ref>connector1</connector-ref>
             </static-connectors>
-         </redirect>
-         <redirect name="redirect2" sourceIP="*" user="*" userRole="REDIRECT">
-            <algorithm>HASH</algorithm>
-            <key>USER</key>
+         </broker-balancer>
+         <broker-balancer name="redirect2">
+            <policy-plugin class-name="org.apache.activemq.artemis.core.server.balancer.policies.RoundRobinBalancerPolicy"/>
             <discovery-group-ref discovery-group-name="dg1"/>
-         </redirect>
-      </redirects>
+         </broker-balancer>
+      </broker-balancers>
       <amqp-use-core-subscription-naming>true</amqp-use-core-subscription-naming>
       <queues>
          <queue name="queue1">

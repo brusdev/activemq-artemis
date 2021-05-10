@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect;
+package org.apache.activemq.artemis.core.remoting;
 
-public enum RedirectKeyType {
-   SNIHostname, SOURCE_IP, USER;
+public enum RedirectKey {
+   SNI_HOST, SOURCE_IP, USER_NAME;
 
    public static final String validValues;
 
    static {
       StringBuffer stringBuffer = new StringBuffer();
-      for (RedirectKeyType type : RedirectKeyType.values()) {
+      for (RedirectKey type : RedirectKey.values()) {
 
          if (stringBuffer.length() != 0) {
             stringBuffer.append(",");
@@ -36,14 +36,14 @@ public enum RedirectKeyType {
       validValues = stringBuffer.toString();
    }
 
-   public static RedirectKeyType getType(String type) {
+   public static RedirectKey getType(String type) {
       switch (type) {
-         case "SNIHostname":
-            return SNIHostname;
+         case "SNI_HOST":
+            return SNI_HOST;
          case "SOURCE_IP":
             return SOURCE_IP;
-         case "USER":
-            return USER;
+         case "USER_NAME":
+            return USER_NAME;
          default:
             throw new IllegalStateException("Invalid RedirectKey:" + type + " valid Types: " + validValues);
       }

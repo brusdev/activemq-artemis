@@ -15,25 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.pools;
+package org.apache.activemq.artemis.core.server.balancer.pools;
 
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DiscoveryRedirectPool implements RedirectPool {
+public class DiscoveryBalancerPool implements BalancerPool {
    private final ActiveMQServer server;
    private final String discoveryGroupName;
-   private final ArrayList<RedirectTarget> targets = new ArrayList<>();
+   private final ArrayList<BalancerTarget> targets = new ArrayList<>();
 
    private DiscoveryGroup discoveryGroup;
 
-   public DiscoveryRedirectPool(ActiveMQServer server, String discoveryGroupName) {
+   public DiscoveryBalancerPool(ActiveMQServer server, String discoveryGroupName) {
       this.server = server;
       this.discoveryGroupName = discoveryGroupName;
    }
@@ -45,7 +45,7 @@ public class DiscoveryRedirectPool implements RedirectPool {
       discoveryGroup.registerListener(newConnectors -> {
          targets.clear();
          for (DiscoveryEntry newConnector : newConnectors) {
-            targets.add(new RedirectTarget(newConnector.getNodeID(), newConnector.getConnector()));
+            targets.add(new BalancerTarget(newConnector.getNodeID(), newConnector.getConnector()));
          }
       });
       discoveryGroup.start();
@@ -64,7 +64,7 @@ public class DiscoveryRedirectPool implements RedirectPool {
    }
 
    @Override
-   public List<RedirectTarget> getTargets() {
+   public List<BalancerTarget> getTargets() {
       return targets;
    }
 }

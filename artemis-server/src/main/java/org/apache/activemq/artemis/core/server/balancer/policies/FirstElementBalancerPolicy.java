@@ -15,21 +15,37 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.policies;
+package org.apache.activemq.artemis.core.server.balancer.policies;
 
-import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
+import org.apache.activemq.artemis.core.server.balancer.BalancerController;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 
-public final class RedirectPolicyFactory {
-   public static RedirectPolicy getPolicy(RedirectPolicyType algorithmType) {
-      switch (algorithmType) {
-         case FIRST_ELEMENT:
-            return new FirstElementRedirectPolicy();
-         case CONSISTENT_HASH:
-            return new ConsistentHashRedirectPolicy();
-         case ROUND_ROBIN:
-            return new RoundRobinRedirectPolicy();
-         default:
-            throw new IllegalStateException("Unexpected value: " + algorithmType);
+import java.util.Map;
+
+public class FirstElementBalancerPolicy implements BalancerPolicy {
+   private BalancerPool pool;
+
+   @Override
+   public void init(Map<String, String> properties) {
+
+   }
+
+   @Override
+   public void load(BalancerController controller) {
+      pool = controller.getPool();
+   }
+
+   @Override
+   public void unload() {
+
+   }
+
+   @Override
+   public BalancerTarget selectTarget(String key) {
+      if (pool.getTargets().size() > 0) {
+         return pool.getTargets().get(0);
       }
+      return null;
    }
 }

@@ -359,9 +359,13 @@ public class TransportConstants {
 
    public static final boolean DEFAULT_PROXY_REMOTE_DNS = false;
 
-   public static final String REDIRECT_ENABLED = "redirectEnabled";
+   public static final String REDIRECT_TO = "redirect-to";
 
-   public static final boolean DEFAULT_REDIRECT_ENABLED = false;
+   public static final String DEFAULT_REDIRECT_TO = null;
+
+   public static final String REDIRECT_KEY = "redirect-key";
+
+   public static final String DEFAULT_REDIRECT_KEY = "SOURCE_IP";
 
    private static int parseDefaultVariable(String variableName, int defaultValue) {
       try {
@@ -439,7 +443,8 @@ public class TransportConstants {
       allowableAcceptorKeys.add(TransportConstants.QUIET_PERIOD);
       allowableAcceptorKeys.add(TransportConstants.DISABLE_STOMP_SERVER_HEADER);
       allowableAcceptorKeys.add(TransportConstants.AUTO_START);
-      allowableAcceptorKeys.add(TransportConstants.REDIRECT_ENABLED);
+      allowableAcceptorKeys.add(TransportConstants.REDIRECT_TO);
+      allowableAcceptorKeys.add(TransportConstants.REDIRECT_KEY);
 
       ALLOWABLE_ACCEPTOR_KEYS = Collections.unmodifiableSet(allowableAcceptorKeys);
 

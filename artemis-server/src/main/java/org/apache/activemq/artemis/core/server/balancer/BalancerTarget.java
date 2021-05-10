@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect;
+package org.apache.activemq.artemis.core.server.balancer;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
-public class RedirectTarget {
+public class BalancerTarget {
    private final String nodeID;
    private final TransportConfiguration connector;
 
@@ -31,14 +31,14 @@ public class RedirectTarget {
       return connector;
    }
 
-   public RedirectTarget(String nodeID, TransportConfiguration connector) {
+   public BalancerTarget(String nodeID, TransportConfiguration connector) {
       this.nodeID = nodeID;
       this.connector = connector;
    }
 
    @Override
    public String toString() {
-      StringBuilder stringBuilder = new StringBuilder(RedirectTarget.class.getSimpleName());
+      StringBuilder stringBuilder = new StringBuilder(BalancerTarget.class.getSimpleName());
       stringBuilder.append("(nodeID=" + nodeID);
       stringBuilder.append(", connector=" + connector);
       stringBuilder.append(") ");
