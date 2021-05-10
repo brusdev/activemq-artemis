@@ -18,13 +18,12 @@ package org.apache.activemq.artemis.core.config.impl;
 
 import java.util.EnumSet;
 
+import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType;
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
-import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
-import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.DeletionPolicy;
 import org.apache.activemq.artemis.core.settings.impl.SlowConsumerPolicy;
@@ -275,21 +274,11 @@ public final class Validators {
       }
    };
 
-   public static final Validator REDIRECT_POLICY = new Validator() {
-      @Override
-      public void validate(final String name, final Object value) {
-         String val = (String) value;
-         if (val == null || !EnumSet.allOf(RedirectPolicyType.class).contains(RedirectPolicyType.valueOf(val))) {
-            throw ActiveMQMessageBundle.BUNDLE.invalidRedirectPolicy(val);
-         }
-      }
-   };
-
    public static final Validator REDIRECT_KEY = new Validator() {
       @Override
       public void validate(final String name, final Object value) {
          String val = (String) value;
-         if (val == null || !EnumSet.allOf(RedirectKeyType.class).contains(RedirectKeyType.valueOf(val))) {
+         if (val == null || !EnumSet.allOf(RedirectKey.class).contains(RedirectKey.valueOf(val))) {
             throw ActiveMQMessageBundle.BUNDLE.invalidRedirectKey(val);
          }
       }

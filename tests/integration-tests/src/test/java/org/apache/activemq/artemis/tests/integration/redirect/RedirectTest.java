@@ -30,9 +30,8 @@ import java.util.ArrayList;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
-import org.apache.activemq.artemis.core.config.RedirectConfiguration;
-import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
-import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
+import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
@@ -49,15 +48,16 @@ public class RedirectTest extends ClusterTestBase {
    @Test
    public void testSimple() throws Exception {
       final SimpleString queueName = new SimpleString("RedirectTestQueue");
-      ArrayList<RedirectConfiguration> redirectConfigurations = new ArrayList<>();
-      redirectConfigurations.add(new RedirectConfiguration().setName("r1").setPolicy(RedirectPolicyType.FIRST_ELEMENT).setKey(RedirectKeyType.SOURCE_IP).setDiscoveryGroupName("dg1"));
+      ArrayList<BalancerConfiguration> balancerConfigurations = new ArrayList<>();
+      balancerConfigurations.add(new BalancerConfiguration().setName("r1").setPolicy(new FirstElementBalancerPolicy()).setDiscoveryGroupName("dg1"));
 
       setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(2, groupAddress, groupPort, true, true, false);
 
-      getServer(0).getConfiguration().setRedirectConfigurations(redirectConfigurations);
-      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirectEnabled", "true");
+      getServer(0).getConfiguration().setBalancerConfigurations(balancerConfigurations);
+      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-to", "r1");
+      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-key", "USER_NAME");
 
       startServers(0, 1, 2);
 
@@ -118,6 +118,7 @@ public class RedirectTest extends ClusterTestBase {
    private ConnectionFactory createFactory(int protocol, String host, int port) {
       switch (protocol) {
          case 1: ActiveMQConnectionFactory coreCF = new ActiveMQConnectionFactory("tcp://" + host + ":" + port + "?ha=true");// core protocol
+            coreCF.setUser("admin");
             coreCF.setCompressLargeMessage(true);
             coreCF.setMinLargeMessageSize(10 * 1024);
             coreCF.setReconnectAttempts(30);

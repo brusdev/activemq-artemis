@@ -173,7 +173,7 @@ import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerMessagePlugi
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerQueuePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerResourcePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerSessionPlugin;
-import org.apache.activemq.artemis.core.server.redirect.RedirectManager;
+import org.apache.activemq.artemis.core.server.balancer.BalancerManager;
 import org.apache.activemq.artemis.core.server.reload.ReloadManager;
 import org.apache.activemq.artemis.core.server.reload.ReloadManagerImpl;
 import org.apache.activemq.artemis.core.server.transformer.Transformer;
@@ -291,7 +291,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
    private volatile RemotingService remotingService;
 
-   private volatile RedirectManager redirectManager;
+   private volatile BalancerManager balancerManager;
 
    private final List<ProtocolManagerFactory> protocolManagerFactories = new ArrayList<>();
 
@@ -1218,7 +1218,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
             }
          }
 
-         stopComponent(redirectManager);
+         stopComponent(balancerManager);
 
          stopComponent(connectorsService);
 
@@ -1659,8 +1659,8 @@ public class ActiveMQServerImpl implements ActiveMQServer {
    }
 
    @Override
-   public RedirectManager getRedirectManager() {
-      return redirectManager;
+   public BalancerManager getBalancerManager() {
+      return balancerManager;
    }
 
    public BackupManager getBackupManager() {
@@ -3136,9 +3136,9 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       federationManager.deploy();
 
-      redirectManager = new RedirectManager(this, configuration);
+      balancerManager = new BalancerManager(this, configuration);
 
-      redirectManager.deploy();
+      balancerManager.deploy();
 
       remotingService = new RemotingServiceImpl(clusterManager, configuration, this, managementService, scheduledPool, protocolManagerFactories, executorFactory.getExecutor(), serviceRegistry);
 
@@ -3303,7 +3303,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
             federationManager.start();
          }
 
-         redirectManager.start();
+         balancerManager.start();
 
          startProtocolServices();
 

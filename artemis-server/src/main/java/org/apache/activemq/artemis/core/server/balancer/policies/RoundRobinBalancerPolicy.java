@@ -15,37 +15,40 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.policies;
+package org.apache.activemq.artemis.core.server.balancer.policies;
 
-import org.apache.activemq.artemis.core.server.redirect.RedirectController;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
-import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
+import org.apache.activemq.artemis.core.server.balancer.BalancerController;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
+import org.apache.activemq.artemis.utils.RandomUtil;
 
 import java.util.Map;
 
-public class FirstElementRedirectPolicy implements RedirectPolicy {
-   private RedirectPool pool;
+public class RoundRobinBalancerPolicy implements BalancerPolicy {
+
+   private BalancerPool pool;
+   private int pos = RandomUtil.randomInt();
 
    @Override
-   public void init(Map<String, String> properties) throws Exception {
+   public void init(Map<String, String> properties) {
 
    }
 
    @Override
-   public void load(RedirectController controller) throws Exception {
+   public void load(BalancerController controller) {
       pool = controller.getPool();
    }
 
    @Override
-   public void unload() throws Exception {
+   public void unload() {
 
    }
 
    @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection) {
+   public BalancerTarget selectTarget(String key) {
       if (pool.getTargets().size() > 0) {
-         return pool.getTargets().get(0);
+         pos = pos % pool.getTargets().size();
+         return pool.getTargets().get(pos++);
       }
       return null;
    }

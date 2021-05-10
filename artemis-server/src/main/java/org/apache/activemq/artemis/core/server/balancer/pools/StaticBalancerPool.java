@@ -15,25 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.pools;
+package org.apache.activemq.artemis.core.server.balancer.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StaticRedirectPool implements RedirectPool {
-   private final ArrayList<RedirectTarget> targets = new ArrayList<>();
+public class StaticBalancerPool implements BalancerPool {
+   private final ArrayList<BalancerTarget> targets = new ArrayList<>();
 
-   public StaticRedirectPool(ActiveMQServer server, List<String> staticConnectors) {
+   public StaticBalancerPool(ActiveMQServer server, List<String> staticConnectors) {
       Map<String, TransportConfiguration> connectorConfigurations =
             server.getConfiguration().getConnectorConfigurations();
 
       for (String connector : staticConnectors) {
-         targets.add(new RedirectTarget(connector, connectorConfigurations.get(connector)));
+         targets.add(new BalancerTarget(connector, connectorConfigurations.get(connector)));
       }
    }
 
@@ -53,7 +53,7 @@ public class StaticRedirectPool implements RedirectPool {
    }
 
    @Override
-   public List<RedirectTarget> getTargets() {
+   public List<BalancerTarget> getTargets() {
       return targets;
    }
 }

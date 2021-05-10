@@ -46,7 +46,7 @@ import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.config.FileDeploymentManager;
 import org.apache.activemq.artemis.core.config.HAPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.MetricsConfiguration;
-import org.apache.activemq.artemis.core.config.RedirectConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.config.ha.LiveOnlyPolicyConfiguration;
 import org.apache.activemq.artemis.core.journal.impl.JournalImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
@@ -55,6 +55,8 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
+import org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy;
+import org.apache.activemq.artemis.core.server.balancer.policies.RoundRobinBalancerPolicy;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.impl.ActiveMQServerImpl;
 import org.apache.activemq.artemis.core.server.impl.LegacyLDAPSecuritySettingPlugin;
@@ -261,21 +263,17 @@ public class FileConfigurationTest extends ConfigurationImplTest {
          }
       }
 
-      Assert.assertEquals(2, conf.getRedirectConfigurations().size());
-      for (RedirectConfiguration rc : conf.getRedirectConfigurations()) {
-         if (rc.getName().equals("redirect1")) {
-            Assert.assertEquals("*", rc.getSourceIP());
-            Assert.assertEquals("*", rc.getUser());
-            Assert.assertEquals("REDIRECT", rc.getUserRole());
-            Assert.assertEquals("connector1", rc.getStaticConnectors().get(0));
-            Assert.assertEquals(null, rc.getDiscoveryGroupName());
+      Assert.assertEquals(2, conf.getBalancerConfigurations().size());
+      for (BalancerConfiguration bc : conf.getBalancerConfigurations()) {
+         if (bc.getName().equals("redirect1")) {
+            Assert.assertTrue(bc.getPolicy() instanceof FirstElementBalancerPolicy);
+            Assert.assertEquals("connector1", bc.getStaticConnectors().get(0));
+            Assert.assertEquals(null, bc.getDiscoveryGroupName());
          } else {
-            Assert.assertEquals("redirect2", rc.getName());
-            Assert.assertEquals("*", rc.getSourceIP());
-            Assert.assertEquals("*", rc.getUser());
-            Assert.assertEquals("REDIRECT", rc.getUserRole());
-            Assert.assertEquals(Collections.emptyList(), rc.getStaticConnectors());
-            Assert.assertEquals("dg1", rc.getDiscoveryGroupName());
+            Assert.assertEquals("redirect2", bc.getName());
+            Assert.assertTrue(bc.getPolicy() instanceof RoundRobinBalancerPolicy);
+            Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
+            Assert.assertEquals("dg1", bc.getDiscoveryGroupName());
          }
       }
 

@@ -469,14 +469,14 @@ public interface Configuration {
    /**
     * Returns the redirects configured for this server.
     */
-   List<RedirectConfiguration> getRedirectConfigurations();
+   List<BalancerConfiguration> getBalancerConfigurations();
 
    /**
     * Sets the redirects configured for this server.
     */
-   Configuration setRedirectConfigurations(List<RedirectConfiguration> configs);
+   Configuration setBalancerConfigurations(List<BalancerConfiguration> configs);
 
-   Configuration addRedirectConfiguration(RedirectConfiguration config);
+   Configuration addBalancerConfiguration(BalancerConfiguration config);
 
    /**
     * Returns the cluster connections configured for this server.

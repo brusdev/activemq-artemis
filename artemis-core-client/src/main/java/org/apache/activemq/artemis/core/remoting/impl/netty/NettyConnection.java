@@ -36,11 +36,13 @@ import org.apache.activemq.artemis.api.core.ActiveMQInterruptedException;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.buffers.impl.ChannelBufferWrapper;
 import org.apache.activemq.artemis.core.client.ActiveMQClientLogger;
+import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
+import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.Env;
 import org.apache.activemq.artemis.utils.IPV6Util;
 import org.jboss.logging.Logger;
@@ -63,6 +65,7 @@ public class NettyConnection implements Connection {
    private final FastThreadLocal<ArrayList<ReadyListener>> localListenersPool = new FastThreadLocal<>();
 
    private final boolean batchingEnabled;
+
    private final boolean redirectEnabled;
 
    private boolean closed;
@@ -75,7 +78,7 @@ public class NettyConnection implements Connection {
                           final BaseConnectionLifeCycleListener<?> listener,
                           boolean batchingEnabled,
                           boolean directDeliver) {
-      this(configuration, channel, listener, batchingEnabled, directDeliver, TransportConstants.DEFAULT_REDIRECT_ENABLED);
+      this(configuration, channel, listener, batchingEnabled, directDeliver, false);
    }
    public NettyConnection(final Map<String, Object> configuration,
                           final Channel channel,
@@ -419,6 +422,16 @@ public class NettyConnection implements Connection {
    @Override
    public final boolean isRedirectEnabled() {
       return redirectEnabled;
+   }
+
+   @Override
+   public String getRedirectTo() {
+      return ConfigurationHelper.getStringProperty(TransportConstants.REDIRECT_TO, TransportConstants.DEFAULT_REDIRECT_TO, configuration);
+   }
+
+   @Override
+   public RedirectKey getRedirectKey() {
+      return RedirectKey.valueOf(ConfigurationHelper.getStringProperty(TransportConstants.REDIRECT_KEY, TransportConstants.DEFAULT_REDIRECT_KEY, configuration));
    }
 
    //never allow this

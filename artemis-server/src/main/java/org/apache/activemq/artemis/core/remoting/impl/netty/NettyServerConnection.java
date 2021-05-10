@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.core.remoting.impl.netty;
 import java.util.Map;
 
 import io.netty.channel.Channel;
+import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.spi.core.remoting.ServerConnectionLifeCycleListener;
 
 public class NettyServerConnection extends NettyConnection {

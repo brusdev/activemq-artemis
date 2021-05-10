@@ -47,7 +47,7 @@ import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.config.RedirectConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
@@ -167,7 +167,7 @@ public class ConfigurationImpl implements Configuration, Serializable {
 
    protected List<DivertConfiguration> divertConfigurations = new ArrayList<>();
 
-   protected List<RedirectConfiguration> redirectConfigurations = new ArrayList<>();
+   protected List<BalancerConfiguration> balancerConfigurations = new ArrayList<>();
 
    protected List<ClusterConnectionConfiguration> clusterConfigurations = new ArrayList<>();
 
@@ -824,19 +824,19 @@ public class ConfigurationImpl implements Configuration, Serializable {
    }
 
    @Override
-   public List<RedirectConfiguration> getRedirectConfigurations() {
-      return redirectConfigurations;
+   public List<BalancerConfiguration> getBalancerConfigurations() {
+      return balancerConfigurations;
    }
 
    @Override
-   public ConfigurationImpl setRedirectConfigurations(final List<RedirectConfiguration> configs) {
-      redirectConfigurations = configs;
+   public ConfigurationImpl setBalancerConfigurations(final List<BalancerConfiguration> configs) {
+      balancerConfigurations = configs;
       return this;
    }
 
    @Override
-   public ConfigurationImpl addRedirectConfiguration(final RedirectConfiguration config) {
-      redirectConfigurations.add(config);
+   public ConfigurationImpl addBalancerConfiguration(final BalancerConfiguration config) {
+      balancerConfigurations.add(config);
       return this;
    }
 

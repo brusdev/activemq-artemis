@@ -15,21 +15,19 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.policies;
+package org.apache.activemq.artemis.core.server.balancer.policies;
 
-import org.apache.activemq.artemis.core.server.redirect.RedirectController;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
-import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
+import org.apache.activemq.artemis.core.server.balancer.BalancerController;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.Map;
 
-public interface RedirectPolicy {
-   void init(Map<String, String> properties) throws Exception;
+public interface BalancerPolicy {
+   void init(Map<String, String> properties);
 
-   void load(RedirectController controller) throws Exception;
+   void load(BalancerController controller);
 
-   void unload() throws Exception;
+   void unload();
 
-   RedirectTarget selectTarget(RedirectingConnection connection);
+   BalancerTarget selectTarget(String key);
 }

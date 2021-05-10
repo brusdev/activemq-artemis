@@ -46,7 +46,7 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.UDPBroadcastEndpointFactory;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.core.config.RedirectConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
@@ -86,12 +86,11 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType;
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
+import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicy;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
-import org.apache.activemq.artemis.core.server.redirect.RedirectPolicyType;
-import org.apache.activemq.artemis.core.server.redirect.RedirectKeyType;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.settings.impl.DeletionPolicy;
@@ -624,16 +623,16 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          parseDivertConfiguration(dvNode, config);
       }
 
-      NodeList ccRedirects = e.getElementsByTagName("redirects");
+      NodeList ccBalancers = e.getElementsByTagName("broker-balancers");
 
-      if (ccRedirects != null) {
-         NodeList ccRedirect = e.getElementsByTagName("redirect");
+      if (ccBalancers != null) {
+         NodeList ccBalancer = e.getElementsByTagName("broker-balancer");
 
-         if (ccRedirect != null) {
-            for (int i = 0; i < ccRedirect.getLength(); i++) {
-               Element ccNode = (Element) ccRedirect.item(i);
+         if (ccBalancer != null) {
+            for (int i = 0; i < ccBalancer.getLength(); i++) {
+               Element ccNode = (Element) ccBalancer.item(i);
 
-               parseRedirectConfiguration(ccNode, config);
+               parseBalancerConfiguration(ccNode, config);
             }
          }
       }
@@ -2557,16 +2556,10 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       mainConfig.getDivertConfigurations().add(config);
    }
 
-   private void parseRedirectConfiguration(final Element e, final Configuration mainConfig) {
+   private void parseBalancerConfiguration(final Element e, final Configuration config) {
       String name = e.getAttribute("name");
-      String sourceIP = e.hasAttribute("sourceIP") ? e.getAttribute("sourceIP") : null;
-      String user = e.hasAttribute("user") ? e.getAttribute("user") : null;
-      String userRole = e.hasAttribute("userRole") ? e.getAttribute("userRole") : null;
 
-      RedirectPolicyType algorithm = RedirectPolicyType.valueOf(getString(e, "policy", ActiveMQDefaultConfiguration.getDefaultRedirectPolicy(), Validators.REDIRECT_POLICY));
-
-      RedirectKeyType key = RedirectKeyType.valueOf(getString(e, "key", ActiveMQDefaultConfiguration.getDefaultRedirectKey(), Validators.REDIRECT_KEY));
-
+      BalancerPolicy policy = null;
       String discoveryGroupName = null;
       List<String> staticConnectorNames = new ArrayList<>();
       NodeList children = e.getChildNodes();
@@ -2574,16 +2567,38 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       for (int j = 0; j < children.getLength(); j++) {
          Node child = children.item(j);
 
-         if (child.getNodeName().equals("discovery-group-ref")) {
+         if (child.getNodeName().equals("policy-plugin")) {
+            policy = parseBalancerPolicyPlugin(child, config);
+         } else if (child.getNodeName().equals("discovery-group-ref")) {
             discoveryGroupName = child.getAttributes().getNamedItem("discovery-group-name").getNodeValue();
          } else if (child.getNodeName().equals("static-connectors")) {
             getStaticConnectors(staticConnectorNames, child);
          }
       }
 
-      RedirectConfiguration config = new RedirectConfiguration().setName(name).setSourceIP(sourceIP).setUser(user).setUserRole(userRole).setPolicy(algorithm).setKey(key).setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
+      BalancerConfiguration balancerConfiguration = new BalancerConfiguration().setName(name).setPolicy(policy).
+         setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
 
-      mainConfig.getRedirectConfigurations().add(config);
+      config.getBalancerConfigurations().add(balancerConfiguration);
+   }
+
+   private BalancerPolicy parseBalancerPolicyPlugin(final Node item, final Configuration config) {
+      final String clazz = item.getAttributes().getNamedItem("class-name").getNodeValue();
+
+      Map<String, String> properties = getMapOfChildPropertyElements(item);
+
+      BalancerPolicy policyPlugin = AccessController.doPrivileged(new PrivilegedAction<BalancerPolicy>() {
+         @Override
+         public BalancerPolicy run() {
+            return (BalancerPolicy) ClassloadingUtil.newInstanceFromClassLoader(FileConfigurationParser.class, clazz);
+         }
+      });
+
+      ActiveMQServerLogger.LOGGER.initializingBalancerPolicyPlugin(clazz, properties.toString());
+
+      policyPlugin.init(properties);
+
+      return policyPlugin;
    }
 
    /**RedirectConfiguration

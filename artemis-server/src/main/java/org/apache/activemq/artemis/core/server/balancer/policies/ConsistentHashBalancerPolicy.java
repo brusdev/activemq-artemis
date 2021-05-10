@@ -15,48 +15,44 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.policies;
+package org.apache.activemq.artemis.core.server.balancer.policies;
 
-import org.apache.activemq.artemis.core.server.redirect.RedirectController;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
-import org.apache.activemq.artemis.core.server.redirect.RedirectingConnection;
-import org.apache.activemq.artemis.core.server.redirect.pools.RedirectPool;
+import org.apache.activemq.artemis.core.server.balancer.BalancerController;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
-public class ConsistentHashRedirectPolicy implements RedirectPolicy {
-   private RedirectPool pool;
+public class ConsistentHashBalancerPolicy implements BalancerPolicy {
+   private BalancerPool pool;
 
    @Override
-   public void init(Map<String, String> properties) throws Exception {
+   public void init(Map<String, String> properties) {
 
    }
 
    @Override
-   public void load(RedirectController controller) throws Exception {
+   public void load(BalancerController controller) {
       pool = controller.getPool();
    }
 
    @Override
-   public void unload() throws Exception {
+   public void unload() {
 
    }
 
    @Override
-   public RedirectTarget selectTarget(RedirectingConnection connection) {
+   public BalancerTarget selectTarget(String key) {
       if (pool.getTargets().size() > 0) {
-         NavigableMap<Integer, RedirectTarget> targets = new TreeMap<>();
+         NavigableMap<Integer, BalancerTarget> targets = new TreeMap<>();
 
-         for(RedirectTarget target : pool.getTargets()) {
+         for (BalancerTarget target : pool.getTargets()) {
             targets.put(target.getNodeID().hashCode(), target);
          }
 
-         Map.Entry<Integer, RedirectTarget> redirectEntry = targets.floorEntry(connection.getUser().hashCode());
+         Map.Entry<Integer, BalancerTarget> redirectEntry = targets.floorEntry(key.hashCode());
 
          if (redirectEntry == null) {
             redirectEntry = targets.firstEntry();

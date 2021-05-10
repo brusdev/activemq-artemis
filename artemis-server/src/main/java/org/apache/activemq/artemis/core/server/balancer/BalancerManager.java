@@ -15,48 +15,48 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect;
+package org.apache.activemq.artemis.core.server.balancer;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.RedirectConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.jboss.logging.Logger;
 
-public class RedirectManager implements ActiveMQComponent {
-   private static final Logger logger = Logger.getLogger(RedirectManager.class);
+public class BalancerManager implements ActiveMQComponent {
+   private static final Logger logger = Logger.getLogger(BalancerManager.class);
 
    private final ActiveMQServer server;
    private final Configuration configuration;
 
-   private Map<String, RedirectController> redirectControllers = new HashMap<>();
+   private Map<String, BalancerController> redirectControllers = new HashMap<>();
 
 
-   public RedirectManager(final ActiveMQServer server, final Configuration configuration) {
+   public BalancerManager(final ActiveMQServer server, final Configuration configuration) {
       this.server = server;
       this.configuration = configuration;
    }
 
    public void deploy() {
-      for (RedirectConfiguration config : configuration.getRedirectConfigurations()) {
-         redirectControllers.put(config.getName(), new RedirectController(server, config));
+      for (BalancerConfiguration config : configuration.getBalancerConfigurations()) {
+         redirectControllers.put(config.getName(), new BalancerController(server, config));
       }
    }
 
    @Override
    public void start() throws Exception {
-      for (RedirectController redirectController : redirectControllers.values()) {
-         redirectController.start();
+      for (BalancerController balancerController : redirectControllers.values()) {
+         balancerController.start();
       }
    }
 
    @Override
    public void stop() throws Exception {
-      for (RedirectController redirectController : redirectControllers.values()) {
-         redirectController.stop();
+      for (BalancerController balancerController : redirectControllers.values()) {
+         balancerController.stop();
       }
    }
 
@@ -65,13 +65,7 @@ public class RedirectManager implements ActiveMQComponent {
       return false;
    }
 
-   public RedirectTarget getTarget(RedirectingConnection connection) {
-      for (RedirectController redirectController : redirectControllers.values()) {
-         if (redirectController.match(connection)) {
-            return redirectController.getTarget(connection);
-         }
-      }
-
-      return null;
+   public BalancerController getBalancer(String name) {
+      return redirectControllers.get(name);
    }
 }

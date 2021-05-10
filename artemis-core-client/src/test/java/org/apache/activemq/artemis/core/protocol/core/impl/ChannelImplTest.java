@@ -36,6 +36,7 @@ import org.apache.activemq.artemis.core.protocol.core.ResponseHandler;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.PacketsConfirmedMessage;
 import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
+import org.apache.activemq.artemis.core.remoting.RedirectKey;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
@@ -450,6 +451,16 @@ public class ChannelImplTest {
             @Override
             public boolean isRedirectEnabled() {
                return false;
+            }
+
+            @Override
+            public String getRedirectTo() {
+               return null;
+            }
+
+            @Override
+            public RedirectKey getRedirectKey() {
+               return null;
             }
          };
       }

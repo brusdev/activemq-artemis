@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.redirect.pools;
+package org.apache.activemq.artemis.core.server.balancer.pools;
 
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.List;
 
-public interface RedirectPool extends ActiveMQComponent {
-   List<RedirectTarget> getTargets();
+public interface BalancerPool extends ActiveMQComponent {
+   List<BalancerTarget> getTargets();
 }

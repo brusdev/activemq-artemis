@@ -51,7 +51,7 @@ import org.apache.activemq.artemis.core.io.SequentialFile;
 import org.apache.activemq.artemis.core.postoffice.Binding;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ReplicationSyncFileMessage;
 import org.apache.activemq.artemis.core.security.CheckType;
-import org.apache.activemq.artemis.core.server.redirect.RedirectTarget;
+import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.jboss.logging.Messages;
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.Message;
@@ -511,5 +511,5 @@ public interface ActiveMQMessageBundle {
    IllegalArgumentException invalidRedirectKey(String val);
 
    @Message(id = 229237, value = "Connection redirected to {0}", format = Message.Format.MESSAGE_FORMAT)
-   ActiveMQRedirectedException redirectConnection(RedirectTarget target);
+   ActiveMQRedirectedException redirectConnection(BalancerTarget target);
 }
