@@ -23,8 +23,8 @@ import java.util.List;
 public class BalancerConfiguration implements Serializable {
 
    private String name = null;
-   private int affinityTimeout;
-   private String policyName = null;
+   private int affinityTimeout = 0;
+   private BalancerPolicyConfiguration policyConfiguration = null;
    private List<String> staticConnectors = Collections.emptyList();
    private String discoveryGroupName = null;
 
@@ -46,12 +46,12 @@ public class BalancerConfiguration implements Serializable {
       return this;
    }
 
-   public String getPolicyName() {
-      return policyName;
+   public BalancerPolicyConfiguration getPolicyConfiguration() {
+      return policyConfiguration;
    }
 
-   public BalancerConfiguration setPolicyName(String policyName) {
-      this.policyName = policyName;
+   public BalancerConfiguration setPolicyConfiguration(BalancerPolicyConfiguration policyConfiguration) {
+      this.policyConfiguration = policyConfiguration;
       return this;
    }
 

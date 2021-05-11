@@ -17,10 +17,31 @@
 
 package org.apache.activemq.artemis.core.server.balancer.policies;
 
-public interface BalancerPolicyFactory {
-   String[] getSupportedPolicies();
+import org.apache.activemq.artemis.core.server.balancer.BalancerController;
 
-   boolean supports(String name);
+import java.util.ServiceLoader;
 
-   BalancerPolicy createPolicy(String name);
+public abstract class BalancerPolicyFactory {
+   private static final ServiceLoader<BalancerPolicyFactory> serviceLoader =
+      ServiceLoader.load(BalancerPolicyFactory.class, BalancerController.class.getClassLoader());
+
+   public static BalancerPolicyFactory forName(String policyName) throws ClassNotFoundException {
+      for (BalancerPolicyFactory policyFactory : serviceLoader) {
+         if (policyFactory.supports(policyName)) {
+            return policyFactory;
+         }
+      }
+
+      throw new ClassNotFoundException("No BalancerPolicyFactory found for the policy " + policyName);
+   }
+
+   public static BalancerPolicy policyForName(String policyName) throws ClassNotFoundException {
+      return BalancerPolicyFactory.forName(policyName).createPolicy(policyName);
+   }
+
+   public abstract String[] getSupportedPolicies();
+
+   public abstract boolean supports(String name);
+
+   public abstract BalancerPolicy createPolicy(String name);
 }

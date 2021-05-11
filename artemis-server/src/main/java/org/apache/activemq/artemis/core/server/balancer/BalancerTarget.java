@@ -17,11 +17,29 @@
 
 package org.apache.activemq.artemis.core.server.balancer;
 
+import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class BalancerTarget {
    private final String nodeID;
    private final TransportConfiguration connector;
+   private final ServerLocator serverLocator;
+   private final ActiveMQManagementProxy managementProxy;
+   private final Map<String, Object> taskResults = new HashMap<>();
+
+   public enum State {
+      ATTACHED,
+      READY,
+      DETACHED
+   }
+
+   private volatile BalancerTarget.State state = BalancerTarget.State.DETACHED;
 
    public String getNodeID() {
       return nodeID;
@@ -31,9 +49,50 @@ public class BalancerTarget {
       return connector;
    }
 
+   public State getState() {
+      return state;
+   }
+
+   public void setState(State state) {
+      this.state = state;
+   }
+
+   public ServerLocator getServerLocator() {
+      return serverLocator;
+   }
+
    public BalancerTarget(String nodeID, TransportConfiguration connector) {
       this.nodeID = nodeID;
       this.connector = connector;
+      this.serverLocator = ActiveMQClient.createServerLocatorWithoutHA(connector);
+      this.managementProxy = new ActiveMQManagementProxy(serverLocator, null, null);
+
+
+   }
+
+   public Object getTaskResult(String name) {
+      return taskResults.get(name);
+   }
+
+   public void setTaskResult(String name, Object result) {
+      taskResults.put(name, result);
+   }
+
+   public void connect() throws Exception {
+      this.managementProxy.start();
+   }
+
+   public <T> T getAttribute(final Class<T> type, final String resourceName, final String attributeName) throws Exception {
+      return managementProxy.getAttribute(type, resourceName, attributeName);
+   }
+
+   public <T> T invokeOperation(final Class<T> type, final String resourceName, final String operationName, final Object... operationArgs) throws Exception {
+      return managementProxy.invokeOperation(type, resourceName, operationName, operationArgs);
+   }
+
+
+   public void disconnect() throws ActiveMQException {
+      this.managementProxy.stop();
    }
 
    @Override

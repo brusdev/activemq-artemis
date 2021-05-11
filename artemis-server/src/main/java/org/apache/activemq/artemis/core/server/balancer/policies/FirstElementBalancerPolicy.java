@@ -21,14 +21,16 @@ import org.apache.activemq.artemis.core.server.balancer.BalancerController;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 
-public class FirstElementBalancerPolicy implements BalancerPolicy {
+import java.util.Collections;
+import java.util.List;
+
+public class FirstElementBalancerPolicy extends BalancerPolicy {
    public static final String NAME = "FIRST_ELEMENT";
 
    private BalancerPool pool;
 
-   @Override
-   public String getName() {
-      return NAME;
+   public FirstElementBalancerPolicy() {
+      super(NAME);
    }
 
    @Override
@@ -42,10 +44,13 @@ public class FirstElementBalancerPolicy implements BalancerPolicy {
    }
 
    @Override
-   public BalancerTarget selectTarget(String key) {
-      if (pool.getTargets().size() > 0) {
-         return pool.getTargets().get(0);
+   public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
+      if (targets.size() > 1) {
+         return selectTargetsNext(Collections.singletonList(targets.get(0)), key);
+      } else if (targets.size() > 0) {
+         return selectTargetsNext(targets, key);
       }
-      return null;
+
+      return targets;
    }
 }

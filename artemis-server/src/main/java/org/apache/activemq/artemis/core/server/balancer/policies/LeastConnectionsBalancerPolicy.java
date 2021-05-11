@@ -20,25 +20,36 @@ package org.apache.activemq.artemis.core.server.balancer.policies;
 import org.apache.activemq.artemis.core.server.balancer.BalancerController;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
+import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPoolTask;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class ConsistentHashBalancerPolicy extends BalancerPolicy {
-   public static final String NAME = "CONSISTENT_HASH";
+public class LeastConnectionsBalancerPolicy extends BalancerPolicy {
+   public static final String NAME = "LEAST_CONNECTIONS";
+
+   public static final String GET_CONNECTION_COUNT_TASK_NAME = "GET_CONNECTION_COUNT_TASK";
 
    private BalancerPool pool;
 
-   public ConsistentHashBalancerPolicy() {
+   public LeastConnectionsBalancerPolicy() {
       super(NAME);
    }
 
    @Override
    public void load(BalancerController controller) {
       pool = controller.getPool();
+
+      pool.addTask(new BalancerPoolTask("GET_CONNECTION_COUNT", balancerTarget -> {
+         try {
+            return balancerTarget.getAttribute(Integer.class, "broker", "ConnectionCount");
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+         return null;
+      }));
    }
 
    @Override
@@ -49,21 +60,26 @@ public class ConsistentHashBalancerPolicy extends BalancerPolicy {
    @Override
    public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
       if (targets.size() > 1) {
-         NavigableMap<Integer, BalancerTarget> consistentTargets = new TreeMap<>();
+         NavigableMap<Integer, List<BalancerTarget>> sortedTargets = new TreeMap<>();
 
-         for (BalancerTarget target : pool.getTargets()) {
-            consistentTargets.put(target.getNodeID().hashCode(), target);
-         }
+         for (BalancerTarget target : targets) {
+            Integer connectionCount = (Integer)target.getTaskResult(GET_CONNECTION_COUNT_TASK_NAME);
 
-         if (consistentTargets.size() > 0) {
-            Map.Entry<Integer, BalancerTarget> consistentEntry = consistentTargets.floorEntry(key.hashCode());
-
-            if (consistentEntry == null) {
-               consistentEntry = consistentTargets.firstEntry();
+            if (connectionCount == null) {
+               connectionCount = -1;
             }
 
-            return selectTargetsNext(Collections.singletonList(consistentEntry.getValue()), key);
+            List<BalancerTarget> leastTargets = sortedTargets.get(connectionCount);
+
+            if (leastTargets == null) {
+               leastTargets = new ArrayList<>();
+               sortedTargets.put(connectionCount, leastTargets);
+            }
+
+            leastTargets.add(target);
          }
+
+         return sortedTargets.firstEntry().getValue();
       } else if (targets.size() > 0) {
          return selectTargetsNext(targets, key);
       }

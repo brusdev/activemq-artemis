@@ -2094,10 +2094,17 @@
 
    <xsd:complexType name="brokerBalancerType">
       <xsd:sequence maxOccurs="unbounded">
-         <xsd:element name="policy-name" type="xsd:string" maxOccurs="1" minOccurs="1">
+         <xsd:element name="affinity-timeout" type="xsd:long" default="0" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
-                  optional name of policy
+                  the time period for an affinity to remain active
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:element>
+         <xsd:element name="policy" type="brokerBalancerPolicyType" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  optional policy
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
@@ -2123,6 +2130,26 @@
                </xsd:complexType>
             </xsd:element>
          </xsd:choice>
+      </xsd:sequence>
+      <xsd:attribute name="name" type="xsd:string" use="required">
+         <xsd:annotation>
+            <xsd:documentation>
+               a unique name for the divert
+            </xsd:documentation>
+         </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attributeGroup ref="xml:specialAttrs"/>
+   </xsd:complexType>
+
+   <xsd:complexType name="brokerBalancerPolicyType">
+      <xsd:sequence maxOccurs="unbounded">
+         <xsd:element name="policy" type="brokerBalancerPolicyType" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  optional policy
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:element>
       </xsd:sequence>
       <xsd:attribute name="name" type="xsd:ID" use="required">
          <xsd:annotation>

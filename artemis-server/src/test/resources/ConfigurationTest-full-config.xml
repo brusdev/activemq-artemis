@@ -153,15 +153,22 @@
          </divert>
       </diverts>
       <broker-balancers>
-         <broker-balancer name="redirect1">
-            <policy-plugin class-name="org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy"/>
+         <broker-balancer name="simple-balancer">
+            <policy name="FIRST_ELEMENT"/>
             <static-connectors>
                <connector-ref>connector1</connector-ref>
             </static-connectors>
          </broker-balancer>
-         <broker-balancer name="redirect2">
-            <policy-plugin class-name="org.apache.activemq.artemis.core.server.balancer.policies.RoundRobinBalancerPolicy"/>
+         <broker-balancer name="consistent-hash-balancer">
+            <policy name="CONSISTENT_HASH"/>
             <discovery-group-ref discovery-group-name="dg1"/>
+         </broker-balancer>
+         <broker-balancer name="least-connections-balancer">
+            <affinity-timeout>60000</affinity-timeout>
+            <policy name="LEAST_CONNECTIONS">
+               <policy name="ROUND_ROBIN"/>
+            </policy>
+            <discovery-group-ref discovery-group-name="dg2"/>
          </broker-balancer>
       </broker-balancers>
       <amqp-use-core-subscription-naming>true</amqp-use-core-subscription-naming>

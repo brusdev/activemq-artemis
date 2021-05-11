@@ -17,29 +17,24 @@
 
 package org.apache.activemq.artemis.core.server.balancer.pools;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
-public class StaticBalancerPool extends BalancerPool {
-   private final List<String> staticConnectors;
+public class BalancerPoolTask {
+   private final String name;
+   private final Function<BalancerTarget, Object> task;
 
-   public StaticBalancerPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, List<String> staticConnectors) {
-      super(server, scheduledExecutor);
-      this.staticConnectors = staticConnectors;
+   public String getName() {
+      return name;
+   }
 
-      Map<String, TransportConfiguration> connectorConfigurations =
-            server.getConfiguration().getConnectorConfigurations();
+   public Function<BalancerTarget, Object> getTask() {
+      return task;
+   }
 
-      for (String connector : staticConnectors) {
-         addTarget(new BalancerTarget(connector, connectorConfigurations.get(connector)));
-      }
+   public BalancerPoolTask(String name, Function<BalancerTarget, Object> task) {
+      this.name = name;
+      this.task = task;
    }
 }

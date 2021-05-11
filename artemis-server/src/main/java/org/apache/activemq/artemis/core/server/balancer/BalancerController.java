@@ -20,6 +20,7 @@ package org.apache.activemq.artemis.core.server.balancer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicy;
@@ -28,58 +29,60 @@ import org.apache.activemq.artemis.core.server.balancer.pools.DiscoveryBalancerP
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 import org.apache.activemq.artemis.core.server.balancer.pools.StaticBalancerPool;
 
-import java.util.ServiceLoader;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BalancerController implements ActiveMQComponent {
 
-   private final BalancerPool pool;
-   private final BalancerPolicy policy;
+   private final BalancerConfiguration config;
+   private final ActiveMQServer server;
+   private final ScheduledExecutorService scheduledExecutor;
+
+   private BalancerPool pool;
+   private BalancerPolicy policy;
    private final Cache<String, BalancerTarget> affinityCache;
 
    public BalancerPool getPool() {
       return pool;
    }
 
-   public BalancerController(final BalancerConfiguration config, final ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
-      policy = createPolicy(config.getPolicyName());
+   public BalancerController(final BalancerConfiguration config, final ActiveMQServer server, final ScheduledExecutorService scheduledExecutor) {
+      this.config = config;
+      this.server = server;
+      this.scheduledExecutor = scheduledExecutor;
 
       affinityCache = CacheBuilder.newBuilder().expireAfterAccess(config.getAffinityTimeout(), TimeUnit.MILLISECONDS).build();
-
-      if (config.getDiscoveryGroupName() != null) {
-         pool = new DiscoveryBalancerPool(config.getDiscoveryGroupName(), server, scheduledExecutor);
-      } else {
-         pool = new StaticBalancerPool(config.getStaticConnectors(), server, scheduledExecutor);
-      }
    }
 
-   private BalancerPolicy createPolicy(String name) {
-      BalancerPolicy policy = null;
+   @Override
+   public void start() throws Exception {
+      if (config.getDiscoveryGroupName() != null) {
+         pool = new DiscoveryBalancerPool(server, scheduledExecutor, config.getDiscoveryGroupName());
+      } else {
+         pool = new StaticBalancerPool(server, scheduledExecutor, config.getStaticConnectors());
+      }
 
-      ServiceLoader<BalancerPolicyFactory> policyFactoryServiceLoader =
-         ServiceLoader.load(BalancerPolicyFactory.class, BalancerController.class.getClassLoader());
+      policy = createPolicy(config.getPolicyConfiguration());
 
-      for (BalancerPolicyFactory policyFactory : policyFactoryServiceLoader) {
-         if (policyFactory.supports(name)) {
-            policy = policyFactory.createPolicy(name);
-            break;
-         }
+      pool.start();
+
+      this.policy.load(this);
+   }
+
+   private BalancerPolicy createPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
+      BalancerPolicy policy = BalancerPolicyFactory.policyForName(policyConfig.getName());
+
+      if (policyConfig.getNext() != null) {
+         policy.setNext(createPolicy(policyConfig.getNext()));
       }
 
       return policy;
    }
 
    @Override
-   public void start() throws Exception {
-      pool.start();
-
-      this.policy.load(this);
-   }
-
-   @Override
    public void stop() throws Exception {
-      this.policy.unload();
+      policy.unload();
 
       pool.stop();
    }
@@ -92,10 +95,17 @@ public class BalancerController implements ActiveMQComponent {
    public BalancerTarget getTarget(String key) {
       BalancerTarget target = affinityCache.getIfPresent(key);
 
-      if (target == null) {
-         target = policy.selectTarget(key);
+      if (target != null && target.getState() != BalancerTarget.State.READY) {
+         target = null;
+      }
 
-         if (target != null) {
+      if (target == null) {
+         List<BalancerTarget> targets = pool.getTargets(BalancerTarget.State.READY);
+
+         List<BalancerTarget> selectedTargets = policy.selectTargets(targets, key);
+
+         if (selectedTargets.size() > 0) {
+            target = selectedTargets.get(0);
             affinityCache.put(key, target);
          }
       }
