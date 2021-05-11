@@ -277,7 +277,7 @@ public class FileConfigurationTest extends ConfigurationImplTest {
             Assert.assertNull(bc.getPolicyConfiguration().getNext());
             Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
             Assert.assertEquals("dg1", bc.getDiscoveryGroupName());
-        } else {
+         } else {
             Assert.assertEquals("least-connections-balancer", bc.getName());
             Assert.assertEquals(bc.getPolicyConfiguration(), LeastConnectionsBalancerPolicy.NAME);
             Assert.assertEquals(bc.getPolicyConfiguration().getNext(), RoundRobinBalancerPolicy.NAME);

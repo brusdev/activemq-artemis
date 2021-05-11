@@ -512,4 +512,7 @@ public interface ActiveMQMessageBundle {
 
    @Message(id = 229237, value = "Connection redirected to {0}", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQRedirectedException redirectConnection(BalancerTarget target);
+
+   @Message(id = 229237, value = "No target broker available for the connection")
+   ActiveMQRedirectedException cannotRedirect();
 }

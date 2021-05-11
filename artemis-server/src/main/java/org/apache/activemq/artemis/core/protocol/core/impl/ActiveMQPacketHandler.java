@@ -177,6 +177,8 @@ public class ActiveMQPacketHandler implements ChannelHandler {
 
                connection.disconnect(DisconnectReason.REDIRECT, balancerTarget.getNodeID(), balancerTarget.getConnector());
                throw ActiveMQMessageBundle.BUNDLE.redirectConnection(balancerTarget);
+            } else {
+               throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
             }
          }
 

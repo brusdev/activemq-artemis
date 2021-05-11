@@ -22,16 +22,12 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class BalancerPool implements ActiveMQComponent {
@@ -68,7 +64,7 @@ public abstract class BalancerPool implements ActiveMQComponent {
 
    public void addTarget(BalancerTarget target) {
       targets.put(target.getNodeID(), target);
-      target.setState(BalancerTarget.State.ATTACHED);
+      target.attach();
    }
 
    public BalancerTarget getTarget(String nodeId) {
@@ -78,7 +74,7 @@ public abstract class BalancerPool implements ActiveMQComponent {
    public BalancerTarget removeTarget(String nodeId) {
       BalancerTarget target = targets.remove(nodeId);
       if (target != null) {
-         target.setState(BalancerTarget.State.DETACHED);
+         target.detach();
       }
       return target;
    }
@@ -100,7 +96,7 @@ public abstract class BalancerPool implements ActiveMQComponent {
       connectScheduledFuture = scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
          @Override
          public void run() {
-            List<BalancerTarget> connectingTargets = new ArrayList<>(targets.values());
+            List<BalancerTarget> connectingTargets = getTargets(BalancerTarget.State.ATTACHED);
 
             for (BalancerTarget connectingTarget : connectingTargets) {
                if (connectingTarget.getState() == BalancerTarget.State.ATTACHED) {
@@ -112,39 +108,46 @@ public abstract class BalancerPool implements ActiveMQComponent {
                }
             }
          }
-      }, 0, 0, TimeUnit.MILLISECONDS);
-
+      }, 0, 5000, TimeUnit.MILLISECONDS);
 
       checkScheduledFuture = scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
          @Override
          public void run() {
-            List<BalancerTarget> checkingTargets = new ArrayList<>(targets.values());
+            List<BalancerTarget> checkingTargets = getTargets(BalancerTarget.State.CONNECTED);
 
             for (BalancerTarget checkingTarget : checkingTargets) {
-               try {
-                  checkingTarget.getAttribute(int.class, "broker", "ConnectionCount");
-               } catch (Exception e) {
-                  e.printStackTrace();
+               if (checkingTarget.getState() == BalancerTarget.State.CONNECTED) {
+                  try {
+                     Boolean activated = checkingTarget.getAttribute(Boolean.class, "broker", "Active");
+
+                     if (activated) {
+                        checkingTarget.active();
+                     }
+                  } catch (Exception e) {
+                     e.printStackTrace();
+                  }
                }
-
-
             }
          }
-      }, 0, 0, TimeUnit.MILLISECONDS);
+      }, 6000, 5000, TimeUnit.MILLISECONDS);
 
       taskScheduledFuture = scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
          @Override
          public void run() {
-            List<BalancerTarget> schedulingTargets = new ArrayList<>(targets.values());
+            if (tasks.size() > 0) {
+               List<BalancerTarget> schedulingTargets = getTargets(BalancerTarget.State.ACTIVATED);
 
-            for (BalancerTarget schedulingTarget : schedulingTargets) {
-             for (BalancerPoolTask task : tasks.values()) {
-                  schedulingTarget.setTaskResult(task.getName(),
-                     task.getTask().apply(schedulingTarget));
+               for (BalancerTarget schedulingTarget : schedulingTargets) {
+                  if (schedulingTarget.getState() == BalancerTarget.State.ACTIVATED) {
+                     for (BalancerPoolTask task : tasks.values()) {
+                        schedulingTarget.setTaskResult(task.getName(),
+                           task.getTask().apply(schedulingTarget));
+                     }
+                  }
                }
             }
          }
-      }, 0, 0, TimeUnit.MILLISECONDS);
+      }, 9000, 5000, TimeUnit.MILLISECONDS);
    }
 
    @Override

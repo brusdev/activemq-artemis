@@ -20,8 +20,10 @@ package org.apache.activemq.artemis.core.server.balancer;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
+import org.apache.activemq.artemis.core.remoting.FailureListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,12 +32,15 @@ public class BalancerTarget {
    private final String nodeID;
    private final TransportConfiguration connector;
    private final ServerLocator serverLocator;
-   private final ActiveMQManagementProxy managementProxy;
    private final Map<String, Object> taskResults = new HashMap<>();
+
+   private ClientSessionFactory sessionFactory;
+   private ActiveMQManagementProxy managementProxy;
 
    public enum State {
       ATTACHED,
-      READY,
+      CONNECTED,
+      ACTIVATED,
       DETACHED
    }
 
@@ -53,10 +58,6 @@ public class BalancerTarget {
       return state;
    }
 
-   public void setState(State state) {
-      this.state = state;
-   }
-
    public ServerLocator getServerLocator() {
       return serverLocator;
    }
@@ -65,9 +66,6 @@ public class BalancerTarget {
       this.nodeID = nodeID;
       this.connector = connector;
       this.serverLocator = ActiveMQClient.createServerLocatorWithoutHA(connector);
-      this.managementProxy = new ActiveMQManagementProxy(serverLocator, null, null);
-
-
    }
 
    public Object getTaskResult(String name) {
@@ -78,8 +76,32 @@ public class BalancerTarget {
       taskResults.put(name, result);
    }
 
+   public void attach() {
+      state = State.ATTACHED;
+   }
+
    public void connect() throws Exception {
-      this.managementProxy.start();
+      sessionFactory = serverLocator.createSessionFactory();
+      sessionFactory.getConnection().addFailureListener(new FailureListener() {
+         @Override
+         public void connectionFailed(ActiveMQException exception, boolean failedOver) {
+            try {
+               disconnect();
+            } catch (Exception e) {
+               e.printStackTrace();
+            }
+         }
+
+         @Override
+         public void connectionFailed(ActiveMQException exception, boolean failedOver, String scaleDownTargetNodeID) {
+            connectionFailed(exception, failedOver);
+         }
+      });
+
+      managementProxy = new ActiveMQManagementProxy(sessionFactory);
+      managementProxy.start();
+
+      state = state == State.DETACHED ? State.DETACHED : State.CONNECTED;
    }
 
    public <T> T getAttribute(final Class<T> type, final String resourceName, final String attributeName) throws Exception {
@@ -90,9 +112,23 @@ public class BalancerTarget {
       return managementProxy.invokeOperation(type, resourceName, operationName, operationArgs);
    }
 
+   public void active() {
+      state = State.ACTIVATED;
+   }
 
-   public void disconnect() throws ActiveMQException {
-      this.managementProxy.stop();
+   public void disconnect() throws Exception {
+      state = state == State.DETACHED ? State.DETACHED : State.ATTACHED;
+
+      try {
+         managementProxy.close();
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+      sessionFactory.close();
+   }
+
+   public void detach() {
+      state = State.DETACHED;
    }
 
    @Override
