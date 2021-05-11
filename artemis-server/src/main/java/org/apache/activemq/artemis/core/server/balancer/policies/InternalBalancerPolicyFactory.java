@@ -21,12 +21,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class InternalBalancerPolicyFactory implements BalancerPolicyFactory {
+public class InternalBalancerPolicyFactory extends BalancerPolicyFactory {
    private static final Map<String, Supplier<BalancerPolicy>> supportedPolicies = new HashMap<>();
 
    static {
       supportedPolicies.put(ConsistentHashBalancerPolicy.NAME, () -> new ConsistentHashBalancerPolicy());
       supportedPolicies.put(FirstElementBalancerPolicy.NAME, () -> new FirstElementBalancerPolicy());
+      supportedPolicies.put(LeastConnectionsBalancerPolicy.NAME, () -> new LeastConnectionsBalancerPolicy());
       supportedPolicies.put(RoundRobinBalancerPolicy.NAME, () -> new RoundRobinBalancerPolicy());
    }
 

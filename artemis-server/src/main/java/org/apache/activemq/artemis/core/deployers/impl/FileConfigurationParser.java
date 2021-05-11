@@ -47,6 +47,7 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.UDPBroadcastEndpointFactory;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
@@ -87,6 +88,7 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
 import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicy;
+import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicyFactory;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
@@ -2546,31 +2548,56 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       mainConfig.getDivertConfigurations().add(config);
    }
 
-   private void parseBalancerConfiguration(final Element e, final Configuration config) {
-      String name = e.getAttribute("name");
+   private void parseBalancerConfiguration(final Element e, final Configuration config) throws ClassNotFoundException {
+      BalancerConfiguration balancerConfiguration = new BalancerConfiguration();
 
-      BalancerPolicy policy = null;
+      balancerConfiguration.setName(e.getAttribute("name"));
+
+      balancerConfiguration.setAffinityTimeout(getInteger(e, "affinity-timeout",
+         balancerConfiguration.getAffinityTimeout(), Validators.MINUS_ONE_OR_GE_ZERO));
+
       String discoveryGroupName = null;
       List<String> staticConnectorNames = new ArrayList<>();
+      BalancerPolicyConfiguration policyConfiguration = null;
       NodeList children = e.getChildNodes();
-
-      String policyName = getString(e, "policy-name", null, Validators.NO_CHECK);
 
       for (int j = 0; j < children.getLength(); j++) {
          Node child = children.item(j);
 
-         if (child.getNodeName().equals("discovery-group-ref")) {
-            discoveryGroupName = child.getAttributes().getNamedItem("discovery-group-name").getNodeValue();
+         if (child.getNodeName().equals("policy")) {
+            policyConfiguration = new BalancerPolicyConfiguration();
+            parseBalancerPolicyConfiguration((Element)child, policyConfiguration);
+            balancerConfiguration.setPolicyConfiguration(policyConfiguration);
+         } else if (child.getNodeName().equals("discovery-group-ref")) {
+            balancerConfiguration.setDiscoveryGroupName(child.getAttributes().getNamedItem("discovery-group-name").getNodeValue());
          } else if (child.getNodeName().equals("static-connectors")) {
             getStaticConnectors(staticConnectorNames, child);
+            balancerConfiguration.setStaticConnectors(staticConnectorNames);
          }
       }
 
-      BalancerConfiguration balancerConfiguration = new BalancerConfiguration().setName(name).setPolicyName(policyName).
-         setDiscoveryGroupName(discoveryGroupName).setStaticConnectors(staticConnectorNames);
-
       config.getBalancerConfigurations().add(balancerConfiguration);
    }
+
+   private void parseBalancerPolicyConfiguration(final Element e, final BalancerPolicyConfiguration policyConfiguration) throws ClassNotFoundException {
+      String name = e.getAttribute("name");
+
+      BalancerPolicyFactory.forName(name);
+
+      policyConfiguration.setName(name);
+
+      NodeList children = e.getChildNodes();
+      for (int i = 0; i < children.getLength(); i++) {
+         Node child = children.item(i);
+
+         if (child.getNodeName().equals("policy")) {
+            BalancerPolicyConfiguration nextPolicyConfiguration = new BalancerPolicyConfiguration();
+            parseBalancerPolicyConfiguration((Element) child, nextPolicyConfiguration);
+            policyConfiguration.setNext(nextPolicyConfiguration);
+         }
+      }
+   }
+
 
    /**RedirectConfiguration
     * @param e

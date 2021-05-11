@@ -24,29 +24,49 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 
-public class DiscoveryBalancerPool implements BalancerPool {
-   private final ActiveMQServer server;
+public class DiscoveryBalancerPool extends BalancerPool {
    private final String discoveryGroupName;
-   private final ArrayList<BalancerTarget> targets = new ArrayList<>();
 
    private DiscoveryGroup discoveryGroup;
 
-   public DiscoveryBalancerPool(String discoveryGroupName, ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
-      this.server = server;
+   public DiscoveryBalancerPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, String discoveryGroupName) {
+      super(server, scheduledExecutor);
       this.discoveryGroupName = discoveryGroupName;
    }
 
    @Override
    public void start() throws Exception {
-      DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().getDiscoveryGroupConfigurations().get(discoveryGroupName);
-      discoveryGroup = new DiscoveryGroup(server.getNodeID().toString(), discoveryGroupName, discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
+      super.start();
+
+      DiscoveryGroupConfiguration discoveryGroupConfiguration = getServer().getConfiguration().getDiscoveryGroupConfigurations().get(discoveryGroupName);
+      discoveryGroup = new DiscoveryGroup(getServer().getNodeID().toString(), discoveryGroupName, discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
       discoveryGroup.registerListener(newConnectors -> {
-         targets.clear();
+         List<BalancerTarget> addingTargets = new ArrayList<>();
+         Map<String, BalancerTarget> removingTragets = new HashMap<>();
+         for (BalancerTarget target : getTargets()) {
+            removingTragets.put(target.getNodeID(), target);
+         }
+
          for (DiscoveryEntry newConnector : newConnectors) {
-            targets.add(new BalancerTarget(newConnector.getNodeID(), newConnector.getConnector()));
+            BalancerTarget addingTarget = removingTragets.remove(newConnector.getNodeID());
+
+            if (addingTarget != null) {
+               addingTargets.add(addingTarget);
+            }
+         }
+
+         for (BalancerTarget removingTraget : removingTragets.values()) {
+            removeTarget(removingTraget.getNodeID());
+         }
+
+         for (BalancerTarget addingTarget : addingTargets) {
+            addTarget(addingTarget);
          }
       });
       discoveryGroup.start();
@@ -54,6 +74,8 @@ public class DiscoveryBalancerPool implements BalancerPool {
 
    @Override
    public void stop() throws Exception {
+      super.stop();
+
       if (discoveryGroup != null) {
          discoveryGroup.stop();
       }
@@ -62,10 +84,5 @@ public class DiscoveryBalancerPool implements BalancerPool {
    @Override
    public boolean isStarted() {
       return false;
-   }
-
-   @Override
-   public List<BalancerTarget> getTargets() {
-      return targets;
    }
 }

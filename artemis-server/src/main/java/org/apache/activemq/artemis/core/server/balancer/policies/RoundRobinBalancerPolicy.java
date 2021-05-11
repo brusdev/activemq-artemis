@@ -22,15 +22,17 @@ import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
 import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
-public class RoundRobinBalancerPolicy implements BalancerPolicy {
+import java.util.Collections;
+import java.util.List;
+
+public class RoundRobinBalancerPolicy extends BalancerPolicy {
    public static final String NAME = "ROUND_ROBIN";
 
    private BalancerPool pool;
    private int pos = RandomUtil.randomInt();
 
-   @Override
-   public String getName() {
-      return NAME;
+   public RoundRobinBalancerPolicy() {
+      super(NAME);
    }
 
    @Override
@@ -44,11 +46,14 @@ public class RoundRobinBalancerPolicy implements BalancerPolicy {
    }
 
    @Override
-   public BalancerTarget selectTarget(String key) {
-      if (pool.getTargets().size() > 0) {
+   public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
+      if (targets.size() > 1) {
          pos = pos % pool.getTargets().size();
-         return pool.getTargets().get(pos++);
+         return selectTargetsNext(Collections.singletonList(targets.get(pos++)), key);
+      } else if (targets.size() > 0) {
+         return selectTargetsNext(targets, key);
       }
-      return null;
+
+      return targets;
    }
 }
