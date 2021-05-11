@@ -474,7 +474,6 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          log.error("Error init connection", e);
       }
 
-      boolean connectionRedirected = false;
       if (connectionCallback.getTransportConnection().isRedirectEnabled()) {
          org.apache.activemq.artemis.spi.core.remoting.Connection transportConnection = connectionCallback.getTransportConnection();
 
@@ -486,8 +485,6 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
             connectionCallback.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
          if (balancerTarget != null) {
-            connectionRedirected = true;
-
             String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, balancerTarget.getConnector().getParams());
             int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, balancerTarget.getConnector().getParams());
 
@@ -499,12 +496,15 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
             info.put(AmqpSupport.PORT, Integer.toString(port));
             error.setInfo(info);
             connection.setCondition(error);
-
-            connection.close();
+         } else {
+            ErrorCondition error = new ErrorCondition();
+            error.setCondition(ConnectionError.CONNECTION_FORCED);
+            error.setDescription(ConnectionError.CONNECTION_FORCED.toString());
+            connection.setCondition(error);
          }
-      }
 
-      if (!connectionRedirected) {
+         connection.close();
+      } else {
          if (!validateConnection(connection)) {
             connection.close();
          } else {

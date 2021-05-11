@@ -95,12 +95,12 @@ public class BalancerController implements ActiveMQComponent {
    public BalancerTarget getTarget(String key) {
       BalancerTarget target = affinityCache.getIfPresent(key);
 
-      if (target != null && target.getState() != BalancerTarget.State.READY) {
+      if (target != null && target.getState() != BalancerTarget.State.ACTIVATED) {
          target = null;
       }
 
       if (target == null) {
-         List<BalancerTarget> targets = pool.getTargets(BalancerTarget.State.READY);
+         List<BalancerTarget> targets = pool.getTargets(BalancerTarget.State.ACTIVATED);
 
          List<BalancerTarget> selectedTargets = policy.selectTargets(targets, key);
 

@@ -23,11 +23,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RedirectKeyBuilder {
+   private String defaultValue = "DEFAULT";
    private RedirectKey key;
    private String username;
    private Connection connection;
 
    private static final Pattern ipv4Pattern = Pattern.compile("^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\\.(?!$)|$)){4}$");
+
+   public String getDefaultValue() {
+      return defaultValue;
+   }
+
+   public RedirectKeyBuilder setDefaultValue(String defaultValue) {
+      this.defaultValue = defaultValue;
+      return this;
+   }
 
    public String getUsername() {
       return username;
@@ -49,22 +59,28 @@ public class RedirectKeyBuilder {
    }
 
    public String build() {
+      String keyValue = null;
+
       switch (key) {
          case SNI_HOST:
-            return connection.getSNIHostName();
+            keyValue = connection.getSNIHostName();
+            break;
          case SOURCE_IP:
             if (connection.getRemoteAddress() != null) {
                Matcher ipv4Matcher = ipv4Pattern.matcher(connection.getRemoteAddress());
 
                if (ipv4Matcher.find()) {
-                  return ipv4Matcher.group();
+                  keyValue = ipv4Matcher.group();
                }
             }
-            return null;
+            break;
          case USER_NAME:
-            return username;
+            keyValue = username;
+            break;
          default:
             throw new IllegalStateException("Unexpected value: " + key);
       }
+
+      return keyValue != null ? keyValue : defaultValue;
    }
 }

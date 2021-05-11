@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Function;
 
 public class DiscoveryBalancerPool extends BalancerPool {
    private final String discoveryGroupName;
@@ -56,13 +55,13 @@ public class DiscoveryBalancerPool extends BalancerPool {
          for (DiscoveryEntry newConnector : newConnectors) {
             BalancerTarget addingTarget = removingTragets.remove(newConnector.getNodeID());
 
-            if (addingTarget != null) {
-               addingTargets.add(addingTarget);
+            if (addingTarget == null) {
+               addingTargets.add(new BalancerTarget(newConnector.getNodeID(), newConnector.getConnector()));
             }
          }
 
          for (BalancerTarget removingTraget : removingTragets.values()) {
-            removeTarget(removingTraget.getNodeID());
+            //removeTarget(removingTraget.getNodeID());
          }
 
          for (BalancerTarget addingTarget : addingTargets) {

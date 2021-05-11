@@ -31,6 +31,7 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
 import org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
@@ -49,20 +50,20 @@ public class RedirectTest extends ClusterTestBase {
    public void testSimple() throws Exception {
       final SimpleString queueName = new SimpleString("RedirectTestQueue");
       ArrayList<BalancerConfiguration> balancerConfigurations = new ArrayList<>();
-      balancerConfigurations.add(new BalancerConfiguration().setName("r1").
-         setPolicyName(FirstElementBalancerPolicy.NAME).setDiscoveryGroupName("dg1"));
+      balancerConfigurations.add(new BalancerConfiguration().setName("simple-balancer").setDiscoveryGroupName("dg1").
+         setPolicyConfiguration(new BalancerPolicyConfiguration().setName(FirstElementBalancerPolicy.NAME)));
 
       setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(2, groupAddress, groupPort, true, true, false);
 
       getServer(0).getConfiguration().setBalancerConfigurations(balancerConfigurations);
-      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-to", "r1");
+      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-to", "simple-balancer");
       getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-key", "USER_NAME");
 
       startServers(0, 1, 2);
 
-      ConnectionFactory connectionFactory = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
+      ConnectionFactory connectionFactory = createFactory(2, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
 
       try (Connection connection = connectionFactory.createConnection()) {
          connection.start();
