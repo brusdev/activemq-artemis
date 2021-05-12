@@ -32,29 +32,17 @@ public class LeastConnectionsPolicy extends Policy {
 
    public static final String GET_CONNECTION_COUNT_TASK_NAME = "GET_CONNECTION_COUNT_TASK";
 
-   private Pool pool;
+   private static final PoolTask GET_CONNECTION_COUNT_POOL_TASK =  new PoolTask("GET_CONNECTION_COUNT", balancerTarget -> {
+      try {
+         return balancerTarget.getAttribute(Integer.class, "broker", "ConnectionCount");
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+      return null;
+   });
 
    public LeastConnectionsPolicy() {
-      super(NAME);
-   }
-
-   @Override
-   public void load(BrokerBalancer controller) {
-      pool = controller.getPool();
-
-      pool.addTask(new PoolTask("GET_CONNECTION_COUNT", balancerTarget -> {
-         try {
-            return balancerTarget.getAttribute(Integer.class, "broker", "ConnectionCount");
-         } catch (Exception e) {
-            e.printStackTrace();
-         }
-         return null;
-      }));
-   }
-
-   @Override
-   public void unload() {
-
+      super(NAME, new PoolTask[] { GET_CONNECTION_COUNT_POOL_TASK});
    }
 
    @Override
@@ -66,7 +54,7 @@ public class LeastConnectionsPolicy extends Policy {
             Integer connectionCount = (Integer)target.getTaskResult(GET_CONNECTION_COUNT_TASK_NAME);
 
             if (connectionCount == null) {
-               connectionCount = -1;
+               connectionCount = Integer.MAX_VALUE;
             }
 
             List<BrokerBalancerTarget> leastTargets = sortedTargets.get(connectionCount);
@@ -81,7 +69,7 @@ public class LeastConnectionsPolicy extends Policy {
 
          return sortedTargets.firstEntry().getValue();
       } else if (targets.size() > 0) {
-         return selectTargetsNext(targets, key);
+         return selectNextTargets(targets, key);
       }
 
       return targets;

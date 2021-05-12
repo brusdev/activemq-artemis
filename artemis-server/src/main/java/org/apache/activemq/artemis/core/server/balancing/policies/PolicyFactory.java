@@ -35,7 +35,7 @@ public abstract class PolicyFactory {
       throw new ClassNotFoundException("No BalancerPolicyFactory found for the policy " + policyName);
    }
 
-   public static Policy policyForName(String policyName) throws ClassNotFoundException {
+   public static Policy createPolicyForName(String policyName) throws ClassNotFoundException {
       return PolicyFactory.forName(policyName).createPolicy(policyName);
    }
 

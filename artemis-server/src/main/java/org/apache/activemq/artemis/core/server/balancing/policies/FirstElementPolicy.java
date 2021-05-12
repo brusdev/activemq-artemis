@@ -27,28 +27,16 @@ import java.util.List;
 public class FirstElementPolicy extends Policy {
    public static final String NAME = "FIRST_ELEMENT";
 
-   private Pool pool;
-
    public FirstElementPolicy() {
-      super(NAME);
-   }
-
-   @Override
-   public void load(BrokerBalancer controller) {
-      pool = controller.getPool();
-   }
-
-   @Override
-   public void unload() {
-
+      super(NAME, null);
    }
 
    @Override
    public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
       if (targets.size() > 1) {
-         return selectTargetsNext(Collections.singletonList(targets.get(0)), key);
+         return selectNextTargets(Collections.singletonList(targets.get(0)), key);
       } else if (targets.size() > 0) {
-         return selectTargetsNext(targets, key);
+         return selectNextTargets(targets, key);
       }
 
       return targets;

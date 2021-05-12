@@ -17,48 +17,39 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
-import org.apache.activemq.artemis.core.server.balancing.pools.PoolTask;
+import org.junit.Assert;
+import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
-public abstract class Policy {
-   private final String name;
+public abstract class BasePolicyTest {
 
-   private final PoolTask[] poolTasks;
+   abstract protected Policy createPolicy();
 
-   private Policy next;
+   @Test
+   public void testNoTarget() {
+      Policy policy = createPolicy();
 
-   public String getName() {
-      return name;
+      List<BrokerBalancerTarget> selectedTargets = policy.selectTargets(Collections.emptyList(), "test");
+
+      Assert.assertEquals(0, selectedTargets.size());
    }
 
-   public PoolTask[] getPoolTasks() {
-      return poolTasks;
-   }
+   @Test
+   public void testSingleTarget() {
+      Policy policy = createPolicy();
 
-   public Policy getNext() {
-      return next;
-   }
+      ArrayList<BrokerBalancerTarget> targets = new ArrayList<>();
+      targets.add(new BrokerBalancerTarget(UUID.randomUUID().toString(), new TransportConfiguration()));
 
-   public Policy setNext(Policy next) {
-      this.next = next;
-      return this;
-   }
+      List<BrokerBalancerTarget> selectedTargets = policy.selectTargets(targets, "test");
 
-   public Policy(final String name, final PoolTask[] poolTasks) {
-      this.name = name;
-      this.poolTasks = poolTasks;
-   }
-
-   public abstract List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key);
-
-   protected List<BrokerBalancerTarget> selectNextTargets(List<BrokerBalancerTarget> targets, String key) {
-      if (next == null) {
-         return targets;
-      }
-
-      return next.selectTargets(targets, key);
+      Assert.assertEquals(1, selectedTargets.size());
+      Assert.assertEquals(selectedTargets.get(0), targets.get(0));
    }
 }

@@ -30,20 +30,8 @@ import java.util.TreeMap;
 public class ConsistentHashPolicy extends Policy {
    public static final String NAME = "CONSISTENT_HASH";
 
-   private Pool pool;
-
    public ConsistentHashPolicy() {
-      super(NAME);
-   }
-
-   @Override
-   public void load(BrokerBalancer controller) {
-      pool = controller.getPool();
-   }
-
-   @Override
-   public void unload() {
-
+      super(NAME, null);
    }
 
    @Override
@@ -51,7 +39,7 @@ public class ConsistentHashPolicy extends Policy {
       if (targets.size() > 1) {
          NavigableMap<Integer, BrokerBalancerTarget> consistentTargets = new TreeMap<>();
 
-         for (BrokerBalancerTarget target : pool.getTargets()) {
+         for (BrokerBalancerTarget target : targets) {
             consistentTargets.put(target.getNodeID().hashCode(), target);
          }
 
@@ -62,10 +50,10 @@ public class ConsistentHashPolicy extends Policy {
                consistentEntry = consistentTargets.firstEntry();
             }
 
-            return selectTargetsNext(Collections.singletonList(consistentEntry.getValue()), key);
+            return selectNextTargets(Collections.singletonList(consistentEntry.getValue()), key);
          }
       } else if (targets.size() > 0) {
-         return selectTargetsNext(targets, key);
+         return selectNextTargets(targets, key);
       }
 
       return targets;

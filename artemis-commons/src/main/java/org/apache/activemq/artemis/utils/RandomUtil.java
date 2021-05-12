@@ -57,7 +57,7 @@ public class RandomUtil {
    }
 
    public static int randomInt() {
-      return RandomUtil.random.nextInt();
+      return RandomUtil.random.nextInt(Integer.SIZE - 1);
    }
 
    public static int randomPositiveInt() {
