@@ -28,30 +28,19 @@ import java.util.List;
 public class RoundRobinPolicy extends Policy {
    public static final String NAME = "ROUND_ROBIN";
 
-   private Pool pool;
-   private int pos = RandomUtil.randomInt();
+   private int pos = RandomUtil.randomInterval(0, Integer.MAX_VALUE);
 
    public RoundRobinPolicy() {
-      super(NAME);
-   }
-
-   @Override
-   public void load(BrokerBalancer controller) {
-      pool = controller.getPool();
-   }
-
-   @Override
-   public void unload() {
-
+      super(NAME, null);
    }
 
    @Override
    public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
       if (targets.size() > 1) {
-         pos = pos % pool.getTargets().size();
-         return selectTargetsNext(Collections.singletonList(targets.get(pos++)), key);
+         pos = pos % targets.size();
+         return selectNextTargets(Collections.singletonList(targets.get(pos++)), key);
       } else if (targets.size() > 0) {
-         return selectTargetsNext(targets, key);
+         return selectNextTargets(targets, key);
       }
 
       return targets;

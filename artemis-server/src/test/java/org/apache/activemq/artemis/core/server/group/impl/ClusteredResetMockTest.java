@@ -46,6 +46,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Divert;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.QueueFactory;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import org.apache.activemq.artemis.core.server.cluster.Bridge;
 import org.apache.activemq.artemis.core.server.cluster.BroadcastGroup;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
@@ -322,6 +323,16 @@ public class ClusteredResetMockTest extends ActiveMQTestBase {
 
       @Override
       public void unregisterCluster(String name) throws Exception {
+
+      }
+
+      @Override
+      public void registerBrokerBalancer(BrokerBalancer balancer) throws Exception {
+
+      }
+
+      @Override
+      public void unregisterBrokerBalancer(String name) throws Exception {
 
       }
 

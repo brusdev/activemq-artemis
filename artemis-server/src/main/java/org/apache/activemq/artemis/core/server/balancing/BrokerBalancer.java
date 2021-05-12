@@ -27,6 +27,7 @@ import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
+import org.apache.activemq.artemis.core.server.balancing.pools.PoolTask;
 import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
 
 import java.util.List;
@@ -66,18 +67,36 @@ public class BrokerBalancer implements ActiveMQComponent {
          pool = new StaticPool(server, scheduledExecutor, config.getStaticConnectors());
       }
 
-      policy = createPolicy(config.getPolicyConfiguration());
+      policy = loadPolicy(config.getPolicyConfiguration());
 
       pool.start();
-
-      this.policy.load(this);
    }
 
-   private Policy createPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
-      Policy policy = PolicyFactory.policyForName(policyConfig.getName());
+   private Policy loadPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
+      Policy policy = PolicyFactory.createPolicyForName(policyConfig.getName());
+
+      if (policy.getPoolTasks() != null) {
+         for (PoolTask task : policy.getPoolTasks()) {
+            pool.addTask(task);
+         }
+      }
 
       if (policyConfig.getNext() != null) {
-         policy.setNext(createPolicy(policyConfig.getNext()));
+         policy.setNext(loadPolicy(policyConfig.getNext()));
+      }
+
+      return policy;
+   }
+
+   private Policy unloadPolicy(Policy policy) {
+      if (policy.getPoolTasks() != null) {
+         for (PoolTask task : policy.getPoolTasks()) {
+            pool.removeTask(task.getName());
+         }
+      }
+
+      if (policy.getNext() != null) {
+         unloadPolicy(policy.getNext());
       }
 
       return policy;
@@ -85,7 +104,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    @Override
    public void stop() throws Exception {
-      policy.unload();
+      unloadPolicy(policy);
 
       pool.stop();
    }
