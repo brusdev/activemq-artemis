@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.pools;
+package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class DiscoveryBalancerPool extends BalancerPool {
+public class DiscoveryPool extends Pool {
    private final String discoveryGroupName;
 
    private DiscoveryGroup discoveryGroup;
 
-   public DiscoveryBalancerPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, String discoveryGroupName) {
+   public DiscoveryPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, String discoveryGroupName) {
       super(server, scheduledExecutor);
       this.discoveryGroupName = discoveryGroupName;
    }
@@ -46,25 +46,25 @@ public class DiscoveryBalancerPool extends BalancerPool {
       DiscoveryGroupConfiguration discoveryGroupConfiguration = getServer().getConfiguration().getDiscoveryGroupConfigurations().get(discoveryGroupName);
       discoveryGroup = new DiscoveryGroup(getServer().getNodeID().toString(), discoveryGroupName, discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
       discoveryGroup.registerListener(newConnectors -> {
-         List<BalancerTarget> addingTargets = new ArrayList<>();
-         Map<String, BalancerTarget> removingTragets = new HashMap<>();
-         for (BalancerTarget target : getTargets()) {
+         List<BrokerBalancerTarget> addingTargets = new ArrayList<>();
+         Map<String, BrokerBalancerTarget> removingTragets = new HashMap<>();
+         for (BrokerBalancerTarget target : getTargets()) {
             removingTragets.put(target.getNodeID(), target);
          }
 
          for (DiscoveryEntry newConnector : newConnectors) {
-            BalancerTarget addingTarget = removingTragets.remove(newConnector.getNodeID());
+            BrokerBalancerTarget addingTarget = removingTragets.remove(newConnector.getNodeID());
 
             if (addingTarget == null) {
-               addingTargets.add(new BalancerTarget(newConnector.getNodeID(), newConnector.getConnector()));
+               addingTargets.add(new BrokerBalancerTarget(newConnector.getNodeID(), newConnector.getConnector()));
             }
          }
 
-         for (BalancerTarget removingTraget : removingTragets.values()) {
+         for (BrokerBalancerTarget removingTraget : removingTragets.values()) {
             //removeTarget(removingTraget.getNodeID());
          }
 
-         for (BalancerTarget addingTarget : addingTargets) {
+         for (BrokerBalancerTarget addingTarget : addingTargets) {
             addTarget(addingTarget);
          }
       });

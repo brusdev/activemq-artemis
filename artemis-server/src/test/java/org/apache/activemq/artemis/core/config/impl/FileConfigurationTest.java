@@ -55,10 +55,10 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
-import org.apache.activemq.artemis.core.server.balancer.policies.ConsistentHashBalancerPolicy;
-import org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy;
-import org.apache.activemq.artemis.core.server.balancer.policies.LeastConnectionsBalancerPolicy;
-import org.apache.activemq.artemis.core.server.balancer.policies.RoundRobinBalancerPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.RoundRobinPolicy;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.impl.ActiveMQServerImpl;
 import org.apache.activemq.artemis.core.server.impl.LegacyLDAPSecuritySettingPlugin;
@@ -267,19 +267,19 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       Assert.assertEquals(3, conf.getBalancerConfigurations().size());
       for (BalancerConfiguration bc : conf.getBalancerConfigurations()) {
          if (bc.getName().equals("simple-balancer")) {
-            Assert.assertEquals(bc.getPolicyConfiguration(), FirstElementBalancerPolicy.NAME);
+            Assert.assertEquals(bc.getPolicyConfiguration(), FirstElementPolicy.NAME);
             Assert.assertNull(bc.getPolicyConfiguration().getNext());
             Assert.assertEquals("connector1", bc.getStaticConnectors().get(0));
             Assert.assertEquals(null, bc.getDiscoveryGroupName());
          } else if (bc.getName().equals("consistent-hash-balancer")) {
-            Assert.assertEquals(bc.getPolicyConfiguration(), ConsistentHashBalancerPolicy.NAME);
+            Assert.assertEquals(bc.getPolicyConfiguration(), ConsistentHashPolicy.NAME);
             Assert.assertNull(bc.getPolicyConfiguration().getNext());
             Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
             Assert.assertEquals("dg1", bc.getDiscoveryGroupName());
          } else {
             Assert.assertEquals("least-connections-balancer", bc.getName());
-            Assert.assertEquals(bc.getPolicyConfiguration(), LeastConnectionsBalancerPolicy.NAME);
-            Assert.assertEquals(bc.getPolicyConfiguration().getNext(), RoundRobinBalancerPolicy.NAME);
+            Assert.assertEquals(bc.getPolicyConfiguration(), LeastConnectionsPolicy.NAME);
+            Assert.assertEquals(bc.getPolicyConfiguration().getNext(), RoundRobinPolicy.NAME);
             Assert.assertNull(bc.getPolicyConfiguration().getNext().getNext());
             Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
             Assert.assertEquals("dg2", bc.getDiscoveryGroupName());

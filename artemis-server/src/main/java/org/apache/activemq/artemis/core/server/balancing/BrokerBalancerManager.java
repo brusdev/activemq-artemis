@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer;
+package org.apache.activemq.artemis.core.server.balancing;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,39 +27,44 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.jboss.logging.Logger;
 
-public class BalancerManager implements ActiveMQComponent {
-   private static final Logger logger = Logger.getLogger(BalancerManager.class);
+public final class BrokerBalancerManager implements ActiveMQComponent {
+   private static final Logger logger = Logger.getLogger(BrokerBalancerManager.class);
 
    private final Configuration config;
    private final ActiveMQServer server;
    private final ScheduledExecutorService scheduledExecutor;
 
-   private Map<String, BalancerController> balancerControllers = new HashMap<>();
+   private Map<String, BrokerBalancer> balancerControllers = new HashMap<>();
 
 
-   public BalancerManager(final Configuration config, final ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
+   public BrokerBalancerManager(final Configuration config, final ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
       this.config = config;
       this.server = server;
       this.scheduledExecutor = scheduledExecutor;
    }
 
-   public void deploy() {
+   public void deploy() throws Exception {
       for (BalancerConfiguration balancerConfig : config.getBalancerConfigurations()) {
-         balancerControllers.put(balancerConfig.getName(), new BalancerController(balancerConfig, server, scheduledExecutor));
+         BrokerBalancer balancer = new BrokerBalancer(balancerConfig, server, scheduledExecutor);
+
+         balancerControllers.put(balancerConfig.getName(), balancer);
+
+         server.getManagementService().registerBrokerBalancer(balancer);
       }
    }
 
    @Override
    public void start() throws Exception {
-      for (BalancerController balancerController : balancerControllers.values()) {
-         balancerController.start();
+      for (BrokerBalancer brokerBalancer : balancerControllers.values()) {
+         brokerBalancer.start();
       }
    }
 
    @Override
    public void stop() throws Exception {
-      for (BalancerController balancerController : balancerControllers.values()) {
-         balancerController.stop();
+      for (BrokerBalancer balancer : balancerControllers.values()) {
+         balancer.stop();
+         server.getManagementService().registerBrokerBalancer(balancer);
       }
    }
 
@@ -68,7 +73,7 @@ public class BalancerManager implements ActiveMQComponent {
       return false;
    }
 
-   public BalancerController getBalancer(String name) {
+   public BrokerBalancer getBalancer(String name) {
       return balancerControllers.get(name);
    }
 }

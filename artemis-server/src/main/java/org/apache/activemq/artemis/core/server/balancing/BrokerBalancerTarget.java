@@ -15,20 +15,24 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer;
+package org.apache.activemq.artemis.core.server.balancing;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.JsonUtil;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
+import org.apache.activemq.artemis.utils.JsonLoader;
 
+import javax.json.JsonObject;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BalancerTarget {
+public class BrokerBalancerTarget implements Serializable {
    private final String nodeID;
    private final TransportConfiguration connector;
    private final ServerLocator serverLocator;
@@ -44,7 +48,7 @@ public class BalancerTarget {
       DETACHED
    }
 
-   private volatile BalancerTarget.State state = BalancerTarget.State.DETACHED;
+   private volatile BrokerBalancerTarget.State state = BrokerBalancerTarget.State.DETACHED;
 
    public String getNodeID() {
       return nodeID;
@@ -62,7 +66,7 @@ public class BalancerTarget {
       return serverLocator;
    }
 
-   public BalancerTarget(String nodeID, TransportConfiguration connector) {
+   public BrokerBalancerTarget(String nodeID, TransportConfiguration connector) {
       this.nodeID = nodeID;
       this.connector = connector;
       this.serverLocator = ActiveMQClient.createServerLocatorWithoutHA(connector);
@@ -131,11 +135,16 @@ public class BalancerTarget {
       state = State.DETACHED;
    }
 
+   public JsonObject toJson() {
+      return JsonLoader.createObjectBuilder().add("nodeID", nodeID).add("connector", connector.toJson()).add("state", state.name()).build();
+   }
+
    @Override
    public String toString() {
-      StringBuilder stringBuilder = new StringBuilder(BalancerTarget.class.getSimpleName());
+      StringBuilder stringBuilder = new StringBuilder(BrokerBalancerTarget.class.getSimpleName());
       stringBuilder.append("(nodeID=" + nodeID);
       stringBuilder.append(", connector=" + connector);
+      stringBuilder.append(", state=" + state);
       stringBuilder.append(") ");
       return stringBuilder.toString();
    }

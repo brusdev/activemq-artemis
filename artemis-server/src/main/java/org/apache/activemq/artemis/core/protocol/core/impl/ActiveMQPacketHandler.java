@@ -48,7 +48,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
@@ -169,14 +169,14 @@ public class ActiveMQPacketHandler implements ChannelHandler {
                .setConnection(connection.getTransportConnection())
                .setUsername(request.getUsername());
 
-            BalancerTarget balancerTarget = server.getBalancerManager().getBalancer(
+            BrokerBalancerTarget target = server.getBalancerManager().getBalancer(
                connection.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
-            if (balancerTarget != null) {
-               ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), balancerTarget.getConnector());
+            if (target != null) {
+               ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), target.getConnector());
 
-               connection.disconnect(DisconnectReason.REDIRECT, balancerTarget.getNodeID(), balancerTarget.getConnector());
-               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(balancerTarget);
+               connection.disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
+               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(target);
             } else {
                throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
             }

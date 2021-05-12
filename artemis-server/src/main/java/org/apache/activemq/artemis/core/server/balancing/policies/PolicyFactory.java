@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 
 import java.util.ServiceLoader;
 
-public abstract class BalancerPolicyFactory {
-   private static final ServiceLoader<BalancerPolicyFactory> serviceLoader =
-      ServiceLoader.load(BalancerPolicyFactory.class, BalancerController.class.getClassLoader());
+public abstract class PolicyFactory {
+   private static final ServiceLoader<PolicyFactory> serviceLoader =
+      ServiceLoader.load(PolicyFactory.class, BrokerBalancer.class.getClassLoader());
 
-   public static BalancerPolicyFactory forName(String policyName) throws ClassNotFoundException {
-      for (BalancerPolicyFactory policyFactory : serviceLoader) {
+   public static PolicyFactory forName(String policyName) throws ClassNotFoundException {
+      for (PolicyFactory policyFactory : serviceLoader) {
          if (policyFactory.supports(policyName)) {
             return policyFactory;
          }
@@ -35,13 +35,13 @@ public abstract class BalancerPolicyFactory {
       throw new ClassNotFoundException("No BalancerPolicyFactory found for the policy " + policyName);
    }
 
-   public static BalancerPolicy policyForName(String policyName) throws ClassNotFoundException {
-      return BalancerPolicyFactory.forName(policyName).createPolicy(policyName);
+   public static Policy policyForName(String policyName) throws ClassNotFoundException {
+      return PolicyFactory.forName(policyName).createPolicy(policyName);
    }
 
    public abstract String[] getSupportedPolicies();
 
-   public abstract boolean supports(String name);
+   public abstract boolean supports(String policyName);
 
-   public abstract BalancerPolicy createPolicy(String name);
+   public abstract Policy createPolicy(String policyName);
 }

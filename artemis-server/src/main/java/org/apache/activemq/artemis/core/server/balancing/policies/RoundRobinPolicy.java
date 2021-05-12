@@ -15,28 +15,28 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
-import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
 import java.util.Collections;
 import java.util.List;
 
-public class RoundRobinBalancerPolicy extends BalancerPolicy {
+public class RoundRobinPolicy extends Policy {
    public static final String NAME = "ROUND_ROBIN";
 
-   private BalancerPool pool;
+   private Pool pool;
    private int pos = RandomUtil.randomInt();
 
-   public RoundRobinBalancerPolicy() {
+   public RoundRobinPolicy() {
       super(NAME);
    }
 
    @Override
-   public void load(BalancerController controller) {
+   public void load(BrokerBalancer controller) {
       pool = controller.getPool();
    }
 
@@ -46,7 +46,7 @@ public class RoundRobinBalancerPolicy extends BalancerPolicy {
    }
 
    @Override
-   public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
+   public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
       if (targets.size() > 1) {
          pos = pos % pool.getTargets().size();
          return selectTargetsNext(Collections.singletonList(targets.get(pos++)), key);

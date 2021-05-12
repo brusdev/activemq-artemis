@@ -38,7 +38,7 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
@@ -481,12 +481,12 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
             .setConnection(connectionCallback.getTransportConnection())
             .setUsername(handler.getSASLResult().getUser());
 
-         BalancerTarget balancerTarget = protocolManager.getServer().getBalancerManager().getBalancer(
+         BrokerBalancerTarget target = protocolManager.getServer().getBalancerManager().getBalancer(
             connectionCallback.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
-         if (balancerTarget != null) {
-            String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, balancerTarget.getConnector().getParams());
-            int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, balancerTarget.getConnector().getParams());
+         if (target != null) {
+            String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
+            int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
 
             ErrorCondition error = new ErrorCondition();
             error.setCondition(ConnectionError.REDIRECT);

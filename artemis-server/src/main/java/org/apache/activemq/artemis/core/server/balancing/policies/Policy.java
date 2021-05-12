@@ -15,42 +15,42 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 
 import java.util.List;
 
-public abstract class BalancerPolicy {
+public abstract class Policy {
    private String name;
 
-   private BalancerPolicy next;
+   private Policy next;
 
    public String getName() {
       return name;
    }
 
-   public BalancerPolicy getNext() {
+   public Policy getNext() {
       return next;
    }
 
-   public BalancerPolicy setNext(BalancerPolicy next) {
+   public Policy setNext(Policy next) {
       this.next = next;
       return this;
    }
 
-   public BalancerPolicy(String name) {
+   public Policy(String name) {
 
    }
 
-   public abstract void load(BalancerController controller);
+   public abstract void load(BrokerBalancer controller);
 
    public abstract void unload();
 
-   public abstract List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key);
+   public abstract List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key);
 
-   protected List<BalancerTarget> selectTargetsNext(List<BalancerTarget> targets, String key) {
+   protected List<BrokerBalancerTarget> selectTargetsNext(List<BrokerBalancerTarget> targets, String key) {
       if (next == null) {
          return targets;
       }

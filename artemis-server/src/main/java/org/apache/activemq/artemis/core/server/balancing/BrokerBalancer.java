@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer;
+package org.apache.activemq.artemis.core.server.balancing;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -23,31 +23,34 @@ import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicy;
-import org.apache.activemq.artemis.core.server.balancer.policies.BalancerPolicyFactory;
-import org.apache.activemq.artemis.core.server.balancer.pools.DiscoveryBalancerPool;
-import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
-import org.apache.activemq.artemis.core.server.balancer.pools.StaticBalancerPool;
+import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
+import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
+import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
+import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
 
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class BalancerController implements ActiveMQComponent {
+public class BrokerBalancer implements ActiveMQComponent {
 
+   private final String name;
    private final BalancerConfiguration config;
    private final ActiveMQServer server;
    private final ScheduledExecutorService scheduledExecutor;
 
-   private BalancerPool pool;
-   private BalancerPolicy policy;
-   private final Cache<String, BalancerTarget> affinityCache;
+   private Pool pool;
+   private Policy policy;
+   private final Cache<String, BrokerBalancerTarget> affinityCache;
 
-   public BalancerPool getPool() {
-      return pool;
+   public String getName() {
+      return name;
    }
 
-   public BalancerController(final BalancerConfiguration config, final ActiveMQServer server, final ScheduledExecutorService scheduledExecutor) {
+   public BrokerBalancer(final BalancerConfiguration config, final ActiveMQServer server, final ScheduledExecutorService scheduledExecutor) {
+      name = config.getName();
+
       this.config = config;
       this.server = server;
       this.scheduledExecutor = scheduledExecutor;
@@ -58,9 +61,9 @@ public class BalancerController implements ActiveMQComponent {
    @Override
    public void start() throws Exception {
       if (config.getDiscoveryGroupName() != null) {
-         pool = new DiscoveryBalancerPool(server, scheduledExecutor, config.getDiscoveryGroupName());
+         pool = new DiscoveryPool(server, scheduledExecutor, config.getDiscoveryGroupName());
       } else {
-         pool = new StaticBalancerPool(server, scheduledExecutor, config.getStaticConnectors());
+         pool = new StaticPool(server, scheduledExecutor, config.getStaticConnectors());
       }
 
       policy = createPolicy(config.getPolicyConfiguration());
@@ -70,8 +73,8 @@ public class BalancerController implements ActiveMQComponent {
       this.policy.load(this);
    }
 
-   private BalancerPolicy createPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
-      BalancerPolicy policy = BalancerPolicyFactory.policyForName(policyConfig.getName());
+   private Policy createPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
+      Policy policy = PolicyFactory.policyForName(policyConfig.getName());
 
       if (policyConfig.getNext() != null) {
          policy.setNext(createPolicy(policyConfig.getNext()));
@@ -92,17 +95,17 @@ public class BalancerController implements ActiveMQComponent {
       return false;
    }
 
-   public BalancerTarget getTarget(String key) {
-      BalancerTarget target = affinityCache.getIfPresent(key);
+   public BrokerBalancerTarget getTarget(String key) {
+      BrokerBalancerTarget target = affinityCache.getIfPresent(key);
 
-      if (target != null && target.getState() != BalancerTarget.State.ACTIVATED) {
+      if (target != null && target.getState() != BrokerBalancerTarget.State.ACTIVATED) {
          target = null;
       }
 
       if (target == null) {
-         List<BalancerTarget> targets = pool.getTargets(BalancerTarget.State.ACTIVATED);
+         List<BrokerBalancerTarget> targets = pool.getTargets(BrokerBalancerTarget.State.ACTIVATED);
 
-         List<BalancerTarget> selectedTargets = policy.selectTargets(targets, key);
+         List<BrokerBalancerTarget> selectedTargets = policy.selectTargets(targets, key);
 
          if (selectedTargets.size() > 0) {
             target = selectedTargets.get(0);
