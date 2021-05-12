@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.pools;
+package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class StaticBalancerPool extends BalancerPool {
+public class StaticPool extends Pool {
    private final List<String> staticConnectors;
 
-   public StaticBalancerPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, List<String> staticConnectors) {
+   public StaticPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, List<String> staticConnectors) {
       super(server, scheduledExecutor);
       this.staticConnectors = staticConnectors;
 
@@ -36,7 +36,7 @@ public class StaticBalancerPool extends BalancerPool {
             server.getConfiguration().getConnectorConfigurations();
 
       for (String connector : staticConnectors) {
-         addTarget(new BalancerTarget(connector, connectorConfigurations.get(connector)));
+         addTarget(new BrokerBalancerTarget(connector, connectorConfigurations.get(connector)));
       }
    }
 }

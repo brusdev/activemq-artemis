@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class InternalBalancerPolicyFactory extends BalancerPolicyFactory {
-   private static final Map<String, Supplier<BalancerPolicy>> supportedPolicies = new HashMap<>();
+public class InternalPolicyFactory extends PolicyFactory {
+   private static final Map<String, Supplier<Policy>> supportedPolicies = new HashMap<>();
 
    static {
-      supportedPolicies.put(ConsistentHashBalancerPolicy.NAME, () -> new ConsistentHashBalancerPolicy());
-      supportedPolicies.put(FirstElementBalancerPolicy.NAME, () -> new FirstElementBalancerPolicy());
-      supportedPolicies.put(LeastConnectionsBalancerPolicy.NAME, () -> new LeastConnectionsBalancerPolicy());
-      supportedPolicies.put(RoundRobinBalancerPolicy.NAME, () -> new RoundRobinBalancerPolicy());
+      supportedPolicies.put(ConsistentHashPolicy.NAME, () -> new ConsistentHashPolicy());
+      supportedPolicies.put(FirstElementPolicy.NAME, () -> new FirstElementPolicy());
+      supportedPolicies.put(LeastConnectionsPolicy.NAME, () -> new LeastConnectionsPolicy());
+      supportedPolicies.put(RoundRobinPolicy.NAME, () -> new RoundRobinPolicy());
    }
 
    @Override
@@ -37,16 +37,16 @@ public class InternalBalancerPolicyFactory extends BalancerPolicyFactory {
    }
 
    @Override
-   public boolean supports(String name) {
-      return supportedPolicies.containsKey(name);
+   public boolean supports(String policyName) {
+      return supportedPolicies.containsKey(policyName);
    }
 
    @Override
-   public BalancerPolicy createPolicy(String name) {
-      Supplier<BalancerPolicy> policySupplier = supportedPolicies.get(name);
+   public Policy createPolicy(String policyName) {
+      Supplier<Policy> policySupplier = supportedPolicies.get(policyName);
 
       if (policySupplier == null) {
-         throw new IllegalStateException("Unexpected value: " + name);
+         throw new IllegalArgumentException("Policy not supported: " + policyName);
       }
 
       return policySupplier.get();

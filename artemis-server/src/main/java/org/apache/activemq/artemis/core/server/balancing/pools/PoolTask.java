@@ -15,25 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.pools;
+package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 
 import java.util.function.Function;
 
-public class BalancerPoolTask {
+public class PoolTask {
    private final String name;
-   private final Function<BalancerTarget, Object> task;
+   private final Function<BrokerBalancerTarget, Object> task;
 
    public String getName() {
       return name;
    }
 
-   public Function<BalancerTarget, Object> getTask() {
+   public Function<BrokerBalancerTarget, Object> getTask() {
       return task;
    }
 
-   public BalancerPoolTask(String name, Function<BalancerTarget, Object> task) {
+   public PoolTask(String name, Function<BrokerBalancerTarget, Object> task) {
       this.name = name;
       this.task = task;
    }

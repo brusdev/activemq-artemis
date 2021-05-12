@@ -15,26 +15,26 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
-import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 
 import java.util.Collections;
 import java.util.List;
 
-public class FirstElementBalancerPolicy extends BalancerPolicy {
+public class FirstElementPolicy extends Policy {
    public static final String NAME = "FIRST_ELEMENT";
 
-   private BalancerPool pool;
+   private Pool pool;
 
-   public FirstElementBalancerPolicy() {
+   public FirstElementPolicy() {
       super(NAME);
    }
 
    @Override
-   public void load(BalancerController controller) {
+   public void load(BrokerBalancer controller) {
       pool = controller.getPool();
    }
 
@@ -44,7 +44,7 @@ public class FirstElementBalancerPolicy extends BalancerPolicy {
    }
 
    @Override
-   public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
+   public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
       if (targets.size() > 1) {
          return selectTargetsNext(Collections.singletonList(targets.get(0)), key);
       } else if (targets.size() > 0) {

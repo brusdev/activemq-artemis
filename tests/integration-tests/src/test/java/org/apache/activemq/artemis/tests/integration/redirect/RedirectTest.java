@@ -32,7 +32,7 @@ import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.config.BalancerConfiguration;
 import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
-import org.apache.activemq.artemis.core.server.balancer.policies.FirstElementBalancerPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
@@ -51,7 +51,7 @@ public class RedirectTest extends ClusterTestBase {
       final SimpleString queueName = new SimpleString("RedirectTestQueue");
       ArrayList<BalancerConfiguration> balancerConfigurations = new ArrayList<>();
       balancerConfigurations.add(new BalancerConfiguration().setName("simple-balancer").setDiscoveryGroupName("dg1").
-         setPolicyConfiguration(new BalancerPolicyConfiguration().setName(FirstElementBalancerPolicy.NAME)));
+         setPolicyConfiguration(new BalancerPolicyConfiguration().setName(FirstElementPolicy.NAME)));
 
       setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
       setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);

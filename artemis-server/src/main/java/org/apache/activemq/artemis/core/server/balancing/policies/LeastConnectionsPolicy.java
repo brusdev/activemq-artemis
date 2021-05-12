@@ -15,34 +15,34 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
-import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
-import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPoolTask;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
+import org.apache.activemq.artemis.core.server.balancing.pools.PoolTask;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class LeastConnectionsBalancerPolicy extends BalancerPolicy {
+public class LeastConnectionsPolicy extends Policy {
    public static final String NAME = "LEAST_CONNECTIONS";
 
    public static final String GET_CONNECTION_COUNT_TASK_NAME = "GET_CONNECTION_COUNT_TASK";
 
-   private BalancerPool pool;
+   private Pool pool;
 
-   public LeastConnectionsBalancerPolicy() {
+   public LeastConnectionsPolicy() {
       super(NAME);
    }
 
    @Override
-   public void load(BalancerController controller) {
+   public void load(BrokerBalancer controller) {
       pool = controller.getPool();
 
-      pool.addTask(new BalancerPoolTask("GET_CONNECTION_COUNT", balancerTarget -> {
+      pool.addTask(new PoolTask("GET_CONNECTION_COUNT", balancerTarget -> {
          try {
             return balancerTarget.getAttribute(Integer.class, "broker", "ConnectionCount");
          } catch (Exception e) {
@@ -58,18 +58,18 @@ public class LeastConnectionsBalancerPolicy extends BalancerPolicy {
    }
 
    @Override
-   public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
+   public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
       if (targets.size() > 1) {
-         NavigableMap<Integer, List<BalancerTarget>> sortedTargets = new TreeMap<>();
+         NavigableMap<Integer, List<BrokerBalancerTarget>> sortedTargets = new TreeMap<>();
 
-         for (BalancerTarget target : targets) {
+         for (BrokerBalancerTarget target : targets) {
             Integer connectionCount = (Integer)target.getTaskResult(GET_CONNECTION_COUNT_TASK_NAME);
 
             if (connectionCount == null) {
                connectionCount = -1;
             }
 
-            List<BalancerTarget> leastTargets = sortedTargets.get(connectionCount);
+            List<BrokerBalancerTarget> leastTargets = sortedTargets.get(connectionCount);
 
             if (leastTargets == null) {
                leastTargets = new ArrayList<>();

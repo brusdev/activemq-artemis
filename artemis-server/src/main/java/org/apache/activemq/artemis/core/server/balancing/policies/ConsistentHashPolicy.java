@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.policies;
+package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancer.BalancerController;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
-import org.apache.activemq.artemis.core.server.balancer.pools.BalancerPool;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,17 +27,17 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class ConsistentHashBalancerPolicy extends BalancerPolicy {
+public class ConsistentHashPolicy extends Policy {
    public static final String NAME = "CONSISTENT_HASH";
 
-   private BalancerPool pool;
+   private Pool pool;
 
-   public ConsistentHashBalancerPolicy() {
+   public ConsistentHashPolicy() {
       super(NAME);
    }
 
    @Override
-   public void load(BalancerController controller) {
+   public void load(BrokerBalancer controller) {
       pool = controller.getPool();
    }
 
@@ -47,16 +47,16 @@ public class ConsistentHashBalancerPolicy extends BalancerPolicy {
    }
 
    @Override
-   public List<BalancerTarget> selectTargets(List<BalancerTarget> targets, String key) {
+   public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
       if (targets.size() > 1) {
-         NavigableMap<Integer, BalancerTarget> consistentTargets = new TreeMap<>();
+         NavigableMap<Integer, BrokerBalancerTarget> consistentTargets = new TreeMap<>();
 
-         for (BalancerTarget target : pool.getTargets()) {
+         for (BrokerBalancerTarget target : pool.getTargets()) {
             consistentTargets.put(target.getNodeID().hashCode(), target);
          }
 
          if (consistentTargets.size() > 0) {
-            Map.Entry<Integer, BalancerTarget> consistentEntry = consistentTargets.floorEntry(key.hashCode());
+            Map.Entry<Integer, BrokerBalancerTarget> consistentEntry = consistentTargets.floorEntry(key.hashCode());
 
             if (consistentEntry == null) {
                consistentEntry = consistentTargets.firstEntry();

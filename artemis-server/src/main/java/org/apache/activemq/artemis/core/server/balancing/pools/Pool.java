@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancer.pools;
+package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancer.BalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,11 +30,11 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public abstract class BalancerPool implements ActiveMQComponent {
+public abstract class Pool implements ActiveMQComponent {
    private final ActiveMQServer server;
    private final ScheduledExecutorService scheduledExecutor;
-   private final Map<String, BalancerPoolTask> tasks = new HashMap<>();
-   private final Map<String, BalancerTarget> targets = new HashMap<>();
+   private final Map<String, PoolTask> tasks = new HashMap<>();
+   private final Map<String, BrokerBalancerTarget> targets = new HashMap<>();
 
    private ScheduledFuture checkScheduledFuture;
    private ScheduledFuture connectScheduledFuture;
@@ -48,46 +48,46 @@ public abstract class BalancerPool implements ActiveMQComponent {
       return scheduledExecutor;
    }
 
-   public List<BalancerTarget> getTargets() {
+   public List<BrokerBalancerTarget> getTargets() {
       return new ArrayList<>(targets.values());
    }
 
-   public List<BalancerTarget> getTargets(BalancerTarget.State state) {
+   public List<BrokerBalancerTarget> getTargets(BrokerBalancerTarget.State state) {
       return targets.values().stream().filter(balancerTarget ->
          balancerTarget.getState() == state).collect(Collectors.toList());
    }
 
-   public BalancerPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
+   public Pool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
       this.server = server;
       this.scheduledExecutor = scheduledExecutor;
    }
 
-   public void addTarget(BalancerTarget target) {
+   public void addTarget(BrokerBalancerTarget target) {
       targets.put(target.getNodeID(), target);
       target.attach();
    }
 
-   public BalancerTarget getTarget(String nodeId) {
+   public BrokerBalancerTarget getTarget(String nodeId) {
       return targets.get(nodeId);
    }
 
-   public BalancerTarget removeTarget(String nodeId) {
-      BalancerTarget target = targets.remove(nodeId);
+   public BrokerBalancerTarget removeTarget(String nodeId) {
+      BrokerBalancerTarget target = targets.remove(nodeId);
       if (target != null) {
          target.detach();
       }
       return target;
    }
 
-   public void addTask(BalancerPoolTask task) {
+   public void addTask(PoolTask task) {
       tasks.put(task.getName(), task);
    }
 
-   public BalancerPoolTask getTask(String name) {
+   public PoolTask getTask(String name) {
       return tasks.get(name);
    }
 
-   public BalancerPoolTask removeTask(String name) {
+   public PoolTask removeTask(String name) {
       return tasks.remove(name);
    }
 
@@ -96,10 +96,10 @@ public abstract class BalancerPool implements ActiveMQComponent {
       connectScheduledFuture = scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
          @Override
          public void run() {
-            List<BalancerTarget> connectingTargets = getTargets(BalancerTarget.State.ATTACHED);
+            List<BrokerBalancerTarget> connectingTargets = getTargets(BrokerBalancerTarget.State.ATTACHED);
 
-            for (BalancerTarget connectingTarget : connectingTargets) {
-               if (connectingTarget.getState() == BalancerTarget.State.ATTACHED) {
+            for (BrokerBalancerTarget connectingTarget : connectingTargets) {
+               if (connectingTarget.getState() == BrokerBalancerTarget.State.ATTACHED) {
                   try {
                      connectingTarget.connect();
                   } catch (Exception e) {
@@ -113,10 +113,10 @@ public abstract class BalancerPool implements ActiveMQComponent {
       checkScheduledFuture = scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
          @Override
          public void run() {
-            List<BalancerTarget> checkingTargets = getTargets(BalancerTarget.State.CONNECTED);
+            List<BrokerBalancerTarget> checkingTargets = getTargets(BrokerBalancerTarget.State.CONNECTED);
 
-            for (BalancerTarget checkingTarget : checkingTargets) {
-               if (checkingTarget.getState() == BalancerTarget.State.CONNECTED) {
+            for (BrokerBalancerTarget checkingTarget : checkingTargets) {
+               if (checkingTarget.getState() == BrokerBalancerTarget.State.CONNECTED) {
                   try {
                      Boolean activated = checkingTarget.getAttribute(Boolean.class, "broker", "Active");
 
@@ -135,11 +135,11 @@ public abstract class BalancerPool implements ActiveMQComponent {
          @Override
          public void run() {
             if (tasks.size() > 0) {
-               List<BalancerTarget> schedulingTargets = getTargets(BalancerTarget.State.ACTIVATED);
+               List<BrokerBalancerTarget> schedulingTargets = getTargets(BrokerBalancerTarget.State.ACTIVATED);
 
-               for (BalancerTarget schedulingTarget : schedulingTargets) {
-                  if (schedulingTarget.getState() == BalancerTarget.State.ACTIVATED) {
-                     for (BalancerPoolTask task : tasks.values()) {
+               for (BrokerBalancerTarget schedulingTarget : schedulingTargets) {
+                  if (schedulingTarget.getState() == BrokerBalancerTarget.State.ACTIVATED) {
+                     for (PoolTask task : tasks.values()) {
                         schedulingTarget.setTaskResult(task.getName(),
                            task.getTask().apply(schedulingTarget));
                      }
