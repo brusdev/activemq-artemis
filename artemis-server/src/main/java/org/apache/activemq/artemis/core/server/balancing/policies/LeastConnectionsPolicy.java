@@ -17,9 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
-import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.pools.PoolTask;
 
 import java.util.ArrayList;
@@ -42,7 +40,7 @@ public class LeastConnectionsPolicy extends Policy {
    });
 
    public LeastConnectionsPolicy() {
-      super(NAME, new PoolTask[] { GET_CONNECTION_COUNT_POOL_TASK});
+      super(NAME, new PoolTask[] {GET_CONNECTION_COUNT_POOL_TASK});
    }
 
    @Override
