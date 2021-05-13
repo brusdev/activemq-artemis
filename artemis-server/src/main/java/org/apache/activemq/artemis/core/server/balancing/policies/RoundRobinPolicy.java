@@ -17,9 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
-import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
 import java.util.Collections;

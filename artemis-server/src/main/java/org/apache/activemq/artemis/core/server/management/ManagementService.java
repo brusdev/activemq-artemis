@@ -128,7 +128,7 @@ public interface ManagementService extends NotificationService, ActiveMQComponen
 
    void unregisterCluster(String name) throws Exception;
 
-   void registerBrokerBalancer(final BrokerBalancer balancer) throws Exception;
+   void registerBrokerBalancer(BrokerBalancer balancer) throws Exception;
 
    void unregisterBrokerBalancer(String name) throws Exception;
 

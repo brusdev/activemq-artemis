@@ -29,7 +29,7 @@ import java.util.UUID;
 
 public abstract class BasePolicyTest {
 
-   abstract protected Policy createPolicy();
+   protected abstract Policy createPolicy();
 
    @Test
    public void testNoTarget() {
