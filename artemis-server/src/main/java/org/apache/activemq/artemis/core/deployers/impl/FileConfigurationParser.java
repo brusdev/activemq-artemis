@@ -46,8 +46,8 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.UDPBroadcastEndpointFactory;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.core.config.BalancerConfiguration;
-import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.PolicyConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
@@ -64,6 +64,7 @@ import org.apache.activemq.artemis.core.config.WildcardConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectionElement;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectionAddressType;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPMirrorBrokerConnectionElement;
+import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.config.federation.FederationAddressPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.federation.FederationDownstreamConfiguration;
 import org.apache.activemq.artemis.core.config.federation.FederationPolicySet;
@@ -2558,37 +2559,35 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
    }
 
    private void parseBalancerConfiguration(final Element e, final Configuration config) throws ClassNotFoundException {
-      BalancerConfiguration balancerConfiguration = new BalancerConfiguration();
+      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration();
 
-      balancerConfiguration.setName(e.getAttribute("name"));
+      brokerBalancerConfiguration.setName(e.getAttribute("name"));
 
-      balancerConfiguration.setAffinityTimeout(getInteger(e, "affinity-timeout",
-         balancerConfiguration.getAffinityTimeout(), Validators.MINUS_ONE_OR_GE_ZERO));
+      brokerBalancerConfiguration.setAffinityTimeout(getInteger(e, "affinity-timeout",
+         brokerBalancerConfiguration.getAffinityTimeout(), Validators.MINUS_ONE_OR_GE_ZERO));
 
-      String discoveryGroupName = null;
-      List<String> staticConnectorNames = new ArrayList<>();
-      BalancerPolicyConfiguration policyConfiguration = null;
+      PolicyConfiguration policyConfiguration = null;
+      PoolConfiguration poolConfiguration = null;
       NodeList children = e.getChildNodes();
 
       for (int j = 0; j < children.getLength(); j++) {
          Node child = children.item(j);
 
          if (child.getNodeName().equals("policy")) {
-            policyConfiguration = new BalancerPolicyConfiguration();
-            parseBalancerPolicyConfiguration((Element)child, policyConfiguration);
-            balancerConfiguration.setPolicyConfiguration(policyConfiguration);
-         } else if (child.getNodeName().equals("discovery-group-ref")) {
-            balancerConfiguration.setDiscoveryGroupName(child.getAttributes().getNamedItem("discovery-group-name").getNodeValue());
-         } else if (child.getNodeName().equals("static-connectors")) {
-            getStaticConnectors(staticConnectorNames, child);
-            balancerConfiguration.setStaticConnectors(staticConnectorNames);
+            policyConfiguration = new PolicyConfiguration();
+            parsePolicyConfiguration((Element)child, policyConfiguration);
+            brokerBalancerConfiguration.setPolicyConfiguration(policyConfiguration);
+         } else if (child.getNodeName().equals("pool")) {
+            poolConfiguration = new PoolConfiguration();
+            parsePoolConfiguration((Element) child, poolConfiguration);
+            brokerBalancerConfiguration.setPoolConfiguration(poolConfiguration);
          }
       }
 
-      config.getBalancerConfigurations().add(balancerConfiguration);
+      config.getBalancerConfigurations().add(brokerBalancerConfiguration);
    }
 
-   private void parseBalancerPolicyConfiguration(final Element e, final BalancerPolicyConfiguration policyConfiguration) throws ClassNotFoundException {
+   private void parsePolicyConfiguration(final Element e, final PolicyConfiguration policyConfiguration) throws ClassNotFoundException {
       String name = e.getAttribute("name");
 
       PolicyFactory.forName(name);
@@ -2600,13 +2599,28 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          Node child = children.item(i);
 
          if (child.getNodeName().equals("policy")) {
-            BalancerPolicyConfiguration nextPolicyConfiguration = new BalancerPolicyConfiguration();
-            parseBalancerPolicyConfiguration((Element) child, nextPolicyConfiguration);
+            PolicyConfiguration nextPolicyConfiguration = new PolicyConfiguration();
+            parsePolicyConfiguration((Element) child, nextPolicyConfiguration);
             policyConfiguration.setNext(nextPolicyConfiguration);
          }
       }
    }
 
+   private void parsePoolConfiguration(final Element e, final PoolConfiguration poolConfiguration) throws ClassNotFoundException {
+      NodeList children = e.getChildNodes();
+      for (int i = 0; i < children.getLength(); i++) {
+         Node child = children.item(i);
+
+
+         if (child.getNodeName().equals("discovery-group-ref")) {
+            poolConfiguration.setDiscoveryGroupName(child.getAttributes().getNamedItem("discovery-group-name").getNodeValue());
+         } else if (child.getNodeName().equals("static-connectors")) {
+            List<String> staticConnectorNames = new ArrayList<>();
+            getStaticConnectors(staticConnectorNames, child);
+            poolConfiguration.setStaticConnectors(staticConnectorNames);
+         }
+      }
+   }
 
    /**RedirectConfiguration
     * @param e

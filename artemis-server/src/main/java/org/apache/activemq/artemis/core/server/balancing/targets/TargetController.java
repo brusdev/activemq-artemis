@@ -19,22 +19,32 @@ package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
+import org.jboss.logging.Logger;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class TargetController implements ActiveMQComponent, Runnable {
+   private static final Logger logger = Logger.getLogger(TargetController.class);
+
    private final Target target;
 
    private final Pool pool;
 
    private final ScheduledExecutorService scheduledExecutor;
 
-   private boolean targetReady = false;
+   private volatile boolean started = false;
+
+   private volatile boolean targetReady = false;
 
    private ScheduledFuture scheduledFuture;
 
+
+   @Override
+   public boolean isStarted() {
+      return started;
+   }
 
    public Target getTarget() {
       return target;
@@ -65,8 +75,12 @@ public class TargetController implements ActiveMQComponent, Runnable {
          for (TargetTask targetTask : pool.getTargetTasks()) {
             targetTask.call(target);
          }
+
+         targetReady = true;
       } catch (Exception e) {
-         e.printStackTrace();
+         logger.debug("Target not ready", e);
+
+         targetReady = false;
       }
    }
 
@@ -80,10 +94,5 @@ public class TargetController implements ActiveMQComponent, Runnable {
       if (scheduledFuture != null) {
          scheduledFuture.cancel(true);
       }
-   }
-
-   @Override
-   public boolean isStarted() {
-      return false;
    }
 }

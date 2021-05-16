@@ -26,18 +26,13 @@ import org.apache.activemq.artemis.core.remoting.FailureListener;
 import org.jboss.logging.Logger;
 
 public class CoreTarget extends AbstractTarget {
-   private static final Logger logger = Logger.getLogger(Target.class);
+   private static final Logger logger = Logger.getLogger(CoreTarget.class);
 
    private boolean connected = false;
 
    private final ServerLocator serverLocator;
    private ClientSessionFactory sessionFactory;
    private ActiveMQManagementProxy managementProxy;
-
-   @Override
-   public TargetReference getReference() {
-      return null;
-   }
 
    @Override
    public boolean isConnected() {
@@ -82,7 +77,7 @@ public class CoreTarget extends AbstractTarget {
       try {
          managementProxy.close();
       } catch (Exception e) {
-         e.printStackTrace();
+         logger.debug("Exception on closing the management proxy", e);
       }
       sessionFactory.close();
    }

@@ -15,30 +15,30 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.config;
+package org.apache.activemq.artemis.core.config.balancing;
 
 import java.util.Collections;
 import java.util.Map;
 
-public class BalancerPolicyConfiguration {
+public class PolicyConfiguration {
    private String name;
-   private BalancerPolicyConfiguration next;
+   private PolicyConfiguration next;
    private Map<String, String> properties = Collections.emptyMap();
 
    public String getName() {
       return name;
    }
 
-   public BalancerPolicyConfiguration setName(String name) {
+   public PolicyConfiguration setName(String name) {
       this.name = name;
       return this;
    }
 
-   public BalancerPolicyConfiguration getNext() {
+   public PolicyConfiguration getNext() {
       return next;
    }
 
-   public BalancerPolicyConfiguration setNext(BalancerPolicyConfiguration next) {
+   public PolicyConfiguration setNext(PolicyConfiguration next) {
       this.next = next;
       return this;
    }
@@ -47,7 +47,7 @@ public class BalancerPolicyConfiguration {
       return properties;
    }
 
-   public BalancerPolicyConfiguration setProperties(Map<String, String> properties) {
+   public PolicyConfiguration setProperties(Map<String, String> properties) {
       this.properties = properties;
       return this;
    }

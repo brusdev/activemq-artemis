@@ -31,7 +31,7 @@ public class MockTarget extends AbstractTarget {
 
    private Map<String, Object> attributeValues = new HashMap<>();
 
-   private Map<String, Object> operationReturns = new HashMap<>();
+   private Map<String, Object> operationReturnValues = new HashMap<>();
 
 
    @Override
@@ -88,10 +88,10 @@ public class MockTarget extends AbstractTarget {
 
    @Override
    public Object invokeOperation(String resourceName, String operationName, Object... operationArgs) throws Exception {
-      return operationReturns.get(resourceName + operationName);
+      return operationReturnValues.get(resourceName + operationName);
    }
 
-   public void setOperationReturn(String resourceName, String attributeName, Object value) {
-      operationReturns.put(resourceName + attributeName, value);
+   public void setOperationReturnValue(String resourceName, String attributeName, Object value) {
+      operationReturnValues.put(resourceName + attributeName, value);
    }
 }
