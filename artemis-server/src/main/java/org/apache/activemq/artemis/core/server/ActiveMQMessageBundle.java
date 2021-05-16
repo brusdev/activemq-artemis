@@ -501,4 +501,7 @@ public interface ActiveMQMessageBundle {
 
    @Message(id = 229234, value = "Invalid slow consumer threshold measurement unit {0}", format = Message.Format.MESSAGE_FORMAT)
    IllegalArgumentException invalidSlowConsumerThresholdMeasurementUnit(String val);
+
+   @Message(id = 229235, value = "Invalid target key {0}", format = Message.Format.MESSAGE_FORMAT)
+   IllegalArgumentException invalidTargetKey(String val);
 }
