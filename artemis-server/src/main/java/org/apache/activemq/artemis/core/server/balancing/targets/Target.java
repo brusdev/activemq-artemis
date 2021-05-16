@@ -21,13 +21,32 @@ public interface Target {
 
    TargetReference getReference();
 
+   String getUsername();
+
+   void setUsername(String username);
+
+   String getPassword();
+
+   void setPassword(String password);
+
+   int getCheckPeriod();
+
+   void setCheckPeriod(int checkPeriod);
+
+   TargetListener getListener();
+
+   void setListener(TargetListener listener);
+
    boolean isConnected();
+
 
    void connect() throws Exception;
 
    void disconnect() throws Exception;
 
+
    void checkReadiness() throws Exception;
+
 
    Object getAttribute(String resourceName, String attributeName) throws Exception;
 

@@ -2147,28 +2147,33 @@
    </xsd:complexType>
 
    <xsd:complexType name="brokerBalancerPoolType">
-      <xsd:choice>
-         <xsd:element name="static-connectors" maxOccurs="1" minOccurs="1">
-            <xsd:complexType>
-               <xsd:sequence>
-                  <xsd:element name="connector-ref" type="xsd:string" maxOccurs="unbounded" minOccurs="1"/>
-               </xsd:sequence>
-               <xsd:attributeGroup ref="xml:specialAttrs"/>
-            </xsd:complexType>
-         </xsd:element>
-         <xsd:element name="discovery-group-ref" maxOccurs="1" minOccurs="1">
-            <xsd:complexType>
-               <xsd:attribute name="discovery-group-name" type="xsd:IDREF" use="required">
-                  <xsd:annotation>
-                     <xsd:documentation>
-                        name of discovery group used by this bridge
-                     </xsd:documentation>
-                  </xsd:annotation>
-               </xsd:attribute>
-               <xsd:attributeGroup ref="xml:specialAttrs"/>
-            </xsd:complexType>
-         </xsd:element>
-      </xsd:choice>
+      <xsd:sequence maxOccurs="unbounded">
+         <xsd:element name="username" type="xsd:string" maxOccurs="1" minOccurs="0"/>
+         <xsd:element name="password" type="xsd:string" maxOccurs="1" minOccurs="0"/>
+         <xsd:element name="check-period" type="xsd:long" default="5000" maxOccurs="1" minOccurs="0"/>
+         <xsd:choice>
+            <xsd:element name="static-connectors" maxOccurs="1" minOccurs="1">
+               <xsd:complexType>
+                  <xsd:sequence>
+                     <xsd:element name="connector-ref" type="xsd:string" maxOccurs="unbounded" minOccurs="1"/>
+                  </xsd:sequence>
+                  <xsd:attributeGroup ref="xml:specialAttrs"/>
+               </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="discovery-group-ref" maxOccurs="1" minOccurs="1">
+               <xsd:complexType>
+                  <xsd:attribute name="discovery-group-name" type="xsd:IDREF" use="required">
+                     <xsd:annotation>
+                        <xsd:documentation>
+                           name of discovery group used by this bridge
+                        </xsd:documentation>
+                     </xsd:annotation>
+                  </xsd:attribute>
+                  <xsd:attributeGroup ref="xml:specialAttrs"/>
+               </xsd:complexType>
+            </xsd:element>
+         </xsd:choice>
+      </xsd:sequence>
       <xsd:attributeGroup ref="xml:specialAttrs"/>
    </xsd:complexType>
 

@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.core.server.balancing;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.AbstractTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,11 +54,7 @@ public class MockTarget extends AbstractTarget {
    }
 
    public MockTarget() {
-      this(UUID.randomUUID().toString(), new TransportConfiguration());
-   }
-
-   public MockTarget(String nodeID, TransportConfiguration connector) {
-      super(nodeID, connector);
+      super(new TargetReference(UUID.randomUUID().toString(), new TransportConfiguration()));
    }
 
    @Override

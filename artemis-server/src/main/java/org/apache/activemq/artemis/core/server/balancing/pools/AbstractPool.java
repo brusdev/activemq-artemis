@@ -34,11 +34,51 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractPool implements Pool {
    private final ActiveMQServer server;
+
    private final ScheduledExecutorService scheduledExecutor;
+
    private final List<TargetTask> targetTasks = new ArrayList<>();
+
    private final Map<String, TargetController> targetControllers = new HashMap<>();
 
+   private String username;
+
+   private String password;
+
+   private int checkPeriod;
+
    private volatile boolean started = false;
+
+
+   @Override
+   public String getUsername() {
+      return username;
+   }
+
+   @Override
+   public void setUsername(String username) {
+      this.username = username;
+   }
+
+   @Override
+   public String getPassword() {
+      return password;
+   }
+
+   @Override
+   public void setPassword(String password) {
+      this.password = password;
+   }
+
+   @Override
+   public int getCheckPeriod() {
+      return checkPeriod;
+   }
+
+   @Override
+   public void setCheckPeriod(int checkPeriod) {
+      this.checkPeriod = checkPeriod;
+   }
 
    public ActiveMQServer getServer() {
       return server;
@@ -63,15 +103,23 @@ public abstract class AbstractPool implements Pool {
       return targetTasks;
    }
 
+   @Override
+   public boolean isStarted() {
+      return started;
+   }
+
+
    public AbstractPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
       this.server = server;
+
       this.scheduledExecutor = scheduledExecutor;
    }
+
 
    @Override
    public void addTarget(String nodeId, TransportConfiguration connector) throws Exception {
       Target target = new CoreTarget(new TargetReference(nodeId, connector));
-      TargetController targetController = new TargetController(target, this, scheduledExecutor);
+      TargetController targetController = new TargetController(target, this, scheduledExecutor, checkPeriod);
 
       targetControllers.put(nodeId, targetController);
 
@@ -132,10 +180,5 @@ public abstract class AbstractPool implements Pool {
       for (TargetController targetController : targetControllers) {
          removeTarget(targetController.getTarget().getReference().getNodeID());
       }
-   }
-
-   @Override
-   public boolean isStarted() {
-      return started;
    }
 }

@@ -22,16 +22,74 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 public abstract class AbstractTarget implements Target {
    private final TargetReference reference;
 
+   private String username;
+
+   private String password;
+
+   private int checkPeriod;
+
+   private TargetListener listener;
+
+   @Override
+   public String getUsername() {
+      return username;
+   }
+
+   @Override
+   public void setUsername(String username) {
+      this.username = username;
+   }
+
+   @Override
+   public String getPassword() {
+      return password;
+   }
+
+   @Override
+   public void setPassword(String password) {
+      this.password = password;
+   }
+
+   @Override
+   public int getCheckPeriod() {
+      return checkPeriod;
+   }
+
+   @Override
+   public void setCheckPeriod(int checkPeriod) {
+      this.checkPeriod = checkPeriod;
+   }
+
+   @Override
+   public TargetListener getListener() {
+      return listener;
+   }
+
+   @Override
+   public void setListener(TargetListener listener) {
+      this.listener = listener;
+   }
+
    @Override
    public TargetReference getReference() {
       return reference;
    }
 
-   public AbstractTarget(String nodeID, TransportConfiguration connector) {
-      this(new TargetReference(nodeID, connector));
-   }
 
    public AbstractTarget(TargetReference reference) {
       this.reference = reference;
+   }
+
+
+   protected void fireConnectedEvent() {
+      if (listener != null) {
+         listener.targetConnected();
+      }
+   }
+
+   protected void fireDisconnectedEvent() {
+      if (listener != null) {
+         listener.targetDisconnected();
+      }
    }
 }
