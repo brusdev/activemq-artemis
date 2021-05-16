@@ -17,14 +17,14 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.MockTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 public class LeastConnectionsPolicyTest extends BasePolicyTest {
 
@@ -37,30 +37,35 @@ public class LeastConnectionsPolicyTest extends BasePolicyTest {
    public void testMultipleTargets() {
       final int targetCount = 10;
       Policy policy = createPolicy();
-      List<BrokerBalancerTarget> selectedTargets;
+      List<Target> selectedTargets;
 
-      ArrayList<BrokerBalancerTarget> targets = new ArrayList<>();
+      ArrayList<Target> targets = new ArrayList<>();
       for (int i = 0; i < targetCount; i++) {
-         targets.add(new BrokerBalancerTarget(UUID.randomUUID().toString(), new TransportConfiguration()));
+         targets.add(new MockTarget());
       }
 
       selectedTargets = policy.selectTargets(targets, "test");
       Assert.assertEquals(targetCount, selectedTargets.size());
 
-      for (BrokerBalancerTarget target : targets) {
-         target.setTaskResult(LeastConnectionsPolicy.GET_CONNECTION_COUNT_TASK_NAME, 3);
-      }
+
+      targets.forEach(target -> {
+         ((MockTarget)target).setAttributeValue("broker", "ConnectionCount", 3);
+         Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target));
+      });
       selectedTargets = policy.selectTargets(targets, "test");
       Assert.assertEquals(targetCount, selectedTargets.size());
 
 
-      targets.get(0).setTaskResult(LeastConnectionsPolicy.GET_CONNECTION_COUNT_TASK_NAME, 2);
+      ((MockTarget)targets.get(0)).setAttributeValue("broker", "ConnectionCount", 2);
+      targets.forEach(target -> Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target)));
       selectedTargets = policy.selectTargets(targets, "test");
       Assert.assertEquals(1, selectedTargets.size());
       Assert.assertEquals(targets.get(0), selectedTargets.get(0));
 
-      targets.get(1).setTaskResult(LeastConnectionsPolicy.GET_CONNECTION_COUNT_TASK_NAME, 1);
-      targets.get(2).setTaskResult(LeastConnectionsPolicy.GET_CONNECTION_COUNT_TASK_NAME, 1);
+
+      ((MockTarget)targets.get(1)).setAttributeValue("broker", "ConnectionCount", 1);
+      ((MockTarget)targets.get(2)).setAttributeValue("broker", "ConnectionCount", 1);
+      targets.forEach(target -> Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target)));
       selectedTargets = policy.selectTargets(targets, "test");
       Assert.assertEquals(2, selectedTargets.size());
       Assert.assertTrue(selectedTargets.contains(targets.get(1)));

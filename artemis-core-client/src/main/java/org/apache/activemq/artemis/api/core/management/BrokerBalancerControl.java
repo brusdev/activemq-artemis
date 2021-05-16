@@ -23,5 +23,8 @@ import javax.management.MBeanOperationInfo;
  */
 public interface BrokerBalancerControl {
    @Operation(desc = "Get the target associated with key", impact = MBeanOperationInfo.INFO)
+   Object getTarget(@Parameter(desc = "a key", name = "key") String key);
+
+   @Operation(desc = "Get the target associated with key", impact = MBeanOperationInfo.INFO)
    String getTargetAsJSON(@Parameter(desc = "a key", name = "key") String key);
 }

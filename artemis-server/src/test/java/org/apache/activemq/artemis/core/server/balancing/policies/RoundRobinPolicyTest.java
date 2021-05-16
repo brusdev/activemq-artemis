@@ -17,14 +17,13 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.MockTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class RoundRobinPolicyTest extends BasePolicyTest {
 
@@ -37,12 +36,12 @@ public class RoundRobinPolicyTest extends BasePolicyTest {
    public void testMultipleTargets() {
       final int targetCount = 10;
       Policy policy = createPolicy();
-      List<BrokerBalancerTarget> selectedTargets;
-      List<BrokerBalancerTarget> previousTargets = new ArrayList<>();
+      List<Target> selectedTargets;
+      List<Target> previousTargets = new ArrayList<>();
 
-      ArrayList<BrokerBalancerTarget> targets = new ArrayList<>();
+      ArrayList<Target> targets = new ArrayList<>();
       for (int i = 0; i < targetCount; i++) {
-         targets.add(new BrokerBalancerTarget(UUID.randomUUID().toString(), new TransportConfiguration()));
+         targets.add(new MockTarget());
       }
 
       for (int i = 0; i < targetCount; i++) {

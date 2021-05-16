@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
 import java.util.Collections;
@@ -29,11 +29,11 @@ public class RoundRobinPolicy extends Policy {
    private int pos = RandomUtil.randomInterval(0, Integer.MAX_VALUE);
 
    public RoundRobinPolicy() {
-      super(NAME, null);
+      super(NAME);
    }
 
    @Override
-   public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
+   public List<Target> selectTargets(List<Target> targets, String key) {
       if (targets.size() > 1) {
          pos = pos % targets.size();
          return selectNextTargets(Collections.singletonList(targets.get(pos++)), key);

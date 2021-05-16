@@ -15,28 +15,18 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.policies;
+package org.apache.activemq.artemis.core.server.balancing.targets;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+public abstract class TargetTask {
+   private final String name;
 
-import java.util.Collections;
-import java.util.List;
-
-public class FirstElementPolicy extends Policy {
-   public static final String NAME = "FIRST_ELEMENT";
-
-   public FirstElementPolicy() {
-      super(NAME);
+   public String getName() {
+      return name;
    }
 
-   @Override
-   public List<Target> selectTargets(List<Target> targets, String key) {
-      if (targets.size() > 1) {
-         return selectNextTargets(Collections.singletonList(targets.get(0)), key);
-      } else if (targets.size() > 0) {
-         return selectNextTargets(targets, key);
-      }
-
-      return targets;
+   public TargetTask(String name) {
+      this.name = name;
    }
+
+   public abstract void call(Target target);
 }

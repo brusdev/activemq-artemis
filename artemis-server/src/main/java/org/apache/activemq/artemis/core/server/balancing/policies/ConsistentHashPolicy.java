@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,20 +29,20 @@ public class ConsistentHashPolicy extends Policy {
    public static final String NAME = "CONSISTENT_HASH";
 
    public ConsistentHashPolicy() {
-      super(NAME, null);
+      super(NAME);
    }
 
    @Override
-   public List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key) {
+   public List<Target> selectTargets(List<Target> targets, String key) {
       if (targets.size() > 1) {
-         NavigableMap<Integer, BrokerBalancerTarget> consistentTargets = new TreeMap<>();
+         NavigableMap<Integer, Target> consistentTargets = new TreeMap<>();
 
-         for (BrokerBalancerTarget target : targets) {
-            consistentTargets.put(target.getNodeID().hashCode(), target);
+         for (Target target : targets) {
+            consistentTargets.put(target.getReference().getNodeID().hashCode(), target);
          }
 
          if (consistentTargets.size() > 0) {
-            Map.Entry<Integer, BrokerBalancerTarget> consistentEntry = consistentTargets.floorEntry(key.hashCode());
+            Map.Entry<Integer, Target> consistentEntry = consistentTargets.floorEntry(key.hashCode());
 
             if (consistentEntry == null) {
                consistentEntry = consistentTargets.firstEntry();

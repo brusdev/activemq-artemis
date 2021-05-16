@@ -38,7 +38,7 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
@@ -481,7 +481,7 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
             .setConnection(connectionCallback.getTransportConnection())
             .setUsername(handler.getSASLResult().getUser());
 
-         BrokerBalancerTarget target = protocolManager.getServer().getBalancerManager().getBalancer(
+         TargetReference target = protocolManager.getServer().getBalancerManager().getBalancer(
             connectionCallback.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
          if (target != null) {

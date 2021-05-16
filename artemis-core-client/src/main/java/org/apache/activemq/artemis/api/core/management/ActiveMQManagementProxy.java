@@ -60,7 +60,7 @@ public class ActiveMQManagementProxy implements AutoCloseable {
       session.start();
    }
 
-   public <T> T getAttribute(final Class<T> type, final String resourceName, final String attributeName) throws Exception {
+   public Object getAttribute(final String resourceName, final String attributeName) throws Exception {
       ClientMessage request = session.createMessage(false);
 
       ManagementHelper.putAttribute(request, resourceName, attributeName);
@@ -68,13 +68,13 @@ public class ActiveMQManagementProxy implements AutoCloseable {
       ClientMessage reply = requestor.request(request);
 
       if (ManagementHelper.hasOperationSucceeded(reply)) {
-         return (T)ManagementHelper.getResult(reply, type);
+         return ManagementHelper.getResult(reply);
       } else {
          throw new Exception("Failed to get " + resourceName + "." + attributeName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
       }
    }
 
-   public <T> T invokeOperation(final Class<T> type, final String resourceName, final String operationName, final Object... operationArgs) throws Exception {
+   public Object invokeOperation(final String resourceName, final String operationName, final Object... operationArgs) throws Exception {
       ClientMessage request = session.createMessage(false);
 
       ManagementHelper.putOperationInvocation(request, resourceName, operationName, operationArgs);
@@ -82,7 +82,7 @@ public class ActiveMQManagementProxy implements AutoCloseable {
       ClientMessage reply = requestor.request(request);
 
       if (ManagementHelper.hasOperationSucceeded(reply)) {
-         return (T)ManagementHelper.getResult(reply, type);
+         return ManagementHelper.getResult(reply);
       } else {
          throw new Exception("Failed to invoke " + resourceName + "." + operationName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
       }
