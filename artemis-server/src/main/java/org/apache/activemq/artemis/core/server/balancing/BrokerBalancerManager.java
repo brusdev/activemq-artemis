@@ -78,6 +78,10 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          pool = new StaticAbstractPool(server, scheduledExecutor, config.getStaticConnectors());
       }
 
+      pool.setUsername(config.getUsername());
+      pool.setPassword(config.getPassword());
+      pool.setCheckPeriod(config.getCheckPeriod());
+
       return pool;
    }
 

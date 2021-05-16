@@ -2548,7 +2548,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       mainConfig.getDivertConfigurations().add(config);
    }
 
-   private void parseBalancerConfiguration(final Element e, final Configuration config) throws ClassNotFoundException {
+   private void parseBalancerConfiguration(final Element e, final Configuration config) throws Exception {
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration();
 
       brokerBalancerConfiguration.setName(e.getAttribute("name"));
@@ -2569,7 +2569,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
             brokerBalancerConfiguration.setPolicyConfiguration(policyConfiguration);
          } else if (child.getNodeName().equals("pool")) {
             poolConfiguration = new PoolConfiguration();
-            parsePoolConfiguration((Element) child, poolConfiguration);
+            parsePoolConfiguration((Element) child, config, poolConfiguration);
             brokerBalancerConfiguration.setPoolConfiguration(poolConfiguration);
          }
       }
@@ -2596,11 +2596,19 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       }
    }
 
-   private void parsePoolConfiguration(final Element e, final PoolConfiguration poolConfiguration) throws ClassNotFoundException {
+   private void parsePoolConfiguration(final Element e, final Configuration config, final PoolConfiguration poolConfiguration) throws Exception {
       NodeList children = e.getChildNodes();
       for (int i = 0; i < children.getLength(); i++) {
          Node child = children.item(i);
 
+         poolConfiguration.setUsername(getString(e, "username", null, Validators.NO_CHECK));
+
+         String password = getString(e, "password", null, Validators.NO_CHECK);
+         poolConfiguration.setPassword(password != null ? PasswordMaskingUtil.resolveMask(
+            config.isMaskPassword(), password, config.getPasswordCodec()) : null);
+
+         poolConfiguration.setCheckPeriod(getInteger(e, "check-period",
+            poolConfiguration.getCheckPeriod(), Validators.MINUS_ONE_OR_GE_ZERO));
 
          if (child.getNodeName().equals("discovery-group-ref")) {
             poolConfiguration.setDiscoveryGroupName(child.getAttributes().getNamedItem("discovery-group-name").getNodeValue());

@@ -25,6 +25,17 @@ import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 import java.util.List;
 
 public interface Pool extends ActiveMQComponent {
+   String getUsername();
+
+   void setUsername(String username);
+
+   String getPassword();
+
+   void setPassword(String password);
+
+   int getCheckPeriod();
+
+   void setCheckPeriod(int checkPeriod);
 
    List<Target> getTargets();
 

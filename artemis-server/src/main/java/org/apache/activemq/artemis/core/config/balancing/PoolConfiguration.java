@@ -21,9 +21,40 @@ import java.util.Collections;
 import java.util.List;
 
 public class PoolConfiguration {
+   private String username;
+
+   private String password;
+
    private List<String> staticConnectors = Collections.emptyList();
+
    private String discoveryGroupName = null;
 
+   private int checkPeriod = 5000;
+
+
+   public String getUsername() {
+      return username;
+   }
+
+   public void setUsername(String username) {
+      this.username = username;
+   }
+
+   public String getPassword() {
+      return password;
+   }
+
+   public void setPassword(String password) {
+      this.password = password;
+   }
+
+   public int getCheckPeriod() {
+      return checkPeriod;
+   }
+
+   public void setCheckPeriod(int checkPeriod) {
+      this.checkPeriod = checkPeriod;
+   }
 
    public List<String> getStaticConnectors() {
       return staticConnectors;

@@ -30,31 +30,37 @@ public class ActiveMQManagementProxy implements AutoCloseable {
 
    private final String username;
    private final String password;
-   private final ServerLocator locator;
+   private final ServerLocator serverLocator;
 
    private ClientSessionFactory sessionFactory;
    private ClientSession session;
    private ClientRequestor requestor;
 
-   public ActiveMQManagementProxy(ClientSessionFactory sessionFactory) {
-      username = null;
-      password = null;
-      locator = null;
+   public ActiveMQManagementProxy(final ServerLocator serverLocator, final String username, final String password) {
+      this.serverLocator = serverLocator;
 
-      this.sessionFactory = sessionFactory;
+      this.username = username;
+
+      this.password = password;
    }
 
-   public ActiveMQManagementProxy(final ServerLocator locator, final String username, final String password) {
-      this.locator = locator;
+   public ActiveMQManagementProxy(ClientSessionFactory sessionFactory, final String username, final String password) {
+      this.serverLocator = null;
+
+      this.sessionFactory = sessionFactory;
+
       this.username = username;
+
       this.password = password;
    }
 
    public void start() throws Exception {
-      if (locator != null) {
-         sessionFactory = locator.createSessionFactory();
+      if (serverLocator != null) {
+         sessionFactory = serverLocator.createSessionFactory();
       }
+
       session = sessionFactory.createSession(username, password, false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE);
+
       requestor = new ClientRequestor(session, ActiveMQDefaultConfiguration.getDefaultManagementAddress());
 
       session.start();

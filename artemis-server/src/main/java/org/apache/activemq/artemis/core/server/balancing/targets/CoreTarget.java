@@ -25,7 +25,7 @@ import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
 import org.jboss.logging.Logger;
 
-public class CoreTarget extends AbstractTarget {
+public class CoreTarget extends AbstractTarget implements FailureListener {
    private static final Logger logger = Logger.getLogger(CoreTarget.class);
 
    private boolean connected = false;
@@ -48,26 +48,14 @@ public class CoreTarget extends AbstractTarget {
    @Override
    public void connect() throws Exception {
       sessionFactory = serverLocator.createSessionFactory();
-      sessionFactory.getConnection().addFailureListener(new FailureListener() {
-         @Override
-         public void connectionFailed(ActiveMQException exception, boolean failedOver) {
-            try {
-               disconnect();
-            } catch (Exception e) {
-               logger.debug("Exception on disconnecting: ", e);
-            }
-         }
+      sessionFactory.getConnection().addFailureListener(this);
 
-         @Override
-         public void connectionFailed(ActiveMQException exception, boolean failedOver, String scaleDownTargetNodeID) {
-            connectionFailed(exception, failedOver);
-         }
-      });
-
-      managementProxy = new ActiveMQManagementProxy(sessionFactory);
+      managementProxy = new ActiveMQManagementProxy(sessionFactory, getUsername(), getPassword());
       managementProxy.start();
 
       connected = true;
+
+      fireConnectedEvent();
    }
 
    @Override
@@ -79,7 +67,11 @@ public class CoreTarget extends AbstractTarget {
       } catch (Exception e) {
          logger.debug("Exception on closing the management proxy", e);
       }
+
+      sessionFactory.getConnection().removeFailureListener(this);
       sessionFactory.close();
+
+      fireDisconnectedEvent();
    }
 
    @Override
@@ -101,5 +93,21 @@ public class CoreTarget extends AbstractTarget {
    @Override
    public Object invokeOperation(String resourceName, String operationName, Object... operationArgs) throws Exception {
       return managementProxy.invokeOperation(resourceName, operationName, operationArgs);
+   }
+
+   @Override
+   public void connectionFailed(ActiveMQException exception, boolean failedOver) {
+      connectionFailed(exception, failedOver, null);
+   }
+
+   @Override
+   public void connectionFailed(ActiveMQException exception, boolean failedOver, String scaleDownTargetNodeID) {
+      try {
+         if (connected) {
+            disconnect();
+         }
+      } catch (Exception e) {
+         logger.debug("Exception on disconnecting: ", e);
+      }
    }
 }

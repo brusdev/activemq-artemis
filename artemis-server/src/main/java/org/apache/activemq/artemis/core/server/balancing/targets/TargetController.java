@@ -25,7 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class TargetController implements ActiveMQComponent, Runnable {
+public class TargetController implements ActiveMQComponent, Runnable, TargetListener {
    private static final Logger logger = Logger.getLogger(TargetController.class);
 
    private final Target target;
@@ -33,6 +33,8 @@ public class TargetController implements ActiveMQComponent, Runnable {
    private final Pool pool;
 
    private final ScheduledExecutorService scheduledExecutor;
+
+   private final int checkPeriod;
 
    private volatile boolean started = false;
 
@@ -55,12 +57,27 @@ public class TargetController implements ActiveMQComponent, Runnable {
    }
 
 
-   public TargetController(Target target, Pool pool, ScheduledExecutorService scheduledExecutor) {
+   public TargetController(Target target, Pool pool, ScheduledExecutorService scheduledExecutor, int checkPeriod) {
       this.target = target;
+      this.target.setListener(this);
 
       this.pool = pool;
 
       this.scheduledExecutor = scheduledExecutor;
+
+      this.checkPeriod = checkPeriod;
+   }
+
+   @Override
+   public void start() throws Exception {
+      scheduledFuture = scheduledExecutor.scheduleWithFixedDelay(this, 0, checkPeriod, TimeUnit.MILLISECONDS);
+   }
+
+   @Override
+   public void stop() throws Exception {
+      if (scheduledFuture != null) {
+         scheduledFuture.cancel(true);
+      }
    }
 
    @Override
@@ -85,14 +102,12 @@ public class TargetController implements ActiveMQComponent, Runnable {
    }
 
    @Override
-   public void start() throws Exception {
-      scheduledFuture = scheduledExecutor.scheduleWithFixedDelay(this, 0, 5000, TimeUnit.MILLISECONDS);
+   public void targetConnected() {
+
    }
 
    @Override
-   public void stop() throws Exception {
-      if (scheduledFuture != null) {
-         scheduledFuture.cancel(true);
-      }
+   public void targetDisconnected() {
+      targetReady = false;
    }
 }
