@@ -17,8 +17,6 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-
 public abstract class AbstractTarget implements Target {
    private final TargetReference reference;
 
