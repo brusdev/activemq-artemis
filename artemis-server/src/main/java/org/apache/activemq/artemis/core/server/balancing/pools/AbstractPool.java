@@ -55,7 +55,7 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public List<Target> getTargets() {
-      return targetControllers.values().stream().filter(targetController -> targetController.isStarted()).map(targetController -> targetController.getTarget()).collect(Collectors.toList());
+      return targetControllers.values().stream().filter(targetController -> targetController.isTargetReady()).map(targetController -> targetController.getTarget()).collect(Collectors.toList());
    }
 
    @Override

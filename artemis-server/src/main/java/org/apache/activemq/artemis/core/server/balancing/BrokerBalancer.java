@@ -19,101 +19,69 @@ package org.apache.activemq.artemis.core.server.balancing;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.apache.activemq.artemis.core.config.BalancerConfiguration;
-import org.apache.activemq.artemis.core.config.BalancerPolicyConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
-import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
-import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryAbstractPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
-import org.apache.activemq.artemis.core.server.balancing.pools.StaticAbstractPool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BrokerBalancer implements ActiveMQComponent {
 
    private final String name;
-   private final BalancerConfiguration config;
-   private final ActiveMQServer server;
-   private final ScheduledExecutorService scheduledExecutor;
 
-   private Pool pool;
-   private Policy policy;
+   private final Pool pool;
+
+   private final Policy policy;
+
+   private final int affinityTimeout;
+
+   private final ActiveMQServer server;
+
    private final Cache<String, Target> affinityCache;
+
+   private volatile boolean started = false;
+
 
    public String getName() {
       return name;
    }
 
-   public BrokerBalancer(final BalancerConfiguration config, final ActiveMQServer server, final ScheduledExecutorService scheduledExecutor) {
-      name = config.getName();
+   @Override
+   public boolean isStarted() {
+      return started;
+   }
 
-      this.config = config;
+
+   public BrokerBalancer(final String name, final Pool pool, final Policy policy, final int affinityTimeout, final ActiveMQServer server) {
+      this.name = name;
+
+      this.pool = pool;
+
+      this.policy = policy;
+
       this.server = server;
-      this.scheduledExecutor = scheduledExecutor;
 
-      affinityCache = CacheBuilder.newBuilder().expireAfterAccess(config.getAffinityTimeout(), TimeUnit.MILLISECONDS).build();
+      this.affinityTimeout = affinityTimeout;
+
+      affinityCache = CacheBuilder.newBuilder().expireAfterAccess(affinityTimeout, TimeUnit.MILLISECONDS).build();
    }
 
    @Override
    public void start() throws Exception {
-      if (config.getDiscoveryGroupName() != null) {
-         pool = new DiscoveryAbstractPool(server, scheduledExecutor, config.getDiscoveryGroupName());
-      } else {
-         pool = new StaticAbstractPool(server, scheduledExecutor, config.getStaticConnectors());
-      }
-
-      policy = loadPolicy(config.getPolicyConfiguration());
-
       pool.start();
-   }
 
-   private Policy loadPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
-      Policy policy = PolicyFactory.createPolicyForName(policyConfig.getName());
-
-      if (policy.getTargetTasks() != null) {
-         for (TargetTask targetTask : policy.getTargetTasks()) {
-            pool.addTargetTask(targetTask);
-         }
-      }
-
-      if (policyConfig.getNext() != null) {
-         policy.setNext(loadPolicy(policyConfig.getNext()));
-      }
-
-      return policy;
-   }
-
-   private Policy unloadPolicy(Policy policy) {
-      if (policy.getTargetTasks() != null) {
-         for (TargetTask targetTask : policy.getTargetTasks()) {
-            pool.removeTargetTask(targetTask);
-         }
-      }
-
-      if (policy.getNext() != null) {
-         unloadPolicy(policy.getNext());
-      }
-
-      return policy;
+      started = true;
    }
 
    @Override
    public void stop() throws Exception {
-      unloadPolicy(policy);
+      started = false;
 
       pool.stop();
-   }
-
-   @Override
-   public boolean isStarted() {
-      return false;
    }
 
    public TargetReference getTarget(String key) {
@@ -136,6 +104,6 @@ public class BrokerBalancer implements ActiveMQComponent {
          }
       }
 
-      return target.getReference();
+      return target != null ? target.getReference() : null;
    }
 }

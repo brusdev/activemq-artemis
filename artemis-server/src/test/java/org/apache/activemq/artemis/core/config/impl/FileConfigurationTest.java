@@ -46,7 +46,7 @@ import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.config.FileDeploymentManager;
 import org.apache.activemq.artemis.core.config.HAPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.MetricsConfiguration;
-import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
 import org.apache.activemq.artemis.core.config.ha.LiveOnlyPolicyConfiguration;
 import org.apache.activemq.artemis.core.journal.impl.JournalImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
@@ -265,24 +265,24 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       }
 
       Assert.assertEquals(3, conf.getBalancerConfigurations().size());
-      for (BalancerConfiguration bc : conf.getBalancerConfigurations()) {
+      for (BrokerBalancerConfiguration bc : conf.getBalancerConfigurations()) {
          if (bc.getName().equals("simple-balancer")) {
             Assert.assertEquals(bc.getPolicyConfiguration(), FirstElementPolicy.NAME);
             Assert.assertNull(bc.getPolicyConfiguration().getNext());
-            Assert.assertEquals("connector1", bc.getStaticConnectors().get(0));
-            Assert.assertEquals(null, bc.getDiscoveryGroupName());
+            Assert.assertEquals("connector1", bc.getPoolConfiguration().getStaticConnectors().get(0));
+            Assert.assertEquals(null, bc.getPoolConfiguration().getDiscoveryGroupName());
          } else if (bc.getName().equals("consistent-hash-balancer")) {
             Assert.assertEquals(bc.getPolicyConfiguration(), ConsistentHashPolicy.NAME);
             Assert.assertNull(bc.getPolicyConfiguration().getNext());
-            Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
-            Assert.assertEquals("dg1", bc.getDiscoveryGroupName());
+            Assert.assertEquals(Collections.emptyList(), bc.getPoolConfiguration().getStaticConnectors());
+            Assert.assertEquals("dg1", bc.getPoolConfiguration().getDiscoveryGroupName());
          } else {
             Assert.assertEquals("least-connections-balancer", bc.getName());
             Assert.assertEquals(bc.getPolicyConfiguration(), LeastConnectionsPolicy.NAME);
             Assert.assertEquals(bc.getPolicyConfiguration().getNext(), RoundRobinPolicy.NAME);
             Assert.assertNull(bc.getPolicyConfiguration().getNext().getNext());
-            Assert.assertEquals(Collections.emptyList(), bc.getStaticConnectors());
-            Assert.assertEquals("dg2", bc.getDiscoveryGroupName());
+            Assert.assertEquals(Collections.emptyList(), bc.getPoolConfiguration().getStaticConnectors());
+            Assert.assertEquals("dg2", bc.getPoolConfiguration().getDiscoveryGroupName());
          }
       }
 

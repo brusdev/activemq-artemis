@@ -48,7 +48,7 @@ public class DiscoveryAbstractPool extends AbstractPool {
       discoveryGroup.registerListener(newConnectors -> {
          List<DiscoveryEntry> addingTargets = new ArrayList<>();
          Map<String, Target> removingTragets = new HashMap<>();
-         for (Target target : getTargets()) {
+         for (Target target : getAllTargets()) {
             removingTragets.put(target.getReference().getNodeID(), target);
          }
 

@@ -17,10 +17,18 @@
 
 package org.apache.activemq.artemis.core.server.balancing;
 
-import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.PolicyConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
+import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
+import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryAbstractPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
+import org.apache.activemq.artemis.core.server.balancing.pools.StaticAbstractPool;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 import org.jboss.logging.Logger;
 
 import java.util.HashMap;
@@ -44,13 +52,49 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
    }
 
    public void deploy() throws Exception {
-      for (BalancerConfiguration balancerConfig : config.getBalancerConfigurations()) {
-         BrokerBalancer balancer = new BrokerBalancer(balancerConfig, server, scheduledExecutor);
-
-         balancerControllers.put(balancerConfig.getName(), balancer);
-
-         server.getManagementService().registerBrokerBalancer(balancer);
+      for (BrokerBalancerConfiguration balancerConfig : config.getBalancerConfigurations()) {
+         deployBrokerBalancer(balancerConfig);
       }
+   }
+
+   public void deployBrokerBalancer(BrokerBalancerConfiguration config) throws Exception {
+      Pool pool = deployPool(config.getPoolConfiguration());
+
+      Policy policy = deployPolicy(config.getPolicyConfiguration(), pool);
+
+      BrokerBalancer balancer = new BrokerBalancer(config.getName(), pool, policy, config.getAffinityTimeout(), server);
+
+      balancerControllers.put(balancer.getName(), balancer);
+
+      server.getManagementService().registerBrokerBalancer(balancer);
+   }
+
+   private Pool deployPool(PoolConfiguration config) {
+      Pool pool;
+
+      if (config.getDiscoveryGroupName() != null) {
+         pool = new DiscoveryAbstractPool(server, scheduledExecutor, config.getDiscoveryGroupName());
+      } else {
+         pool = new StaticAbstractPool(server, scheduledExecutor, config.getStaticConnectors());
+      }
+
+      return pool;
+   }
+
+   private Policy deployPolicy(PolicyConfiguration policyConfig, Pool pool) throws ClassNotFoundException {
+      Policy policy = PolicyFactory.createPolicyForName(policyConfig.getName());
+
+      if (policy.getTargetTasks() != null) {
+         for (TargetTask targetTask : policy.getTargetTasks()) {
+            pool.addTargetTask(targetTask);
+         }
+      }
+
+      if (policyConfig.getNext() != null) {
+         policy.setNext(deployPolicy(policyConfig.getNext(), pool));
+      }
+
+      return policy;
    }
 
    @Override
