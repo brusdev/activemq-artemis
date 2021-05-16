@@ -17,9 +17,13 @@
 
 package org.apache.activemq.artemis.core.config;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class BalancerPolicyConfiguration {
    private String name;
    private BalancerPolicyConfiguration next;
+   private Map<String, String> properties = Collections.emptyMap();
 
    public String getName() {
       return name;
@@ -36,6 +40,15 @@ public class BalancerPolicyConfiguration {
 
    public BalancerPolicyConfiguration setNext(BalancerPolicyConfiguration next) {
       this.next = next;
+      return this;
+   }
+
+   public Map<String, String> getProperties() {
+      return properties;
+   }
+
+   public BalancerPolicyConfiguration setProperties(Map<String, String> properties) {
+      this.properties = properties;
       return this;
    }
 }

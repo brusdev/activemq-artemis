@@ -15,26 +15,23 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.pools;
+package org.apache.activemq.artemis.core.server.balancing.targets;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
-import java.util.function.Function;
+public abstract class AbstractTarget implements Target {
+   private final TargetReference reference;
 
-public class PoolTask {
-   private final String name;
-   private final Function<BrokerBalancerTarget, Object> task;
-
-   public String getName() {
-      return name;
+   @Override
+   public TargetReference getReference() {
+      return reference;
    }
 
-   public Function<BrokerBalancerTarget, Object> getTask() {
-      return task;
+   public AbstractTarget(String nodeID, TransportConfiguration connector) {
+      this(new TargetReference(nodeID, connector));
    }
 
-   public PoolTask(String name, Function<BrokerBalancerTarget, Object> task) {
-      this.name = name;
-      this.task = task;
+   public AbstractTarget(TargetReference reference) {
+      this.reference = reference;
    }
 }

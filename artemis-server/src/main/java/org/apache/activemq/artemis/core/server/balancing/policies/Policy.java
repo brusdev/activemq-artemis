@@ -17,15 +17,13 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
-import org.apache.activemq.artemis.core.server.balancing.pools.PoolTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
 import java.util.List;
 
 public abstract class Policy {
    private final String name;
-
-   private final PoolTask[] poolTasks;
 
    private Policy next;
 
@@ -33,8 +31,8 @@ public abstract class Policy {
       return name;
    }
 
-   public PoolTask[] getPoolTasks() {
-      return poolTasks;
+   public TargetTask[] getTargetTasks() {
+      return null;
    }
 
    public Policy getNext() {
@@ -46,14 +44,13 @@ public abstract class Policy {
       return this;
    }
 
-   public Policy(final String name, final PoolTask[] poolTasks) {
+   public Policy(final String name) {
       this.name = name;
-      this.poolTasks = poolTasks;
    }
 
-   public abstract List<BrokerBalancerTarget> selectTargets(List<BrokerBalancerTarget> targets, String key);
+   public abstract List<Target> selectTargets(List<Target> targets, String key);
 
-   protected List<BrokerBalancerTarget> selectNextTargets(List<BrokerBalancerTarget> targets, String key) {
+   protected List<Target> selectNextTargets(List<Target> targets, String key) {
       if (next == null) {
          return targets;
       }

@@ -34,7 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SuppliedThreadPoolTest extends ActiveMQTestBase {
+public class SuppliedThreadAbstractPoolTest extends ActiveMQTestBase {
 
    private ActiveMQServer server;
 

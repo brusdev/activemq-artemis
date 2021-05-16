@@ -17,14 +17,13 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.MockTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class FirstElementPolicyTest extends BasePolicyTest {
 
@@ -38,12 +37,12 @@ public class FirstElementPolicyTest extends BasePolicyTest {
       final int targetCount = 10;
       Policy policy = createPolicy();
 
-      ArrayList<BrokerBalancerTarget> targets = new ArrayList<>();
+      ArrayList<Target> targets = new ArrayList<>();
       for (int i = 0; i < targetCount; i++) {
-         targets.add(new BrokerBalancerTarget(UUID.randomUUID().toString(), new TransportConfiguration()));
+         targets.add(new MockTarget());
       }
 
-      List<BrokerBalancerTarget> selectedTargets = policy.selectTargets(targets, "test");
+      List<Target> selectedTargets = policy.selectTargets(targets, "test");
 
       Assert.assertEquals(1, selectedTargets.size());
       Assert.assertEquals(selectedTargets.get(0), targets.get(0));

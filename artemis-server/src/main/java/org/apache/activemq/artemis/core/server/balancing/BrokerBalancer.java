@@ -25,10 +25,12 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
-import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryAbstractPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
-import org.apache.activemq.artemis.core.server.balancing.pools.PoolTask;
-import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.StaticAbstractPool;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,7 +45,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    private Pool pool;
    private Policy policy;
-   private final Cache<String, BrokerBalancerTarget> affinityCache;
+   private final Cache<String, Target> affinityCache;
 
    public String getName() {
       return name;
@@ -62,9 +64,9 @@ public class BrokerBalancer implements ActiveMQComponent {
    @Override
    public void start() throws Exception {
       if (config.getDiscoveryGroupName() != null) {
-         pool = new DiscoveryPool(server, scheduledExecutor, config.getDiscoveryGroupName());
+         pool = new DiscoveryAbstractPool(server, scheduledExecutor, config.getDiscoveryGroupName());
       } else {
-         pool = new StaticPool(server, scheduledExecutor, config.getStaticConnectors());
+         pool = new StaticAbstractPool(server, scheduledExecutor, config.getStaticConnectors());
       }
 
       policy = loadPolicy(config.getPolicyConfiguration());
@@ -75,9 +77,9 @@ public class BrokerBalancer implements ActiveMQComponent {
    private Policy loadPolicy(BalancerPolicyConfiguration policyConfig) throws ClassNotFoundException {
       Policy policy = PolicyFactory.createPolicyForName(policyConfig.getName());
 
-      if (policy.getPoolTasks() != null) {
-         for (PoolTask task : policy.getPoolTasks()) {
-            pool.addTask(task);
+      if (policy.getTargetTasks() != null) {
+         for (TargetTask targetTask : policy.getTargetTasks()) {
+            pool.addTargetTask(targetTask);
          }
       }
 
@@ -89,9 +91,9 @@ public class BrokerBalancer implements ActiveMQComponent {
    }
 
    private Policy unloadPolicy(Policy policy) {
-      if (policy.getPoolTasks() != null) {
-         for (PoolTask task : policy.getPoolTasks()) {
-            pool.removeTask(task.getName());
+      if (policy.getTargetTasks() != null) {
+         for (TargetTask targetTask : policy.getTargetTasks()) {
+            pool.removeTargetTask(targetTask);
          }
       }
 
@@ -114,17 +116,19 @@ public class BrokerBalancer implements ActiveMQComponent {
       return false;
    }
 
-   public BrokerBalancerTarget getTarget(String key) {
-      BrokerBalancerTarget target = affinityCache.getIfPresent(key);
+   public TargetReference getTarget(String key) {
+      Target target = affinityCache.getIfPresent(key);
 
-      if (target != null && target.getState() != BrokerBalancerTarget.State.ACTIVATED) {
+      if (target != null && !pool.isTargetReady(target.getReference().getNodeID())) {
          target = null;
+
+         affinityCache.invalidate(key);
       }
 
       if (target == null) {
-         List<BrokerBalancerTarget> targets = pool.getTargets(BrokerBalancerTarget.State.ACTIVATED);
+         List<Target> targets = pool.getTargets();
 
-         List<BrokerBalancerTarget> selectedTargets = policy.selectTargets(targets, key);
+         List<Target> selectedTargets = policy.selectTargets(targets, key);
 
          if (selectedTargets.size() > 0) {
             target = selectedTargets.get(0);
@@ -132,6 +136,6 @@ public class BrokerBalancer implements ActiveMQComponent {
          }
       }
 
-      return target;
+      return target.getReference();
    }
 }

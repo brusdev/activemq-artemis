@@ -17,15 +17,15 @@
 
 package org.apache.activemq.artemis.core.server.balancing;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-
-import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.BalancerConfiguration;
+import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.jboss.logging.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 public final class BrokerBalancerManager implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BrokerBalancerManager.class);

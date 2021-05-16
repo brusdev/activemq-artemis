@@ -47,8 +47,8 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
@@ -169,7 +169,7 @@ public class ActiveMQPacketHandler implements ChannelHandler {
                .setConnection(connection.getTransportConnection())
                .setUsername(request.getUsername());
 
-            BrokerBalancerTarget target = server.getBalancerManager().getBalancer(
+            TargetReference target = server.getBalancerManager().getBalancer(
                connection.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
             if (target != null) {

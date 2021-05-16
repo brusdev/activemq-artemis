@@ -15,28 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.policies;
+package org.apache.activemq.artemis.core.server.balancing.targets;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+public interface Target {
 
-import java.util.Collections;
-import java.util.List;
+   TargetReference getReference();
 
-public class FirstElementPolicy extends Policy {
-   public static final String NAME = "FIRST_ELEMENT";
+   boolean isConnected();
 
-   public FirstElementPolicy() {
-      super(NAME);
-   }
+   void connect() throws Exception;
 
-   @Override
-   public List<Target> selectTargets(List<Target> targets, String key) {
-      if (targets.size() > 1) {
-         return selectNextTargets(Collections.singletonList(targets.get(0)), key);
-      } else if (targets.size() > 0) {
-         return selectNextTargets(targets, key);
-      }
+   void disconnect() throws Exception;
 
-      return targets;
-   }
+   void checkReadiness() throws Exception;
+
+   Object getAttribute(String resourceName, String attributeName) throws Exception;
+
+   Object invokeOperation(String resourceName, String operationName, Object... operationArgs) throws Exception;
 }

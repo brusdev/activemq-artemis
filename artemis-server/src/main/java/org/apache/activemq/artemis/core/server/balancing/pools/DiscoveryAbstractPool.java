@@ -21,7 +21,7 @@ import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class DiscoveryPool extends Pool {
+public class DiscoveryAbstractPool extends AbstractPool {
    private final String discoveryGroupName;
 
    private DiscoveryGroup discoveryGroup;
 
-   public DiscoveryPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, String discoveryGroupName) {
+   public DiscoveryAbstractPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, String discoveryGroupName) {
       super(server, scheduledExecutor);
       this.discoveryGroupName = discoveryGroupName;
    }
@@ -46,26 +46,30 @@ public class DiscoveryPool extends Pool {
       DiscoveryGroupConfiguration discoveryGroupConfiguration = getServer().getConfiguration().getDiscoveryGroupConfigurations().get(discoveryGroupName);
       discoveryGroup = new DiscoveryGroup(getServer().getNodeID().toString(), discoveryGroupName, discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
       discoveryGroup.registerListener(newConnectors -> {
-         List<BrokerBalancerTarget> addingTargets = new ArrayList<>();
-         Map<String, BrokerBalancerTarget> removingTragets = new HashMap<>();
-         for (BrokerBalancerTarget target : getTargets()) {
-            removingTragets.put(target.getNodeID(), target);
+         List<DiscoveryEntry> addingTargets = new ArrayList<>();
+         Map<String, Target> removingTragets = new HashMap<>();
+         for (Target target : getTargets()) {
+            removingTragets.put(target.getReference().getNodeID(), target);
          }
 
          for (DiscoveryEntry newConnector : newConnectors) {
-            BrokerBalancerTarget addingTarget = removingTragets.remove(newConnector.getNodeID());
+            Target addingTarget = removingTragets.remove(newConnector.getNodeID());
 
             if (addingTarget == null) {
-               addingTargets.add(new BrokerBalancerTarget(newConnector.getNodeID(), newConnector.getConnector()));
+               addingTargets.add(newConnector);
             }
          }
 
-         for (BrokerBalancerTarget removingTraget : removingTragets.values()) {
+         for (Target removingTraget : removingTragets.values()) {
             //removeTarget(removingTraget.getNodeID());
          }
 
-         for (BrokerBalancerTarget addingTarget : addingTargets) {
-            addTarget(addingTarget);
+         for (DiscoveryEntry addingTarget : addingTargets) {
+            try {
+               addTarget(addingTarget.getNodeID(), addingTarget.getConnector());
+            } catch (Exception e) {
+               e.printStackTrace();
+            }
          }
       });
       discoveryGroup.start();

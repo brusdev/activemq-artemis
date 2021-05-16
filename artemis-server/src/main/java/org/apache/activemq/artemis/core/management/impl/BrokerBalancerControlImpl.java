@@ -20,7 +20,7 @@ package org.apache.activemq.artemis.core.management.impl;
 import org.apache.activemq.artemis.api.core.management.BrokerBalancerControl;
 import org.apache.activemq.artemis.core.persistence.StorageManager;
 import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanOperationInfo;
@@ -35,8 +35,23 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
    }
 
    @Override
+   public Object getTarget(String key) {
+      TargetReference target = balancer.getTarget(key);
+
+      if (target != null) {
+         return new Object[] {target.getNodeID(), new Object[] {
+            target.getConnector().getName(),
+            target.getConnector().getFactoryClassName(),
+            target.getConnector().getParams()}
+         };
+      }
+
+      return null;
+   }
+
+   @Override
    public String getTargetAsJSON(String key) {
-      BrokerBalancerTarget target = balancer.getTarget(key);
+      TargetReference target = balancer.getTarget(key);
 
       if (target != null) {
          return target.toJson().toString();
