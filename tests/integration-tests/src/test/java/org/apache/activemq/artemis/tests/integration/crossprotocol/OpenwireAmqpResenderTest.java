@@ -77,7 +77,7 @@ public class OpenwireAmqpResenderTest extends ActiveMQTestBase {
       }
    }
 
-   @Test(timeout = 5_000)
+   @Test(timeout = 100000000)
    public void internalOpenwireBinaryPropShouldBeConvertedAsByteArrays() throws Exception {
       openwireSender(factory);
       amqpResender(qpidFactory);

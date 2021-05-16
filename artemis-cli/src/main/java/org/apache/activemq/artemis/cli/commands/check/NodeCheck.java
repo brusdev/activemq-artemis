@@ -138,7 +138,7 @@ public class NodeCheck extends CheckAbstract {
    }
 
    private void checkNodeUp(final CheckContext context) throws Exception {
-      if (!(boolean)context.getManagementProxy().getAttribute("broker", "Started", 0)) {
+      if (!context.getManagementProxy().getAttribute("broker", "Started", Boolean.class, 0)) {
          throw new CheckException("The node isn't started.");
       }
    }
@@ -182,28 +182,31 @@ public class NodeCheck extends CheckAbstract {
    }
 
    private void checkNodeDiskUsage(final CheckContext context) throws Exception {
-      int thresholdValue;
+      Integer maxDiskUsage;
 
       if (diskUsage == -1) {
-         thresholdValue = (int)context.getManagementProxy().
-            getAttribute("broker", "MaxDiskUsage", 0);
+         maxDiskUsage = context.getManagementProxy().
+            getAttribute("broker", "MaxDiskUsage", Integer.class, 0);
       } else {
-         thresholdValue = diskUsage;
+         maxDiskUsage = diskUsage;
       }
 
-      checkNodeUsage(context, "DiskStoreUsage", thresholdValue);
+      Double diskStoreUsage = context.getManagementProxy().
+         getAttribute("broker", "DiskStoreUsage", Double.class, 0);
+
+      checkNodeResourceUsage("DiskStoreUsage", (int)(diskStoreUsage *  100), maxDiskUsage);
    }
 
    private void checkNodeMemoryUsage(final CheckContext context) throws Exception {
-      checkNodeUsage(context, "AddressMemoryUsagePercentage", memoryUsage);
+      int addressMemoryUsagePercentage = context.getManagementProxy().
+         getAttribute("broker", "AddressMemoryUsagePercentage", Integer.class, 0);
+
+      checkNodeResourceUsage("MemoryUsage", addressMemoryUsagePercentage, memoryUsage);
    }
 
-   private void checkNodeUsage(final CheckContext context, final String name, final int thresholdValue) throws Exception {
-      int usageValue = (int)context.getManagementProxy().getAttribute("broker", name, 0);
-
+   private void checkNodeResourceUsage(final String resourceName, final int usageValue, final int thresholdValue) throws Exception {
       if (usageValue > thresholdValue) {
-         throw new CheckException("The " + (name.startsWith("get") ? name.substring(3) : name) +
-                                     " " + usageValue + " is less than " + thresholdValue);
+         throw new CheckException("The " + resourceName + " " + usageValue + " is less than " + thresholdValue);
       }
    }
 }
