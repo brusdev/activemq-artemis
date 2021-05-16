@@ -1925,10 +1925,6 @@ public class FailoverTest extends FailoverTestBase {
    @Test(timeout = 120000)
    public void testMultipleSessionFailover() throws Exception {
       final String address = "TEST";
-      locator.setBlockOnNonDurableSend(true).setBlockOnDurableSend(true).setBlockOnAcknowledge(true).setReconnectAttempts(300).setRetryInterval(100);
-
-      sf = createSessionFactoryAndWaitForTopology(locator, 2);
-
       ClientSession session1 = createSession(sf, true, true, 0);
       ClientSession session2 = createSession(sf, true, true, 0);
 
