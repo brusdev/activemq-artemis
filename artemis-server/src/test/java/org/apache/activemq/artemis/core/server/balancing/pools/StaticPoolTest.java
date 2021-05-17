@@ -18,104 +18,21 @@
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetFactory;
-import org.apache.activemq.artemis.utils.Wait;
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class StaticPoolTest {
-   private static final int CHECK_PERIOD = 500;
+public class StaticPoolTest extends BasePoolTest {
 
-
-   private final ScheduledExecutorService scheduledExecutor =
-      new ScheduledThreadPoolExecutor(0);
-
-   @Test
-   public void testNoTargets() throws Exception {
-      MockTargetFactory targetFactory = new MockTargetFactory();
-
+   @Override
+   protected Pool createPool(TargetFactory targetFactory, int targets) {
       List<TransportConfiguration> staticConnectors = new ArrayList<>();
 
-      Pool pool = new StaticPool(targetFactory, scheduledExecutor, CHECK_PERIOD, staticConnectors);
-
-      Assert.assertEquals(0, pool.getTargets().size());
-      Assert.assertEquals(0, pool.getAllTargets().size());
-      Assert.assertEquals(0, targetFactory.getCreatedTargets().size());
-
-      pool.start();
-
-      try {
-         Assert.assertEquals(0, pool.getTargets().size());
-         Assert.assertEquals(0, pool.getAllTargets().size());
-         Assert.assertEquals(0, targetFactory.getCreatedTargets().size());
-      } finally {
-         pool.stop();
+      for (int i = 0; i < targets; i++) {
+         staticConnectors.add(new TransportConfiguration());
       }
+
+      return new StaticPool(targetFactory, getScheduledExecutor(), getCheckPeriod(), staticConnectors);
    }
-
-   @Test
-   public void testSingleTargets() throws Exception {
-      MockTargetFactory targetFactory = new MockTargetFactory();
-
-      List<TransportConfiguration> staticConnectors = new ArrayList<>();
-      staticConnectors.add(new TransportConfiguration());
-
-      Pool pool = new StaticPool(targetFactory, scheduledExecutor, CHECK_PERIOD, staticConnectors);
-
-      Assert.assertEquals(0, pool.getTargets().size());
-      Assert.assertEquals(0, pool.getAllTargets().size());
-      Assert.assertEquals(0, targetFactory.getCreatedTargets().size());
-
-      pool.start();
-
-      try {
-         Assert.assertEquals(0, pool.getTargets().size());
-         Assert.assertEquals(1, pool.getAllTargets().size());
-         Assert.assertEquals(1, targetFactory.getCreatedTargets().size());
-
-         targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setConnectable(true));
-
-         Assert.assertEquals(0, pool.getTargets().size());
-         Assert.assertEquals(1, pool.getAllTargets().size());
-         Assert.assertEquals(1, targetFactory.getCreatedTargets().size());
-
-         targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(true));
-
-         Wait.assertEquals(1, () -> pool.getTargets().size(), pool.getCheckPeriod());
-         Assert.assertEquals(1, pool.getAllTargets().size());
-         Assert.assertEquals(1, targetFactory.getCreatedTargets().size());
-
-         targetFactory.getCreatedTargets().forEach(mockTarget -> {
-            mockTarget.setConnectable(false);
-            try {
-               mockTarget.disconnect();
-            } catch (Exception ignore) {
-            }
-         });
-
-         Assert.assertEquals(0, pool.getTargets().size());
-         Assert.assertEquals(1, pool.getAllTargets().size());
-         Assert.assertEquals(1, targetFactory.getCreatedTargets().size());
-
-         targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setConnectable(true));
-
-         Wait.assertEquals(1, () -> pool.getTargets().size(), pool.getCheckPeriod());
-         Assert.assertEquals(1, pool.getAllTargets().size());
-         Assert.assertEquals(1, targetFactory.getCreatedTargets().size());
-
-         targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(false));
-
-         Wait.assertEquals(0, () -> pool.getTargets().size(), pool.getCheckPeriod());
-         Assert.assertEquals(1, pool.getAllTargets().size());
-         Assert.assertEquals(1, targetFactory.getCreatedTargets().size());
-      } finally {
-         pool.stop();
-      }
-   }
-
 }

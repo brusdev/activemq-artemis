@@ -28,7 +28,9 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
+import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryGroupService;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryService;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
 import org.apache.activemq.artemis.core.server.balancing.targets.CoreTargetFactory;
@@ -84,10 +86,10 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().
             getDiscoveryGroupConfigurations().get(config.getDiscoveryGroupName());
 
-         DiscoveryGroup discoveryGroup = new DiscoveryGroup(server.getNodeID().toString(), config.getDiscoveryGroupName(),
+         DiscoveryService discoveryService = new DiscoveryGroupService(server.getNodeID().toString(), config.getDiscoveryGroupName(),
             discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
 
-         pool = new DiscoveryPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryGroup);
+         pool = new DiscoveryPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryService);
       } else {
          Map<String, TransportConfiguration> connectorConfigurations =
             server.getConfiguration().getConnectorConfigurations();

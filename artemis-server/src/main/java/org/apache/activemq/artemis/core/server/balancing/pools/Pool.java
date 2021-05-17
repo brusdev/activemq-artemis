@@ -17,7 +17,6 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
@@ -40,10 +39,10 @@ public interface Pool extends ActiveMQComponent {
 
    List<Target> getAllTargets();
 
-   List<TargetTask> getTargetTasks();
-
    boolean isTargetReady(String nodeId);
 
+
+   List<TargetTask> getTargetTasks();
 
    void addTargetTask(TargetTask task);
 
