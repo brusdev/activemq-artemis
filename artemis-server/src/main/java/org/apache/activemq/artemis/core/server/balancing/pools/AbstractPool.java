@@ -17,7 +17,6 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetController;
@@ -26,9 +25,9 @@ import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
@@ -41,7 +40,7 @@ public abstract class AbstractPool implements Pool {
 
    private final List<TargetTask> targetTasks = new ArrayList<>();
 
-   private final Map<String, TargetController> targetControllers = new HashMap<>();
+   private final Map<String, TargetController> targetControllers = new ConcurrentHashMap<>();
 
    private String username;
 
@@ -105,7 +104,7 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
-   public boolean isTargetReady(String nodeId) {
+   public boolean checkTarget(String nodeId) {
       TargetController targetController = targetControllers.get(nodeId);
 
       return targetController != null ? targetController.isTargetReady() : false;

@@ -87,7 +87,7 @@ public class BrokerBalancer implements ActiveMQComponent {
    public TargetReference getTarget(String key) {
       Target target = affinityCache.getIfPresent(key);
 
-      if (target != null && !pool.isTargetReady(target.getReference().getNodeID())) {
+      if (target != null && !pool.checkTarget(target.getReference().getNodeID())) {
          target = null;
 
          affinityCache.invalidate(key);
