@@ -18,7 +18,6 @@
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

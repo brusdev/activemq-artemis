@@ -19,7 +19,6 @@ package org.apache.activemq.artemis.core.server.balancing;
 
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PolicyConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;

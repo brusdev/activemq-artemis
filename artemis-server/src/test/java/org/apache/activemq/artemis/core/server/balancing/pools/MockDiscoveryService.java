@@ -22,7 +22,6 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 public class MockDiscoveryService extends DiscoveryService {
    private final Map<String, TransportConfiguration> entries = new HashMap<>();
@@ -72,12 +71,9 @@ public class MockDiscoveryService extends DiscoveryService {
    public void start() throws Exception {
       started = true;
 
-      pendingEntries.forEach(new BiConsumer<String, TransportConfiguration>() {
-         @Override
-         public void accept(String nodeID, TransportConfiguration connector) {
-            entries.put(nodeID, connector);
-            fireEntryAddedEvent(nodeID, connector);
-         }
+      pendingEntries.forEach((nodeID, connector) -> {
+         entries.put(nodeID, connector);
+         fireEntryAddedEvent(nodeID, connector);
       });
    }
 
