@@ -15,11 +15,9 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing;
+package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.balancing.targets.AbstractTarget;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +25,8 @@ import java.util.UUID;
 
 public class MockTarget extends AbstractTarget {
    private boolean connected = false;
+
+   private boolean connectable = false;
 
    private boolean ready = false;
 
@@ -40,9 +40,12 @@ public class MockTarget extends AbstractTarget {
       return connected;
    }
 
-   public MockTarget setConnected(boolean connected) {
-      this.connected = connected;
-      return this;
+   public boolean isConnectable() {
+      return connectable;
+   }
+
+   public void setConnectable(boolean connectable) {
+      this.connectable = connectable;
    }
 
    public boolean isReady() {
@@ -53,18 +56,46 @@ public class MockTarget extends AbstractTarget {
       this.ready = ready;
    }
 
+   public Map<String, Object> getAttributeValues() {
+      return attributeValues;
+   }
+
+   public void setAttributeValues(Map<String, Object> attributeValues) {
+      this.attributeValues = attributeValues;
+   }
+
+   public Map<String, Object> getOperationReturnValues() {
+      return operationReturnValues;
+   }
+
+   public void setOperationReturnValues(Map<String, Object> operationReturnValues) {
+      this.operationReturnValues = operationReturnValues;
+   }
+
    public MockTarget() {
       super(new TargetReference(UUID.randomUUID().toString(), new TransportConfiguration()));
    }
 
+   public MockTarget(TargetReference reference) {
+      super(reference);
+   }
+
    @Override
    public void connect() throws Exception {
+      if (!connectable) {
+         throw new IllegalStateException("Target not connectable");
+      }
+
       connected = true;
+
+      fireConnectedEvent();
    }
 
    @Override
    public void disconnect() throws Exception {
       connected = false;
+
+      fireDisconnectedEvent();
    }
 
    @Override

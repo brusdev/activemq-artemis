@@ -17,11 +17,11 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
+import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.targets.CoreTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetController;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
@@ -33,9 +33,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 public abstract class AbstractPool implements Pool {
-   private final ActiveMQServer server;
+   private final TargetFactory targetFactory;
 
    private final ScheduledExecutorService scheduledExecutor;
+
+   private final int checkPeriod;
 
    private final List<TargetTask> targetTasks = new ArrayList<>();
 
@@ -44,8 +46,6 @@ public abstract class AbstractPool implements Pool {
    private String username;
 
    private String password;
-
-   private int checkPeriod;
 
    private volatile boolean started = false;
 
@@ -76,19 +76,6 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
-   public void setCheckPeriod(int checkPeriod) {
-      this.checkPeriod = checkPeriod;
-   }
-
-   public ActiveMQServer getServer() {
-      return server;
-   }
-
-   public ScheduledExecutorService getScheduledExecutor() {
-      return scheduledExecutor;
-   }
-
-   @Override
    public List<Target> getAllTargets() {
       return targetControllers.values().stream().map(targetController -> targetController.getTarget()).collect(Collectors.toList());
    }
@@ -109,23 +96,12 @@ public abstract class AbstractPool implements Pool {
    }
 
 
-   public AbstractPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
-      this.server = server;
+   public AbstractPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod) {
+      this.targetFactory = targetFactory;
 
       this.scheduledExecutor = scheduledExecutor;
-   }
 
-
-   @Override
-   public void addTarget(String nodeId, TransportConfiguration connector) throws Exception {
-      Target target = new CoreTarget(new TargetReference(nodeId, connector));
-      TargetController targetController = new TargetController(target, this, scheduledExecutor, checkPeriod);
-
-      targetControllers.put(nodeId, targetController);
-
-      if (started) {
-         targetController.start();
-      }
+      this.checkPeriod = checkPeriod;
    }
 
    @Override
@@ -133,23 +109,6 @@ public abstract class AbstractPool implements Pool {
       TargetController targetController = targetControllers.get(nodeId);
 
       return targetController != null ? targetController.isTargetReady() : false;
-   }
-
-   @Override
-   public Target getTarget(String nodeId) {
-      TargetController targetController = targetControllers.get(nodeId);
-      return targetController != null ? targetController.getTarget() : null;
-   }
-
-   @Override
-   public Target removeTarget(String nodeId) throws Exception {
-      TargetController targetController = targetControllers.remove(nodeId);
-
-      if (targetController != null) {
-         targetController.stop();
-      }
-
-      return targetController != null ? targetController.getTarget() : null;
    }
 
    @Override
@@ -180,5 +139,27 @@ public abstract class AbstractPool implements Pool {
       for (TargetController targetController : targetControllers) {
          removeTarget(targetController.getTarget().getReference().getNodeID());
       }
+   }
+
+
+   protected void addTarget(String nodeId, TransportConfiguration connector) throws Exception {
+      Target target = targetFactory.createTarget(new TargetReference(nodeId, connector));
+      TargetController targetController = new TargetController(target, targetTasks, scheduledExecutor, checkPeriod);
+
+      targetControllers.put(nodeId, targetController);
+
+      if (started) {
+         targetController.start();
+      }
+   }
+
+   protected Target removeTarget(String nodeId) throws Exception {
+      TargetController targetController = targetControllers.remove(nodeId);
+
+      if (targetController != null) {
+         targetController.stop();
+      }
+
+      return targetController != null ? targetController.getTarget() : null;
    }
 }

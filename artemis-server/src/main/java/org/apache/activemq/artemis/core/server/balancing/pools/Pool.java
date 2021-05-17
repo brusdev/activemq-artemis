@@ -35,7 +35,6 @@ public interface Pool extends ActiveMQComponent {
 
    int getCheckPeriod();
 
-   void setCheckPeriod(int checkPeriod);
 
    List<Target> getTargets();
 
@@ -43,14 +42,7 @@ public interface Pool extends ActiveMQComponent {
 
    List<TargetTask> getTargetTasks();
 
-
-   void addTarget(String nodeID, TransportConfiguration connector) throws Exception;
-
    boolean isTargetReady(String nodeId);
-
-   Target getTarget(String nodeID);
-
-   Target removeTarget(String nodeID) throws Exception;
 
 
    void addTargetTask(TargetTask task);

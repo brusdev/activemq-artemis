@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.MockTarget;
+import org.apache.activemq.artemis.core.server.balancing.targets.MockTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.junit.Assert;
 import org.junit.Test;

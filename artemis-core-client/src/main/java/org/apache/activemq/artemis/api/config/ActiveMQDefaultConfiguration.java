@@ -634,6 +634,8 @@ public final class ActiveMQDefaultConfiguration {
 
    private static String DEFAULT_REDIRECT_KEY = "SOURCE_IP";
 
+   private static int DEFAULT_POOL_CHECK_PERIOD = 5000;
+
    /**
     * If true then the ActiveMQ Artemis Server will make use of any Protocol Managers that are in available on the classpath. If false then only the core protocol will be available, unless in Embedded mode where users can inject their own Protocol Managers.
     */
@@ -1732,5 +1734,9 @@ public final class ActiveMQDefaultConfiguration {
 
    public static String getDefaultRedirectKey() {
       return DEFAULT_REDIRECT_KEY;
+   }
+
+   public static int getDefaultPoolCheckPeriod() {
+      return DEFAULT_POOL_CHECK_PERIOD;
    }
 }

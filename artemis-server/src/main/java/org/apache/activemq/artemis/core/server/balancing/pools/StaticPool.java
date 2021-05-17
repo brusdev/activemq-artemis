@@ -18,17 +18,16 @@
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class StaticAbstractPool extends AbstractPool {
-   private final List<String> staticConnectors;
+public class StaticPool extends AbstractPool {
+   private final List<TransportConfiguration> staticConnectors;
 
-   public StaticAbstractPool(ActiveMQServer server, ScheduledExecutorService scheduledExecutor, List<String> staticConnectors) {
-      super(server, scheduledExecutor);
+   public StaticPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod, List<TransportConfiguration> staticConnectors) {
+      super(targetFactory, scheduledExecutor, checkPeriod);
 
       this.staticConnectors = staticConnectors;
    }
@@ -37,11 +36,8 @@ public class StaticAbstractPool extends AbstractPool {
    public void start() throws Exception {
       super.start();
 
-      Map<String, TransportConfiguration> connectorConfigurations =
-         getServer().getConfiguration().getConnectorConfigurations();
-
       for (int i = 0; i < staticConnectors.size(); i++) {
-         addTarget(Integer.toString(i), connectorConfigurations.get(staticConnectors.get(i)));
+         addTarget(Integer.toString(i), staticConnectors.get(i));
       }
    }
 }
