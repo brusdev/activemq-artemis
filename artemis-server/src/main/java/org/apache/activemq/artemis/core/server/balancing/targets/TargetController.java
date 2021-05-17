@@ -93,11 +93,11 @@ public class TargetController implements ActiveMQComponent, Runnable, TargetList
 
          target.checkReadiness();
 
+         targetReady = true;
+
          for (TargetTask targetTask : targetTasks) {
             targetTask.call(target);
          }
-
-         targetReady = true;
       } catch (Exception e) {
          logger.debug("Target not ready", e);
 

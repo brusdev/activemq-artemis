@@ -38,6 +38,12 @@ public abstract class DiscoveryService implements ActiveMQComponent {
       }
    }
 
+   protected void fireEntryChangedEvent(String nodeID, TransportConfiguration connector) {
+      if (listener != null) {
+         this.listener.entryChanged(nodeID, connector);
+      }
+   }
+
    protected void fireEntryRemovedEvent(String nodeID, TransportConfiguration connector) {
       if (listener != null) {
          this.listener.entryRemoved(nodeID, connector);
@@ -46,6 +52,8 @@ public abstract class DiscoveryService implements ActiveMQComponent {
 
    public interface Listener {
       void entryAdded(String nodeID, TransportConfiguration connector);
+
+      void entryChanged(String nodeID, TransportConfiguration connector);
 
       void entryRemoved(String nodeID, TransportConfiguration connector);
    }

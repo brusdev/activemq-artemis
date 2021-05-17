@@ -104,7 +104,14 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
-   public boolean checkTarget(String nodeId) {
+   public Target getTarget(String nodeId) {
+      TargetController targetController = targetControllers.get(nodeId);
+
+      return targetController != null ? targetController.getTarget() : null;
+   }
+
+   @Override
+   public boolean checkTargetReady(String nodeId) {
       TargetController targetController = targetControllers.get(nodeId);
 
       return targetController != null ? targetController.isTargetReady() : false;

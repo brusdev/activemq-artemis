@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.core.server.balancing;
 
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PolicyConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
@@ -44,13 +45,21 @@ import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
 public final class BrokerBalancerManager implements ActiveMQComponent {
-   private static final Logger logger = Logger.getLogger(BrokerBalancerManager.class);
-
    private final Configuration config;
+
    private final ActiveMQServer server;
+
    private final ScheduledExecutorService scheduledExecutor;
 
+   private volatile boolean started = false;
+
    private Map<String, BrokerBalancer> balancerControllers = new HashMap<>();
+
+
+   @Override
+   public boolean isStarted() {
+      return started;
+   }
 
 
    public BrokerBalancerManager(final Configuration config, final ActiveMQServer server, ScheduledExecutorService scheduledExecutor) {
@@ -70,7 +79,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       Policy policy = deployPolicy(config.getPolicyConfiguration(), pool);
 
-      BrokerBalancer balancer = new BrokerBalancer(config.getName(), pool, policy, config.getAffinityTimeout(), server);
+      BrokerBalancer balancer = new BrokerBalancer(config.getName(), pool, policy, config.getAffinityTimeout());
 
       balancerControllers.put(balancer.getName(), balancer);
 
@@ -85,8 +94,8 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().
             getDiscoveryGroupConfigurations().get(config.getDiscoveryGroupName());
 
-         DiscoveryService discoveryService = new DiscoveryGroupService(server.getNodeID().toString(), config.getDiscoveryGroupName(),
-            discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
+         DiscoveryService discoveryService = new DiscoveryGroupService(new DiscoveryGroup(server.getNodeID().toString(), config.getDiscoveryGroupName(),
+            discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null));
 
          pool = new DiscoveryPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryService);
       } else {
@@ -123,27 +132,26 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       return policy;
    }
 
+   public BrokerBalancer getBalancer(String name) {
+      return balancerControllers.get(name);
+   }
+
    @Override
    public void start() throws Exception {
       for (BrokerBalancer brokerBalancer : balancerControllers.values()) {
          brokerBalancer.start();
       }
+
+      started = true;
    }
 
    @Override
    public void stop() throws Exception {
+      started = false;
+
       for (BrokerBalancer balancer : balancerControllers.values()) {
          balancer.stop();
          server.getManagementService().registerBrokerBalancer(balancer);
       }
-   }
-
-   @Override
-   public boolean isStarted() {
-      return false;
-   }
-
-   public BrokerBalancer getBalancer(String name) {
-      return balancerControllers.get(name);
    }
 }

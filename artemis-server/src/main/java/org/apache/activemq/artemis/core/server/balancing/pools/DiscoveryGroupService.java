@@ -17,45 +17,26 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.api.core.BroadcastEndpointFactory;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.cluster.DiscoveryListener;
-import org.apache.activemq.artemis.core.server.management.NotificationService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class DiscoveryGroupService extends DiscoveryService implements DiscoveryListener {
-   private final String nodeID;
-   private final String name;
-   private final long timeout;
-   private final BroadcastEndpointFactory endpointFactory;
-   private final NotificationService service;
+   private final DiscoveryGroup discoveryGroup;
 
-   private DiscoveryGroup discoveryGroup;
-   private Map<String, TransportConfiguration> entries;
+   private final Map<String, TransportConfiguration> entries = new HashMap<>();
 
-   public DiscoveryGroupService(final String nodeID,
-                                final String name,
-                                final long timeout,
-                                BroadcastEndpointFactory endpointFactory,
-                                NotificationService service) {
-      this.nodeID = nodeID;
-      this.name = name;
-      this.timeout = timeout;
-      this.endpointFactory = endpointFactory;
-      this.service = service;
+   public DiscoveryGroupService(DiscoveryGroup discoveryGroup) {
+      this.discoveryGroup = discoveryGroup;
    }
 
    @Override
    public void start() throws Exception {
-      entries = new HashMap<>();
-
-      discoveryGroup = new DiscoveryGroup(nodeID, name, timeout, endpointFactory, service);
-
       discoveryGroup.start();
    }
 
@@ -73,19 +54,26 @@ public class DiscoveryGroupService extends DiscoveryService implements Discovery
 
    @Override
    public void connectorsChanged(List<DiscoveryEntry> newConnectors) {
-      Map<String, TransportConfiguration> addingEntries = new HashMap<>();
       Map<String, TransportConfiguration> removingEntries = new HashMap<>(entries);
 
       for (DiscoveryEntry newConnector : newConnectors) {
          TransportConfiguration removedConnector = removingEntries.remove(newConnector.getNodeID());
 
          if (removedConnector == null) {
-            addingEntries.put(newConnector.getNodeID(), newConnector.getConnector());
+            entries.put(newConnector.getNodeID(), newConnector.getConnector());
+
+            fireEntryAddedEvent(newConnector.getNodeID(), newConnector.getConnector());
+         } else if (!removedConnector.equals(newConnector.getConnector())) {
+            entries.put(newConnector.getNodeID(), newConnector.getConnector());
+
+            fireEntryChangedEvent(newConnector.getNodeID(), newConnector.getConnector());
          }
       }
 
-      addingEntries.forEach((nodeID, connector) -> fireEntryAddedEvent(nodeID, connector));
+      removingEntries.forEach((nodeID, connector) -> {
+         entries.remove(nodeID);
 
-      removingEntries.forEach((nodeID, connector) -> fireEntryRemovedEvent(nodeID, connector));
+         fireEntryRemovedEvent(nodeID, connector);
+      });
    }
 }
