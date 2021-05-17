@@ -44,8 +44,12 @@ public class MockDiscoveryService extends DiscoveryService {
       return started;
    }
 
-   public void addEntry() {
-      addEntry(UUID.randomUUID().toString(), new TransportConfiguration());
+   public String addEntry() {
+      String nodeID = UUID.randomUUID().toString();
+
+      addEntry(nodeID, new TransportConfiguration());
+
+      return nodeID;
    }
 
    public void addEntry(String nodeID, TransportConfiguration connector) {

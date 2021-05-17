@@ -64,6 +64,11 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    }
 
    @Override
+   public void entryChanged(String nodeID, TransportConfiguration connector) {
+      //TODO remove the relative target from the pool and a new target
+   }
+
+   @Override
    public void entryRemoved(String nodeID, TransportConfiguration connector) {
       //TODO remove the relative target from the pool
    }

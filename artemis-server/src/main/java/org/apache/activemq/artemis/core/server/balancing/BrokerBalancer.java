@@ -20,7 +20,6 @@ package org.apache.activemq.artemis.core.server.balancing;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
@@ -37,10 +36,6 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    private final Policy policy;
 
-   private final int affinityTimeout;
-
-   private final ActiveMQServer server;
-
    private final Cache<String, Target> affinityCache;
 
    private volatile boolean started = false;
@@ -56,18 +51,14 @@ public class BrokerBalancer implements ActiveMQComponent {
    }
 
 
-   public BrokerBalancer(final String name, final Pool pool, final Policy policy, final int affinityTimeout, final ActiveMQServer server) {
+   public BrokerBalancer(final String name, final Pool pool, final Policy policy, final int affinityTimeout) {
       this.name = name;
 
       this.pool = pool;
 
       this.policy = policy;
 
-      this.server = server;
-
-      this.affinityTimeout = affinityTimeout;
-
-      affinityCache = CacheBuilder.newBuilder().expireAfterAccess(affinityTimeout, TimeUnit.MILLISECONDS).build();
+      this.affinityCache = CacheBuilder.newBuilder().expireAfterAccess(affinityTimeout, TimeUnit.MILLISECONDS).build();
    }
 
    @Override
@@ -87,7 +78,7 @@ public class BrokerBalancer implements ActiveMQComponent {
    public TargetReference getTarget(String key) {
       Target target = affinityCache.getIfPresent(key);
 
-      if (target != null && !pool.checkTarget(target.getReference().getNodeID())) {
+      if (target != null && !pool.checkTargetReady(target.getReference().getNodeID())) {
          target = null;
 
          affinityCache.invalidate(key);
