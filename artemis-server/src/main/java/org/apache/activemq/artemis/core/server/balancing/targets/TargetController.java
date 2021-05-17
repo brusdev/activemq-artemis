@@ -18,9 +18,9 @@
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
-import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.jboss.logging.Logger;
 
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +30,7 @@ public class TargetController implements ActiveMQComponent, Runnable, TargetList
 
    private final Target target;
 
-   private final Pool pool;
+   private final List<TargetTask> targetTasks;
 
    private final ScheduledExecutorService scheduledExecutor;
 
@@ -57,11 +57,11 @@ public class TargetController implements ActiveMQComponent, Runnable, TargetList
    }
 
 
-   public TargetController(Target target, Pool pool, ScheduledExecutorService scheduledExecutor, int checkPeriod) {
+   public TargetController(Target target, List<TargetTask> targetTasks, ScheduledExecutorService scheduledExecutor, int checkPeriod) {
       this.target = target;
       this.target.setListener(this);
 
-      this.pool = pool;
+      this.targetTasks = targetTasks;
 
       this.scheduledExecutor = scheduledExecutor;
 
@@ -70,11 +70,15 @@ public class TargetController implements ActiveMQComponent, Runnable, TargetList
 
    @Override
    public void start() throws Exception {
+      started = true;
+
       scheduledFuture = scheduledExecutor.scheduleWithFixedDelay(this, 0, checkPeriod, TimeUnit.MILLISECONDS);
    }
 
    @Override
    public void stop() throws Exception {
+      started = false;
+
       if (scheduledFuture != null) {
          scheduledFuture.cancel(true);
       }
@@ -89,7 +93,7 @@ public class TargetController implements ActiveMQComponent, Runnable, TargetList
 
          target.checkReadiness();
 
-         for (TargetTask targetTask : pool.getTargetTasks()) {
+         for (TargetTask targetTask : targetTasks) {
             targetTask.call(target);
          }
 

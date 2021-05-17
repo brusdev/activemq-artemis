@@ -17,6 +17,9 @@
 
 package org.apache.activemq.artemis.core.server.balancing;
 
+import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PolicyConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
@@ -25,13 +28,17 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
-import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryAbstractPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
-import org.apache.activemq.artemis.core.server.balancing.pools.StaticAbstractPool;
+import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
+import org.apache.activemq.artemis.core.server.balancing.targets.CoreTargetFactory;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -69,18 +76,32 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       server.getManagementService().registerBrokerBalancer(balancer);
    }
 
-   private Pool deployPool(PoolConfiguration config) {
+   private Pool deployPool(PoolConfiguration config) throws Exception {
       Pool pool;
+      TargetFactory targetFactory = new CoreTargetFactory();
 
       if (config.getDiscoveryGroupName() != null) {
-         pool = new DiscoveryAbstractPool(server, scheduledExecutor, config.getDiscoveryGroupName());
+         DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().
+            getDiscoveryGroupConfigurations().get(config.getDiscoveryGroupName());
+
+         DiscoveryGroup discoveryGroup = new DiscoveryGroup(server.getNodeID().toString(), config.getDiscoveryGroupName(),
+            discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null);
+
+         pool = new DiscoveryPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryGroup);
       } else {
-         pool = new StaticAbstractPool(server, scheduledExecutor, config.getStaticConnectors());
+         Map<String, TransportConfiguration> connectorConfigurations =
+            server.getConfiguration().getConnectorConfigurations();
+
+         List<TransportConfiguration> staticConnectors = new ArrayList<>();
+         for (String staticConnector : config.getStaticConnectors()) {
+            staticConnectors.add(connectorConfigurations.get(staticConnector));
+         }
+
+         pool = new StaticPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), staticConnectors);
       }
 
       pool.setUsername(config.getUsername());
       pool.setPassword(config.getPassword());
-      pool.setCheckPeriod(config.getCheckPeriod());
 
       return pool;
    }
