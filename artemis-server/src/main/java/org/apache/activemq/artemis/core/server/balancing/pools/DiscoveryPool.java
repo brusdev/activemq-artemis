@@ -17,73 +17,54 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
-import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
-import org.apache.activemq.artemis.core.cluster.DiscoveryListener;
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
+import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class DiscoveryPool extends AbstractPool implements DiscoveryListener {
-   private final DiscoveryGroup discoveryGroup;
+public class DiscoveryPool extends AbstractPool implements DiscoveryService.Listener {
+   private static final Logger logger = Logger.getLogger(DiscoveryPool.class);
 
-   public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod, DiscoveryGroup discoveryGroup) {
+   private final DiscoveryService discoveryService;
+
+   public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod, DiscoveryService discoveryService) {
       super(targetFactory, scheduledExecutor, checkPeriod);
 
-      this.discoveryGroup = discoveryGroup;
+      this.discoveryService = discoveryService;
    }
 
    @Override
    public void start() throws Exception {
       super.start();
 
-      discoveryGroup.registerListener(this);
+      discoveryService.setListener(this);
 
-      discoveryGroup.start();
+      discoveryService.start();
    }
 
    @Override
    public void stop() throws Exception {
       super.stop();
 
-      if (discoveryGroup != null) {
-         discoveryGroup.unregisterListener(this);
+      if (discoveryService != null) {
+         discoveryService.setListener(null);
 
-         discoveryGroup.stop();
+         discoveryService.stop();
       }
    }
 
    @Override
-   public void connectorsChanged(List<DiscoveryEntry> newConnectors) {
-      List<DiscoveryEntry> addingTargets = new ArrayList<>();
-      Map<String, Target> removingTragets = new HashMap<>();
-      for (Target target : getAllTargets()) {
-         removingTragets.put(target.getReference().getNodeID(), target);
+   public void entryAdded(String nodeID, TransportConfiguration connector) {
+      try {
+         addTarget(nodeID, connector);
+      } catch (Exception e) {
+         logger.debug("Error on adding the target " + nodeID);
       }
+   }
 
-      for (DiscoveryEntry newConnector : newConnectors) {
-         Target addingTarget = removingTragets.remove(newConnector.getNodeID());
-
-         if (addingTarget == null) {
-            addingTargets.add(newConnector);
-         }
-      }
-
-      for (Target removingTraget : removingTragets.values()) {
-         //removeTarget(removingTraget.getNodeID());
-      }
-
-      for (DiscoveryEntry addingTarget : addingTargets) {
-         try {
-            addTarget(addingTarget.getNodeID(), addingTarget.getConnector());
-         } catch (Exception e) {
-            e.printStackTrace();
-         }
-      }
+   @Override
+   public void entryRemoved(String nodeID, TransportConfiguration connector) {
+      //TODO remove the relative target from the pool
    }
 }
