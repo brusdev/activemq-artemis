@@ -44,16 +44,23 @@ public class MockTarget extends AbstractTarget {
       return connectable;
    }
 
-   public void setConnectable(boolean connectable) {
+   public MockTarget setConnected(boolean connected) {
+      this.connected = connected;
+      return this;
+   }
+
+   public MockTarget setConnectable(boolean connectable) {
       this.connectable = connectable;
+      return this;
    }
 
    public boolean isReady() {
       return ready;
    }
 
-   public void setReady(boolean ready) {
+   public MockTarget setReady(boolean ready) {
       this.ready = ready;
+      return this;
    }
 
    public Map<String, Object> getAttributeValues() {
@@ -100,13 +107,17 @@ public class MockTarget extends AbstractTarget {
 
    @Override
    public void checkReadiness() throws Exception {
+      checkConnection();
+
       if (!ready) {
-         throw new IllegalStateException("Mock not ready");
+         throw new IllegalStateException("Target not ready");
       }
    }
 
    @Override
    public Object getAttribute(String resourceName, String attributeName) throws Exception {
+      checkConnection();
+
       return attributeValues.get(resourceName + attributeName);
    }
 
@@ -116,10 +127,18 @@ public class MockTarget extends AbstractTarget {
 
    @Override
    public Object invokeOperation(String resourceName, String operationName, Object... operationArgs) throws Exception {
+      checkConnection();
+
       return operationReturnValues.get(resourceName + operationName);
    }
 
    public void setOperationReturnValue(String resourceName, String attributeName, Object value) {
       operationReturnValues.put(resourceName + attributeName, value);
+   }
+
+   private void checkConnection() {
+      if (!connected) {
+         throw new IllegalStateException("Target not connected");
+      }
    }
 }

@@ -41,31 +41,31 @@ public class DiscoveryPoolTest extends BasePoolTest {
    }
 
    private Pool createDiscoveryPool(TargetFactory targetFactory, DiscoveryService discoveryService) {
-      return new DiscoveryPool(targetFactory, getScheduledExecutor(), getCheckPeriod(), discoveryService);
+      return new DiscoveryPool(targetFactory, getScheduledExecutor(), CHECK_PERIOD, discoveryService);
    }
 
 
    @Test
-   public void testTargetsAddingRemovingAllEntries() throws Exception {
-      testTargetsChangingEntries(5, 10, 10);
+   public void testPoolAddingRemovingAllEntries() throws Exception {
+      testPoolChangingEntries(5, 10, 10);
    }
 
    @Test
-   public void testTargetsAddingRemovingPartialEntries() throws Exception {
-      testTargetsChangingEntries(5, 10, 5);
+   public void testPoolAddingRemovingPartialEntries() throws Exception {
+      testPoolChangingEntries(5, 10, 5);
    }
 
    @Test
-   public void testTargetsAddingRemovingAllEntriesAfterStart() throws Exception {
-      testTargetsChangingEntries(0, 10, 10);
+   public void testPoolAddingRemovingAllEntriesAfterStart() throws Exception {
+      testPoolChangingEntries(0, 10, 10);
    }
 
    @Test
-   public void testTargetsAddingRemovingPartialEntriesAfterStart() throws Exception {
-      testTargetsChangingEntries(0, 10, 5);
+   public void testPoolAddingRemovingPartialEntriesAfterStart() throws Exception {
+      testPoolChangingEntries(0, 10, 5);
    }
 
-   private void testTargetsChangingEntries(int initialEntries, int addingEntries, int removingEntries) throws Exception {
+   private void testPoolChangingEntries(int initialEntries, int addingEntries, int removingEntries) throws Exception {
       MockTargetFactory targetFactory = new MockTargetFactory();
       MockTargetTask targetTask = new MockTargetTask("TEST", true);
       MockDiscoveryService discoveryService = new MockDiscoveryService();
@@ -88,10 +88,10 @@ public class DiscoveryPoolTest extends BasePoolTest {
          targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setConnectable(true));
          targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(true));
 
-         Wait.assertEquals(initialEntries, () -> pool.getTargets().size(), getCheckTimeout());
+         Wait.assertEquals(initialEntries, () -> pool.getTargets().size(), CHECK_TIMEOUT);
          Assert.assertEquals(initialEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries, targetFactory.getCreatedTargets().size());
-         initialNodeIDs.forEach(nodeID -> Assert.assertTrue(pool.checkTargetReady(nodeID)));
+         initialNodeIDs.forEach(nodeID -> Assert.assertTrue(pool.isTargetReady(nodeID)));
 
          // Simulate adding entries.
          List<String> addedNodeIDs = new ArrayList<>();
@@ -103,11 +103,11 @@ public class DiscoveryPoolTest extends BasePoolTest {
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
          initialNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.checkTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(nodeID));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
          addedNodeIDs.forEach(nodeID -> {
-            Assert.assertFalse(pool.checkTargetReady(nodeID));
+            Assert.assertFalse(pool.isTargetReady(nodeID));
             Assert.assertEquals(0, targetTask.getTargetExecutions(pool.getTarget(nodeID)));
          });
 
@@ -118,25 +118,25 @@ public class DiscoveryPoolTest extends BasePoolTest {
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
          initialNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.checkTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(nodeID));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
          addedNodeIDs.forEach(nodeID -> {
-            Assert.assertFalse(pool.checkTargetReady(nodeID));
+            Assert.assertFalse(pool.isTargetReady(nodeID));
             Assert.assertEquals(0, targetTask.getTargetExecutions(pool.getTarget(nodeID)));
          });
 
          targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(true));
 
-         Wait.assertEquals(initialEntries + addingEntries, () -> pool.getTargets().size(), getCheckTimeout());
+         Wait.assertEquals(initialEntries + addingEntries, () -> pool.getTargets().size(), CHECK_TIMEOUT);
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
          initialNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.checkTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(nodeID));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
          addedNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.checkTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(nodeID));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
 
@@ -151,11 +151,11 @@ public class DiscoveryPoolTest extends BasePoolTest {
             Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
             Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
             initialNodeIDs.forEach(nodeID -> {
-               Assert.assertTrue(pool.checkTargetReady(nodeID));
+               Assert.assertTrue(pool.isTargetReady(nodeID));
                Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
             });
             addedNodeIDs.forEach(nodeID -> {
-               Assert.assertTrue(pool.checkTargetReady(nodeID));
+               Assert.assertTrue(pool.isTargetReady(nodeID));
                Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
             });
          }

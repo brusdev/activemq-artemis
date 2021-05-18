@@ -33,6 +33,6 @@ public class StaticPoolTest extends BasePoolTest {
          staticConnectors.add(new TransportConfiguration());
       }
 
-      return new StaticPool(targetFactory, getScheduledExecutor(), getCheckPeriod(), staticConnectors);
+      return new StaticPool(targetFactory, getScheduledExecutor(), CHECK_PERIOD, staticConnectors);
    }
 }
