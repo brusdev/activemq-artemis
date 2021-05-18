@@ -36,7 +36,6 @@ import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
 import org.apache.activemq.artemis.core.server.balancing.targets.CoreTargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
-import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;

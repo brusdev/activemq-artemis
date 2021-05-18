@@ -75,7 +75,7 @@ public class DiscoveryPoolTest extends BasePoolTest {
       // Simulate initial entries.
       List<String> initialNodeIDs = new ArrayList<>();
       for (int i = 0; i < initialEntries; i++) {
-         initialNodeIDs.add(discoveryService.addEntry());
+         initialNodeIDs.add(discoveryService.addEntry().getNodeID());
       }
 
       Pool pool = createDiscoveryPool(targetFactory, discoveryService);
@@ -96,7 +96,7 @@ public class DiscoveryPoolTest extends BasePoolTest {
          // Simulate adding entries.
          List<String> addedNodeIDs = new ArrayList<>();
          for (int i = 0; i < addingEntries; i++) {
-            addedNodeIDs.add(discoveryService.addEntry());
+            addedNodeIDs.add(discoveryService.addEntry().getNodeID());
          }
 
          Assert.assertEquals(initialEntries, pool.getTargets().size());

@@ -17,7 +17,6 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.cluster.DiscoveryListener;
@@ -25,11 +24,12 @@ import org.apache.activemq.artemis.core.cluster.DiscoveryListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryGroupService extends DiscoveryService implements DiscoveryListener {
    private final DiscoveryGroup discoveryGroup;
 
-   private final Map<String, TransportConfiguration> entries = new HashMap<>();
+   private final Map<String, DiscoveryEntry> entries = new ConcurrentHashMap<>();
 
    public DiscoveryGroupService(DiscoveryGroup discoveryGroup) {
       this.discoveryGroup = discoveryGroup;
@@ -53,27 +53,25 @@ public class DiscoveryGroupService extends DiscoveryService implements Discovery
    }
 
    @Override
-   public void connectorsChanged(List<DiscoveryEntry> newConnectors) {
-      Map<String, TransportConfiguration> removingEntries = new HashMap<>(entries);
+   public void connectorsChanged(List<DiscoveryEntry> newEntries) {
+      Map<String, DiscoveryEntry> oldEntries = new HashMap<>(entries);
 
-      for (DiscoveryEntry newConnector : newConnectors) {
-         TransportConfiguration removedConnector = removingEntries.remove(newConnector.getNodeID());
+      for (DiscoveryEntry newEntry : newEntries) {
+         DiscoveryEntry oldEntry = oldEntries.remove(newEntry.getNodeID());
 
-         if (removedConnector == null) {
-            entries.put(newConnector.getNodeID(), newConnector.getConnector());
+         entries.put(newEntry.getNodeID(), newEntry);
 
-            fireEntryAddedEvent(newConnector.getNodeID(), newConnector.getConnector());
-         } else if (!removedConnector.equals(newConnector.getConnector())) {
-            entries.put(newConnector.getNodeID(), newConnector.getConnector());
-
-            fireEntryChangedEvent(newConnector.getNodeID(), newConnector.getConnector());
+         if (oldEntry == null) {
+            fireEntryAddedEvent(newEntry);
+         } else {
+            fireEntryUpdatedEvent(oldEntry, newEntry);
          }
       }
 
-      removingEntries.forEach((nodeID, connector) -> {
+      oldEntries.forEach((nodeID, entry) -> {
          entries.remove(nodeID);
 
-         fireEntryRemovedEvent(nodeID, connector);
+         fireEntryRemovedEvent(entry);
       });
    }
 }
