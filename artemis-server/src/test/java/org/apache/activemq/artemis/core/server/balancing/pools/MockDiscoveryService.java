@@ -18,24 +18,25 @@
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class MockDiscoveryService extends DiscoveryService {
-   private final Map<String, TransportConfiguration> entries = new HashMap<>();
+   private final Map<String, DiscoveryEntry> entries = new HashMap<>();
 
-   private final Map<String, TransportConfiguration> pendingEntries = new HashMap<>();
+   private final Map<String, DiscoveryEntry> pendingEntries = new HashMap<>();
 
    private volatile boolean started;
 
 
-   public Map<String, TransportConfiguration> getEntries() {
+   public Map<String, DiscoveryEntry> getEntries() {
       return entries;
    }
 
-   public Map<String, TransportConfiguration> getPendingEntries() {
+   public Map<String, DiscoveryEntry> getPendingEntries() {
       return pendingEntries;
    }
 
@@ -44,29 +45,28 @@ public class MockDiscoveryService extends DiscoveryService {
       return started;
    }
 
-   public String addEntry() {
-      String nodeID = UUID.randomUUID().toString();
-
-      addEntry(nodeID, new TransportConfiguration());
-
-      return nodeID;
+   public DiscoveryEntry addEntry() {
+      return addEntry(new DiscoveryEntry(UUID.randomUUID().toString(), new TransportConfiguration(), System.currentTimeMillis()));
    }
 
-   public void addEntry(String nodeID, TransportConfiguration connector) {
+   public DiscoveryEntry addEntry(DiscoveryEntry entry) {
       if (started) {
-         entries.put(nodeID, connector);
-         fireEntryAddedEvent(nodeID, connector);
+         entries.put(entry.getNodeID(), entry);
+         fireEntryAddedEvent(entry);
       } else {
-         pendingEntries.put(nodeID, connector);
+         pendingEntries.put(entry.getNodeID(), entry);
       }
+
+      return entry;
    }
 
-   public void removeEntry(String nodeID) {
+   public DiscoveryEntry removeEntry(String nodeID) {
       if (started) {
-         TransportConfiguration removedConnector = entries.remove(nodeID);
-         fireEntryRemovedEvent(nodeID, removedConnector);
+         DiscoveryEntry removedEntry = entries.remove(nodeID);
+         fireEntryRemovedEvent(removedEntry);
+         return removedEntry;
       } else {
-         pendingEntries.remove(nodeID);
+         return pendingEntries.remove(nodeID);
       }
    }
 
@@ -75,9 +75,9 @@ public class MockDiscoveryService extends DiscoveryService {
    public void start() throws Exception {
       started = true;
 
-      pendingEntries.forEach((nodeID, connector) -> {
-         entries.put(nodeID, connector);
-         fireEntryAddedEvent(nodeID, connector);
+      pendingEntries.forEach((nodeID, entry) -> {
+         entries.put(nodeID, entry);
+         fireEntryAddedEvent(entry);
       });
    }
 

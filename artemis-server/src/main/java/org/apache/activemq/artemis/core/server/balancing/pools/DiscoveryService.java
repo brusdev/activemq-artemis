@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 
 public abstract class DiscoveryService implements ActiveMQComponent {
@@ -32,29 +32,30 @@ public abstract class DiscoveryService implements ActiveMQComponent {
       this.listener = listener;
    }
 
-   protected void fireEntryAddedEvent(String nodeID, TransportConfiguration connector) {
+   protected void fireEntryAddedEvent(DiscoveryEntry entry) {
       if (listener != null) {
-         this.listener.entryAdded(nodeID, connector);
+         this.listener.entryAdded(entry);
       }
    }
 
-   protected void fireEntryChangedEvent(String nodeID, TransportConfiguration connector) {
+   protected void fireEntryRemovedEvent(DiscoveryEntry entry) {
       if (listener != null) {
-         this.listener.entryChanged(nodeID, connector);
+         this.listener.entryRemoved(entry);
       }
    }
 
-   protected void fireEntryRemovedEvent(String nodeID, TransportConfiguration connector) {
+   protected void fireEntryUpdatedEvent(DiscoveryEntry oldEntry, DiscoveryEntry newEntry) {
       if (listener != null) {
-         this.listener.entryRemoved(nodeID, connector);
+         this.listener.entryUpdated(oldEntry, newEntry);
       }
    }
+
 
    public interface Listener {
-      void entryAdded(String nodeID, TransportConfiguration connector);
+      void entryAdded(DiscoveryEntry entry);
 
-      void entryChanged(String nodeID, TransportConfiguration connector);
+      void entryRemoved(DiscoveryEntry entry);
 
-      void entryRemoved(String nodeID, TransportConfiguration connector);
+      void entryUpdated(DiscoveryEntry oldEntry, DiscoveryEntry newEntry);
    }
 }

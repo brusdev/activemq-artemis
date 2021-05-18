@@ -174,7 +174,7 @@ public abstract class AbstractPool implements Pool {
       return targetRunner != null ? targetRunner.getTarget() : null;
    }
 
-   private class TargetRunner implements Runnable, TargetListener {
+   class TargetRunner implements Runnable, TargetListener {
       private final Target target;
 
       private ScheduledFuture scheduledFuture;
@@ -190,7 +190,7 @@ public abstract class AbstractPool implements Pool {
       }
 
 
-      public TargetRunner(Target target) {
+      TargetRunner(Target target) {
          this.target = target;
 
          this.target.setListener(this);

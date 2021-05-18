@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.jboss.logging.Logger;
 
@@ -27,6 +27,16 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    private static final Logger logger = Logger.getLogger(DiscoveryPool.class);
 
    private final DiscoveryService discoveryService;
+
+   private boolean autoRemove = false;
+
+   public boolean isAutoRemove() {
+      return autoRemove;
+   }
+
+   public void setAutoRemove(boolean autoRemove) {
+      this.autoRemove = autoRemove;
+   }
 
    public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod, DiscoveryService discoveryService) {
       super(targetFactory, scheduledExecutor, checkPeriod);
@@ -55,21 +65,35 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    }
 
    @Override
-   public void entryAdded(String nodeID, TransportConfiguration connector) {
+   public void entryAdded(DiscoveryEntry entry) {
       try {
-         addTarget(nodeID, connector);
+         addTarget(entry.getNodeID(), entry.getConnector());
       } catch (Exception e) {
-         logger.debug("Error on adding the target " + nodeID);
+         logger.debug("Error on adding the target for " + entry);
       }
    }
 
    @Override
-   public void entryChanged(String nodeID, TransportConfiguration connector) {
-      //TODO remove the relative target from the pool and a new target
+   public void entryRemoved(DiscoveryEntry entry) {
+      if (autoRemove) {
+         try {
+            removeTarget(entry.getNodeID());
+         } catch (Exception e) {
+            logger.debug("Error on removing the target for " + entry);
+         }
+      }
    }
 
    @Override
-   public void entryRemoved(String nodeID, TransportConfiguration connector) {
-      //TODO remove the relative target from the pool
+   public void entryUpdated(DiscoveryEntry oldEntry, DiscoveryEntry newEntry) {
+      if (!oldEntry.getConnector().equals(newEntry.getConnector())) {
+         try {
+            removeTarget(oldEntry.getNodeID());
+
+            addTarget(newEntry.getNodeID(), newEntry.getConnector());
+         } catch (Exception e) {
+            logger.debug("Error on updating the target for " + newEntry);
+         }
+      }
    }
 }
