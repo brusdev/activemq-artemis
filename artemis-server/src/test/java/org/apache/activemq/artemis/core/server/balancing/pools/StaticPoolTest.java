@@ -22,6 +22,7 @@ import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class StaticPoolTest extends BasePoolTest {
 
@@ -33,6 +34,6 @@ public class StaticPoolTest extends BasePoolTest {
          staticConnectors.add(new TransportConfiguration());
       }
 
-      return new StaticPool(targetFactory, getScheduledExecutor(), CHECK_PERIOD, staticConnectors);
+      return new StaticPool(targetFactory, new ScheduledThreadPoolExecutor(0), CHECK_PERIOD, staticConnectors);
    }
 }

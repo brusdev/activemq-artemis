@@ -24,19 +24,9 @@ import org.apache.activemq.artemis.utils.Wait;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
 public abstract class BasePoolTest {
    public static final int CHECK_PERIOD = 100;
    public static final int CHECK_TIMEOUT = 2 * CHECK_PERIOD;
-
-   private final ScheduledExecutorService scheduledExecutor =
-      new ScheduledThreadPoolExecutor(0);
-
-   protected ScheduledExecutorService getScheduledExecutor() {
-      return scheduledExecutor;
-   }
 
    protected abstract Pool createPool(TargetFactory targetFactory, int targets);
 
