@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DiscoveryGroupService extends DiscoveryService implements DiscoveryListener {
    private final DiscoveryGroup discoveryGroup;
 
-   private final Map<String, DiscoveryEntry> entries = new ConcurrentHashMap<>();
+   private final Map<String, Entry> entries = new ConcurrentHashMap<>();
 
    public DiscoveryGroupService(DiscoveryGroup discoveryGroup) {
       this.discoveryGroup = discoveryGroup;
@@ -54,17 +54,23 @@ public class DiscoveryGroupService extends DiscoveryService implements Discovery
 
    @Override
    public void connectorsChanged(List<DiscoveryEntry> newEntries) {
-      Map<String, DiscoveryEntry> oldEntries = new HashMap<>(entries);
+      Map<String, Entry> oldEntries = new HashMap<>(entries);
 
       for (DiscoveryEntry newEntry : newEntries) {
-         DiscoveryEntry oldEntry = oldEntries.remove(newEntry.getNodeID());
-
-         entries.put(newEntry.getNodeID(), newEntry);
+         Entry oldEntry = oldEntries.remove(newEntry.getNodeID());
 
          if (oldEntry == null) {
-            fireEntryAddedEvent(newEntry);
-         } else {
-            fireEntryUpdatedEvent(oldEntry, newEntry);
+            Entry addingEntry = new Entry(newEntry.getNodeID(), newEntry.getConnector());
+
+            entries.put(addingEntry.getNodeID(), addingEntry);
+
+            fireEntryAddedEvent(addingEntry);
+         } else if (!newEntry.getConnector().equals(oldEntry.getConnector())) {
+            Entry updatingEntry = new Entry(newEntry.getNodeID(), newEntry.getConnector());
+
+            entries.put(updatingEntry.getNodeID(), updatingEntry);
+
+            fireEntryUpdatedEvent(oldEntry, updatingEntry);
          }
       }
 

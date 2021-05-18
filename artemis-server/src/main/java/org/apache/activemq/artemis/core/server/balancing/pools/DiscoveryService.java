@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 
 public abstract class DiscoveryService implements ActiveMQComponent {
@@ -32,19 +32,19 @@ public abstract class DiscoveryService implements ActiveMQComponent {
       this.listener = listener;
    }
 
-   protected void fireEntryAddedEvent(DiscoveryEntry entry) {
+   protected void fireEntryAddedEvent(Entry entry) {
       if (listener != null) {
          this.listener.entryAdded(entry);
       }
    }
 
-   protected void fireEntryRemovedEvent(DiscoveryEntry entry) {
+   protected void fireEntryRemovedEvent(Entry entry) {
       if (listener != null) {
          this.listener.entryRemoved(entry);
       }
    }
 
-   protected void fireEntryUpdatedEvent(DiscoveryEntry oldEntry, DiscoveryEntry newEntry) {
+   protected void fireEntryUpdatedEvent(Entry oldEntry, Entry newEntry) {
       if (listener != null) {
          this.listener.entryUpdated(oldEntry, newEntry);
       }
@@ -52,10 +52,28 @@ public abstract class DiscoveryService implements ActiveMQComponent {
 
 
    public interface Listener {
-      void entryAdded(DiscoveryEntry entry);
+      void entryAdded(Entry entry);
 
-      void entryRemoved(DiscoveryEntry entry);
+      void entryRemoved(Entry entry);
 
-      void entryUpdated(DiscoveryEntry oldEntry, DiscoveryEntry newEntry);
+      void entryUpdated(Entry oldEntry, Entry newEntry);
+   }
+
+   public class Entry {
+      private final String nodeID;
+      private final TransportConfiguration connector;
+
+      public String getNodeID() {
+         return nodeID;
+      }
+
+      public TransportConfiguration getConnector() {
+         return connector;
+      }
+
+      public Entry(String nodeID, TransportConfiguration connector) {
+         this.nodeID = nodeID;
+         this.connector = connector;
+      }
    }
 }
