@@ -23,25 +23,28 @@ import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.utils.Wait;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.stream.Stream;
 
+@RunWith(Parameterized.class)
 public class DiscoveryPoolTest extends BasePoolTest {
 
-   @Override
-   protected Pool createPool(TargetFactory targetFactory, int targets) {
-      MockDiscoveryService discoveryService = new MockDiscoveryService();
+   private final boolean autoRemove;
 
-      for (int i = 0; i < targets; i++) {
-         discoveryService.addEntry();
-      }
-
-      return createDiscoveryPool(targetFactory, discoveryService);
+   @Parameterized.Parameters(name = "autoRemove: {0}")
+   public static Collection<Object[]> data() {
+      return Arrays.asList(new Object[][] {{true}, {false}});
    }
 
-   private Pool createDiscoveryPool(TargetFactory targetFactory, DiscoveryService discoveryService) {
-      return new DiscoveryPool(targetFactory, getScheduledExecutor(), CHECK_PERIOD, discoveryService);
+   public DiscoveryPoolTest(boolean autoRemove) {
+      this.autoRemove = autoRemove;
    }
 
 
@@ -131,36 +134,64 @@ public class DiscoveryPoolTest extends BasePoolTest {
          Wait.assertEquals(initialEntries + addingEntries, () -> pool.getTargets().size(), CHECK_TIMEOUT);
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
-         initialNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.isTargetReady(nodeID));
-            Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
-         });
-         addedNodeIDs.forEach(nodeID -> {
+         Stream.concat(initialNodeIDs.stream(), addedNodeIDs.stream()).forEach(nodeID -> {
             Assert.assertTrue(pool.isTargetReady(nodeID));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
 
          if (removingEntries > 0) {
             // Simulate removing entries.
-            List<String> entries = new ArrayList<>(discoveryService.getEntries().keySet());
+            List<String> removingNodeIDs = new ArrayList<>();
             for (int i = 0; i < removingEntries; i++) {
-               discoveryService.removeEntry(entries.get(0));
+               removingNodeIDs.add(discoveryService.removeEntry(targetFactory.
+                  getCreatedTargets().get(i).getReference().getNodeID()).getNodeID());
             }
 
-            Assert.assertEquals(initialEntries + addingEntries, pool.getTargets().size());
-            Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
-            Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
-            initialNodeIDs.forEach(nodeID -> {
-               Assert.assertTrue(pool.isTargetReady(nodeID));
-               Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
-            });
-            addedNodeIDs.forEach(nodeID -> {
-               Assert.assertTrue(pool.isTargetReady(nodeID));
-               Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
-            });
+            if (autoRemove) {
+               Assert.assertEquals(initialEntries + addingEntries - removingEntries, pool.getTargets().size());
+               Assert.assertEquals(initialEntries + addingEntries - removingEntries, pool.getAllTargets().size());
+               Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
+               Stream.concat(initialNodeIDs.stream(), addedNodeIDs.stream()).forEach(nodeID -> {
+                  if (removingNodeIDs.contains(nodeID)) {
+                     Assert.assertFalse(pool.isTargetReady(nodeID));
+                     Assert.assertEquals(0, targetTask.getTargetExecutions(pool.getTarget(nodeID)));
+                  } else {
+                     Assert.assertTrue(pool.isTargetReady(nodeID));
+                     Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
+                  }
+               });
+            } else {
+               Assert.assertEquals(initialEntries + addingEntries, pool.getTargets().size());
+               Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
+               Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
+               Stream.concat(initialNodeIDs.stream(), addedNodeIDs.stream()).forEach(nodeID -> {
+                  Assert.assertTrue(pool.isTargetReady(nodeID));
+                  Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
+               });
+            }
          }
       } finally {
          pool.stop();
       }
+   }
+
+
+   @Override
+   protected Pool createPool(TargetFactory targetFactory, int targets) {
+      MockDiscoveryService discoveryService = new MockDiscoveryService();
+
+      for (int i = 0; i < targets; i++) {
+         discoveryService.addEntry();
+      }
+
+      return createDiscoveryPool(targetFactory, discoveryService);
+   }
+
+   private DiscoveryPool createDiscoveryPool(TargetFactory targetFactory, DiscoveryService discoveryService) {
+      DiscoveryPool discoveryPool = new DiscoveryPool(targetFactory, new ScheduledThreadPoolExecutor(0), CHECK_PERIOD, discoveryService);
+
+      discoveryPool.setAutoRemove(autoRemove);
+
+      return discoveryPool;
    }
 }
