@@ -17,7 +17,6 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
-import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.jboss.logging.Logger;
 
@@ -65,7 +64,7 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    }
 
    @Override
-   public void entryAdded(DiscoveryEntry entry) {
+   public void entryAdded(DiscoveryService.Entry entry) {
       try {
          addTarget(entry.getNodeID(), entry.getConnector());
       } catch (Exception e) {
@@ -74,7 +73,7 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    }
 
    @Override
-   public void entryRemoved(DiscoveryEntry entry) {
+   public void entryRemoved(DiscoveryService.Entry entry) {
       if (autoRemove) {
          try {
             removeTarget(entry.getNodeID());
@@ -85,7 +84,7 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    }
 
    @Override
-   public void entryUpdated(DiscoveryEntry oldEntry, DiscoveryEntry newEntry) {
+   public void entryUpdated(DiscoveryService.Entry oldEntry, DiscoveryService.Entry newEntry) {
       if (!oldEntry.getConnector().equals(newEntry.getConnector())) {
          try {
             removeTarget(oldEntry.getNodeID());

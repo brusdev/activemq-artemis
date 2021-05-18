@@ -18,25 +18,24 @@
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.cluster.DiscoveryEntry;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class MockDiscoveryService extends DiscoveryService {
-   private final Map<String, DiscoveryEntry> entries = new HashMap<>();
+   private final Map<String, Entry> entries = new HashMap<>();
 
-   private final Map<String, DiscoveryEntry> pendingEntries = new HashMap<>();
+   private final Map<String, Entry> pendingEntries = new HashMap<>();
 
    private volatile boolean started;
 
 
-   public Map<String, DiscoveryEntry> getEntries() {
+   public Map<String, Entry> getEntries() {
       return entries;
    }
 
-   public Map<String, DiscoveryEntry> getPendingEntries() {
+   public Map<String, Entry> getPendingEntries() {
       return pendingEntries;
    }
 
@@ -45,11 +44,11 @@ public class MockDiscoveryService extends DiscoveryService {
       return started;
    }
 
-   public DiscoveryEntry addEntry() {
-      return addEntry(new DiscoveryEntry(UUID.randomUUID().toString(), new TransportConfiguration(), System.currentTimeMillis()));
+   public Entry addEntry() {
+      return addEntry(new Entry(UUID.randomUUID().toString(), new TransportConfiguration()));
    }
 
-   public DiscoveryEntry addEntry(DiscoveryEntry entry) {
+   public Entry addEntry(Entry entry) {
       if (started) {
          entries.put(entry.getNodeID(), entry);
          fireEntryAddedEvent(entry);
@@ -60,9 +59,9 @@ public class MockDiscoveryService extends DiscoveryService {
       return entry;
    }
 
-   public DiscoveryEntry removeEntry(String nodeID) {
+   public Entry removeEntry(String nodeID) {
       if (started) {
-         DiscoveryEntry removedEntry = entries.remove(nodeID);
+         Entry removedEntry = entries.remove(nodeID);
          fireEntryRemovedEvent(removedEntry);
          return removedEntry;
       } else {
