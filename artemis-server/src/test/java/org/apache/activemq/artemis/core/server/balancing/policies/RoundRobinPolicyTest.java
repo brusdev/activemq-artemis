@@ -33,18 +33,17 @@ public class RoundRobinPolicyTest extends BasePolicyTest {
    }
 
    @Test
-   public void testMultipleTargets() {
-      final int targetCount = 10;
+   public void testPolicyWithMultipleTargets() {
       Policy policy = createPolicy();
       List<Target> selectedTargets;
       List<Target> previousTargets = new ArrayList<>();
 
       ArrayList<Target> targets = new ArrayList<>();
-      for (int i = 0; i < targetCount; i++) {
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          targets.add(new MockTarget());
       }
 
-      for (int i = 0; i < targetCount; i++) {
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          selectedTargets = policy.selectTargets(targets, "test");
          Assert.assertEquals(1, selectedTargets.size());
          Assert.assertTrue("Iteration failed: " + i, !previousTargets.contains(selectedTargets.get(0)));

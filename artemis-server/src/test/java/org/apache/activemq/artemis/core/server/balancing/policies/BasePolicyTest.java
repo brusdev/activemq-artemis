@@ -27,11 +27,12 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class BasePolicyTest {
+   public static final int MULTIPLE_TARGETS = 10;
 
    protected abstract Policy createPolicy();
 
    @Test
-   public void testNoTarget() {
+   public void testPolicyWithNoTarget() {
       Policy policy = createPolicy();
 
       List<Target> selectedTargets = policy.selectTargets(Collections.emptyList(), "test");
@@ -40,7 +41,7 @@ public abstract class BasePolicyTest {
    }
 
    @Test
-   public void testSingleTarget() {
+   public void testPolicyWithSingleTarget() {
       Policy policy = createPolicy();
 
       ArrayList<Target> targets = new ArrayList<>();

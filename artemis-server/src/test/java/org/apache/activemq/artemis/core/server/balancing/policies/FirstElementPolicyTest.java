@@ -33,12 +33,11 @@ public class FirstElementPolicyTest extends BasePolicyTest {
    }
 
    @Test
-   public void testMultipleTargets() {
-      final int targetCount = 10;
+   public void testPolicyWithMultipleTargets() {
       Policy policy = createPolicy();
 
       ArrayList<Target> targets = new ArrayList<>();
-      for (int i = 0; i < targetCount; i++) {
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          targets.add(new MockTarget());
       }
 

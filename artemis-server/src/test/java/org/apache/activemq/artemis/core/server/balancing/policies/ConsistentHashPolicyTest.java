@@ -33,14 +33,13 @@ public class ConsistentHashPolicyTest extends BasePolicyTest {
    }
 
    @Test
-   public void testMultipleTargets() {
-      final int targetCount = 10;
+   public void testPolicyWithMultipleTargets() {
       Policy policy = createPolicy();
       Target selectedTarget;
       List<Target> selectedTargets;
 
       ArrayList<Target> targets = new ArrayList<>();
-      for (int i = 0; i < targetCount; i++) {
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          targets.add(new MockTarget());
       }
 

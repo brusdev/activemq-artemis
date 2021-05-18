@@ -19,19 +19,24 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetController;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetListener;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public abstract class AbstractPool implements Pool {
+   private static final Logger logger = Logger.getLogger(Pool.class);
+
    private final TargetFactory targetFactory;
 
    private final ScheduledExecutorService scheduledExecutor;
@@ -40,7 +45,7 @@ public abstract class AbstractPool implements Pool {
 
    private final List<TargetTask> targetTasks = new ArrayList<>();
 
-   private final Map<String, TargetController> targetControllers = new ConcurrentHashMap<>();
+   private final Map<String, TargetRunner> targetRunners = new ConcurrentHashMap<>();
 
    private String username;
 
@@ -76,12 +81,12 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public List<Target> getAllTargets() {
-      return targetControllers.values().stream().map(targetController -> targetController.getTarget()).collect(Collectors.toList());
+      return targetRunners.values().stream().map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
    }
 
    @Override
    public List<Target> getTargets() {
-      return targetControllers.values().stream().filter(targetController -> targetController.isTargetReady()).map(targetController -> targetController.getTarget()).collect(Collectors.toList());
+      return targetRunners.values().stream().filter(targetRunner -> targetRunner.isTargetReady()).map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
    }
 
    @Override
@@ -105,16 +110,16 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public Target getTarget(String nodeId) {
-      TargetController targetController = targetControllers.get(nodeId);
+      TargetRunner targetRunner = targetRunners.get(nodeId);
 
-      return targetController != null ? targetController.getTarget() : null;
+      return targetRunner != null ? targetRunner.getTarget() : null;
    }
 
    @Override
-   public boolean checkTargetReady(String nodeId) {
-      TargetController targetController = targetControllers.get(nodeId);
+   public boolean isTargetReady(String nodeId) {
+      TargetRunner targetRunner = targetRunners.get(nodeId);
 
-      return targetController != null ? targetController.isTargetReady() : false;
+      return targetRunner != null ? targetRunner.isTargetReady() : false;
    }
 
    @Override
@@ -129,8 +134,8 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public void start() throws Exception {
-      for (TargetController targetController : targetControllers.values()) {
-         targetController.start();
+      for (TargetRunner targetRunner : targetRunners.values()) {
+         targetRunner.schedule();
       }
 
       started = true;
@@ -140,32 +145,108 @@ public abstract class AbstractPool implements Pool {
    public void stop() throws Exception {
       started = false;
 
-      List<TargetController> targetControllers = new ArrayList<>(this.targetControllers.values());
+      List<TargetRunner> targetRunners = new ArrayList<>(this.targetRunners.values());
 
-      for (TargetController targetController : targetControllers) {
-         removeTarget(targetController.getTarget().getReference().getNodeID());
+      for (TargetRunner targetRunner : targetRunners) {
+         removeTarget(targetRunner.getTarget().getReference().getNodeID());
       }
    }
 
 
    protected void addTarget(String nodeId, TransportConfiguration connector) throws Exception {
       Target target = targetFactory.createTarget(new TargetReference(nodeId, connector));
-      TargetController targetController = new TargetController(target, targetTasks, scheduledExecutor, checkPeriod);
+      TargetRunner targetRunner = new TargetRunner(target);
 
-      targetControllers.put(nodeId, targetController);
+      targetRunners.put(nodeId, targetRunner);
 
       if (started) {
-         targetController.start();
+         targetRunner.schedule();
       }
    }
 
    protected Target removeTarget(String nodeId) throws Exception {
-      TargetController targetController = targetControllers.remove(nodeId);
+      TargetRunner targetRunner = targetRunners.remove(nodeId);
 
-      if (targetController != null) {
-         targetController.stop();
+      if (targetRunner != null) {
+         targetRunner.cancel();
       }
 
-      return targetController != null ? targetController.getTarget() : null;
+      return targetRunner != null ? targetRunner.getTarget() : null;
+   }
+
+   private class TargetRunner implements Runnable, TargetListener {
+      private final Target target;
+
+      private ScheduledFuture scheduledFuture;
+
+      private volatile boolean targetReady = false;
+
+      public Target getTarget() {
+         return target;
+      }
+
+      public boolean isTargetReady() {
+         return targetReady;
+      }
+
+
+      public TargetRunner(Target target) {
+         this.target = target;
+
+         this.target.setListener(this);
+      }
+
+
+      public void schedule() {
+         scheduledFuture = scheduledExecutor.scheduleWithFixedDelay(
+            this, 0, checkPeriod, TimeUnit.MILLISECONDS);
+      }
+
+      public void cancel() throws Exception {
+         targetReady = false;
+
+         target.setListener(null);
+
+         if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+
+            scheduledFuture = null;
+
+            target.disconnect();
+         }
+      }
+
+      @Override
+      public void run() {
+         try {
+            if (scheduledFuture != null) {
+               if (!target.isConnected()) {
+                  target.connect();
+               }
+
+               target.checkReadiness();
+
+               for (TargetTask targetTask : targetTasks) {
+                  targetTask.call(target);
+               }
+
+               targetReady = true;
+            }
+         } catch (Exception e) {
+            logger.debug("Target not ready", e);
+
+            targetReady = false;
+         }
+      }
+
+      @Override
+      public void targetConnected() {
+
+      }
+
+      @Override
+      public void targetDisconnected() {
+         targetReady = false;
+      }
    }
 }

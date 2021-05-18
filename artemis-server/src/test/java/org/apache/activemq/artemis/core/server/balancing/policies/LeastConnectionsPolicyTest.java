@@ -34,18 +34,17 @@ public class LeastConnectionsPolicyTest extends BasePolicyTest {
    }
 
    @Test
-   public void testMultipleTargets() {
-      final int targetCount = 10;
+   public void testPolicyWithMultipleTargets() {
       Policy policy = createPolicy();
       List<Target> selectedTargets;
 
       ArrayList<Target> targets = new ArrayList<>();
-      for (int i = 0; i < targetCount; i++) {
-         targets.add(new MockTarget());
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
+         targets.add(new MockTarget().setConnected(true).setReady(true));
       }
 
       selectedTargets = policy.selectTargets(targets, "test");
-      Assert.assertEquals(targetCount, selectedTargets.size());
+      Assert.assertEquals(MULTIPLE_TARGETS, selectedTargets.size());
 
 
       targets.forEach(target -> {
@@ -53,7 +52,7 @@ public class LeastConnectionsPolicyTest extends BasePolicyTest {
          Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target));
       });
       selectedTargets = policy.selectTargets(targets, "test");
-      Assert.assertEquals(targetCount, selectedTargets.size());
+      Assert.assertEquals(MULTIPLE_TARGETS, selectedTargets.size());
 
 
       ((MockTarget)targets.get(0)).setAttributeValue("broker", "ConnectionCount", 2);

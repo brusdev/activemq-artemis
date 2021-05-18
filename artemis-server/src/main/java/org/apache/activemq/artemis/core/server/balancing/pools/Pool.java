@@ -37,7 +37,7 @@ public interface Pool extends ActiveMQComponent {
 
    Target getTarget(String nodeId);
 
-   boolean checkTargetReady(String nodeId);
+   boolean isTargetReady(String nodeId);
 
    List<Target> getTargets();
 
