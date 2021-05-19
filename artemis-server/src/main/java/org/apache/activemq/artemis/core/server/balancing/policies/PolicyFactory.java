@@ -20,7 +20,5 @@ package org.apache.activemq.artemis.core.server.balancing.policies;
 public abstract class PolicyFactory {
    public abstract String[] getSupportedPolicies();
 
-   public abstract boolean supports(String policyName);
-
    public abstract Policy createPolicy(String policyName);
 }

@@ -37,11 +37,6 @@ public class DefaultPolicyFactory extends PolicyFactory {
    }
 
    @Override
-   public boolean supports(String policyName) {
-      return supportedPolicies.containsKey(policyName);
-   }
-
-   @Override
    public Policy createPolicy(String policyName) {
       Supplier<Policy> policySupplier = supportedPolicies.get(policyName);
 
