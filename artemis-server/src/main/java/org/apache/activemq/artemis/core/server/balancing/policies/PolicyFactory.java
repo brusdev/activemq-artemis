@@ -17,10 +17,6 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
-
-import java.util.ServiceLoader;
-
 public abstract class PolicyFactory {
    public abstract String[] getSupportedPolicies();
 
