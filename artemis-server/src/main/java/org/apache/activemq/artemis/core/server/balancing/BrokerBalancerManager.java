@@ -28,6 +28,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
+import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryGroupService;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryService;
@@ -116,7 +117,9 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
    }
 
    private Policy deployPolicy(PolicyConfiguration policyConfig, Pool pool) throws ClassNotFoundException {
-      Policy policy = PolicyFactory.createPolicyForName(policyConfig.getName());
+      PolicyFactory policyFactory = PolicyFactoryResolver.getInstance().resolve(policyConfig.getName());
+
+      Policy policy = policyFactory.createPolicy(policyConfig.getName());
 
       if (policy.getTargetTasks() != null) {
          for (TargetTask targetTask : policy.getTargetTasks()) {

@@ -30,6 +30,8 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
+import org.apache.activemq.artemis.api.core.management.ManagementHelper;
 import org.apache.activemq.artemis.tests.util.Wait;
 import org.junit.Assert;
 import org.junit.Test;
@@ -64,6 +66,37 @@ public class JMSMessageProducerTest extends JMSClientTestSupport {
          connection.close();
       }
    }
+
+   @Test(timeout = 30000)
+   public void testManagementMessage() throws Exception {
+      Connection connection = createConnection("admin", "password");
+
+      try {
+         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         Queue managementQueue = session.createQueue(ActiveMQDefaultConfiguration.getDefaultManagementAddress().toString());
+         Queue managementReplyQueue = session.createQueue(ActiveMQDefaultConfiguration.getDefaultManagementAddress().toString() + "." + UUID.randomUUID().toString());
+         MessageProducer producer = session.createProducer(managementQueue);
+         MessageConsumer consumer = session.createConsumer(managementReplyQueue);
+
+         TextMessage requestMessage = session.createTextMessage();
+         requestMessage.setStringProperty(ManagementHelper.HDR_RESOURCE_NAME.toString(), "broker");
+         requestMessage.setStringProperty(ManagementHelper.HDR_ATTRIBUTE.toString(), "Active");
+         requestMessage.setJMSReplyTo(managementReplyQueue);
+         producer.send(requestMessage);
+
+         {
+            Message replyMessage = consumer.receive(2000);
+            assertNotNull(replyMessage);
+            assertEquals("true", replyMessage.getStringProperty(ManagementHelper.HDR_OPERATION_SUCCEEDED.toString()));
+            assertTrue(replyMessage instanceof TextMessage);
+            assertEquals("[true]", ((TextMessage)replyMessage).getText());
+            consumer.close();
+         }
+      } finally {
+         connection.close();
+      }
+   }
+
 
    @Test(timeout = 30000)
    public void testAnonymousProducer() throws Exception {

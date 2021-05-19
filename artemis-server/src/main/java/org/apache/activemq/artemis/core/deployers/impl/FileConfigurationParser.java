@@ -89,6 +89,7 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
+import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
@@ -2590,7 +2591,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
    private void parsePolicyConfiguration(final Element e, final PolicyConfiguration policyConfiguration) throws ClassNotFoundException {
       String name = e.getAttribute("name");
 
-      PolicyFactory.forName(name);
+      PolicyFactoryResolver.getInstance().resolve(name);
 
       policyConfiguration.setName(name);
 

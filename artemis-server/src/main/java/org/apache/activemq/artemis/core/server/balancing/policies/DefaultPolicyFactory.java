@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class InternalPolicyFactory extends PolicyFactory {
+public class DefaultPolicyFactory extends PolicyFactory {
    private static final Map<String, Supplier<Policy>> supportedPolicies = new HashMap<>();
 
    static {

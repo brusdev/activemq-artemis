@@ -22,23 +22,6 @@ import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import java.util.ServiceLoader;
 
 public abstract class PolicyFactory {
-   private static final ServiceLoader<PolicyFactory> serviceLoader =
-      ServiceLoader.load(PolicyFactory.class, BrokerBalancer.class.getClassLoader());
-
-   public static PolicyFactory forName(String policyName) throws ClassNotFoundException {
-      for (PolicyFactory policyFactory : serviceLoader) {
-         if (policyFactory.supports(policyName)) {
-            return policyFactory;
-         }
-      }
-
-      throw new ClassNotFoundException("No BalancerPolicyFactory found for the policy " + policyName);
-   }
-
-   public static Policy createPolicyForName(String policyName) throws ClassNotFoundException {
-      return PolicyFactory.forName(policyName).createPolicy(policyName);
-   }
-
    public abstract String[] getSupportedPolicies();
 
    public abstract boolean supports(String policyName);
