@@ -37,11 +37,15 @@ public class DiscoveryGroupService extends DiscoveryService implements Discovery
 
    @Override
    public void start() throws Exception {
+      discoveryGroup.registerListener(this);
+
       discoveryGroup.start();
    }
 
    @Override
    public void stop() throws Exception {
+      discoveryGroup.unregisterListener(this);
+
       discoveryGroup.stop();
 
       entries.clear();
