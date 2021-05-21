@@ -25,13 +25,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.airlift.airline.Option;
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
-import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
+import org.apache.activemq.artemis.api.core.management.CoreManagementProxy;
+import org.apache.activemq.artemis.api.jms.management.JMSManagementProxy;
 import org.apache.activemq.artemis.cli.CLIException;
 import org.apache.activemq.artemis.cli.commands.AbstractAction;
 import org.apache.activemq.artemis.cli.commands.ActionContext;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.commons.lang3.time.StopWatch;
+
+import javax.jms.ConnectionFactory;
 
 public abstract class CheckAbstract extends AbstractAction {
 
@@ -71,11 +77,11 @@ public abstract class CheckAbstract extends AbstractAction {
          int failedTasks = 0;
          int successTasks = 0;
 
-         try (ActiveMQConnectionFactory factory = createCoreConnectionFactory();
-              ServerLocator serverLocator = factory.getServerLocator();
-              ActiveMQManagementProxy managementProxy = new ActiveMQManagementProxy(serverLocator, user, password)) {
+         ConnectionFactory factory = createConnectionFactory();
 
-            managementProxy.start();
+         try (JMSManagementProxy managementProxy = new JMSManagementProxy(factory)) {
+
+            managementProxy.connect();
 
             StopWatch watch = new StopWatch();
             CheckTask[] checkTasks = getCheckTasks();

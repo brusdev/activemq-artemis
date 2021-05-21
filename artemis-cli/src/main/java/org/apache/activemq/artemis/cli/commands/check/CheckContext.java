@@ -21,16 +21,18 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
 import org.apache.activemq.artemis.api.core.management.NodeInfo;
 import org.apache.activemq.artemis.cli.commands.ActionContext;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
+import org.apache.activemq.artemis.management.ManagementProxy;
+
+import javax.jms.ConnectionFactory;
 
 public class CheckContext extends ActionContext {
 
    private ActionContext actionContext;
-   private ActiveMQConnectionFactory factory;
-   private ActiveMQManagementProxy managementProxy;
+   private ConnectionFactory factory;
+   private ManagementProxy managementProxy;
 
    private String nodeId;
    private Map<String, NodeInfo> topology;
@@ -43,25 +45,25 @@ public class CheckContext extends ActionContext {
       this.actionContext = actionContext;
    }
 
-   public ActiveMQConnectionFactory getFactory() {
+   public ConnectionFactory getFactory() {
       return factory;
    }
 
-   public void setFactory(ActiveMQConnectionFactory factory) {
+   public void setFactory(ConnectionFactory factory) {
       this.factory = factory;
    }
 
-   public ActiveMQManagementProxy getManagementProxy() {
+   public ManagementProxy getManagementProxy() {
       return managementProxy;
    }
 
-   public void setManagementProxy(ActiveMQManagementProxy managementProxy) {
+   public void setManagementProxy(ManagementProxy managementProxy) {
       this.managementProxy = managementProxy;
    }
 
    public String getNodeId() throws Exception {
       if (nodeId == null) {
-         nodeId = (String)managementProxy.invokeOperation("broker", "getNodeID");
+         nodeId = (String)managementProxy.invokeOperation("broker", "getNodeID", null, 0);
       }
 
       return nodeId;
@@ -70,14 +72,14 @@ public class CheckContext extends ActionContext {
    public Map<String, NodeInfo> getTopology() throws Exception {
       if (topology == null) {
          topology = Arrays.stream(NodeInfo.from((String)managementProxy.
-            invokeOperation("broker", "listNetworkTopology"))).
+            invokeOperation("broker", "listNetworkTopology", null, 0))).
             collect(Collectors.toMap(node -> node.getId(), node -> node));
       }
 
       return topology;
    }
 
-   public CheckContext(ActionContext actionContext, ActiveMQConnectionFactory factory, ActiveMQManagementProxy managementProxy) {
+   public CheckContext(ActionContext actionContext, ConnectionFactory factory, ManagementProxy managementProxy) {
       this.actionContext = actionContext;
       this.factory = factory;
       this.managementProxy = managementProxy;

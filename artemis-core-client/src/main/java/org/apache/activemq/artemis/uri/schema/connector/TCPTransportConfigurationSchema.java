@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnectorFactory;
+import org.apache.activemq.artemis.utils.IPV6Util;
 import org.apache.activemq.artemis.utils.uri.BeanSupport;
 import org.apache.activemq.artemis.utils.uri.SchemaConstants;
 
@@ -51,7 +52,66 @@ public class TCPTransportConfigurationSchema extends AbstractTransportConfigurat
 
    @Override
    protected URI internalNewURI(List<TransportConfiguration> bean) throws Exception {
-      return null;
+      if (bean.size() < 1) {
+         throw new Exception();
+      }
+      StringBuilder fragment = new StringBuilder();
+      for (int i = 1; i < bean.size(); i++) {
+         TransportConfiguration connector = bean.get(i);
+         Map<String, Object> params = escapeIPv6Host(connector.getParams());
+         URI extraUri = new URI(SchemaConstants.TCP, null, getHost(params), getPort(params), null, createQuery(params), null);
+         if (i > 1) {
+            fragment.append(",");
+         }
+         fragment.append(extraUri.toASCIIString());
+
+      }
+      Map<String, Object> params = escapeIPv6Host(bean.get(0).getParams());
+      return new URI(SchemaConstants.TCP, null, getHost(params), getPort(params), null, createQuery(params), fragment.toString());
+   }
+
+   @SuppressWarnings("StringEquality")
+   private static Map<String, Object> escapeIPv6Host(Map<String, Object> params) {
+      String host = (String) params.get("host");
+      String newHost = IPV6Util.encloseHost(host);
+
+      // We really want to check the objects here
+      // Some bug finders may report this as an error, hence the SuppressWarnings on this method
+      if (host != newHost) {
+         params.put("host", "[" + host + "]");
+      }
+
+      return params;
+   }
+
+   private static int getPort(Map<String, Object> params) {
+      Object port = params.get("port");
+      if (port instanceof String) {
+         return Integer.valueOf((String) port);
+      }
+      return port != null ? (int) port : 61616;
+   }
+
+   private static String getHost(Map<String, Object> params) {
+      return params.get("host") != null ? (String) params.get("host") : "localhost";
+   }
+
+   private static String createQuery(Map<String, Object> params) throws Exception {
+      StringBuilder cb = new StringBuilder();
+      boolean empty = true;
+      for (Map.Entry<String, Object> entry : params.entrySet()) {
+         if (entry.getValue() != null) {
+            if (!empty) {
+               cb.append("&");
+            } else {
+               empty = false;
+            }
+            cb.append(BeanSupport.encodeURI(entry.getKey()));
+            cb.append("=");
+            cb.append(BeanSupport.encodeURI(entry.getValue().toString()));
+         }
+      }
+      return cb.toString();
    }
 
    public static List<TransportConfiguration> getTransportConfigurations(URI uri,

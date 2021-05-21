@@ -23,7 +23,14 @@ import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
+import org.apache.activemq.artemis.uri.ConnectorTransportConfigurationParser;
+import org.apache.activemq.artemis.uri.ServerLocatorParser;
+import org.apache.activemq.artemis.uri.schema.connector.TCPTransportConfigurationSchema;
+import org.apache.activemq.artemis.utils.uri.SchemaConstants;
 import org.jboss.logging.Logger;
+
+import java.net.URI;
+import java.util.Collections;
 
 public class CoreTarget extends AbstractTarget implements FailureListener {
    private static final Logger logger = Logger.getLogger(CoreTarget.class);
@@ -47,6 +54,19 @@ public class CoreTarget extends AbstractTarget implements FailureListener {
 
    @Override
    public void connect() throws Exception {
+      ConnectorTransportConfigurationParser c = new ConnectorTransportConfigurationParser();
+
+      ServerLocatorParser serverLocatorParser = new ServerLocatorParser();
+      serverLocatorParser.createSchema(SchemaConstants.TCP, ActiveMQClient.
+         createServerLocatorWithoutHA(getReference().getConnector()));
+
+
+
+      URI connctorURI = c.createSchema(SchemaConstants.TCP, Collections.singletonList(getReference().getConnector()));
+
+      connctorURI.toString();
+
+
       sessionFactory = serverLocator.createSessionFactory();
       sessionFactory.getConnection().addFailureListener(this);
 
