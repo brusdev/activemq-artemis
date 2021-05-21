@@ -23,6 +23,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
 import org.apache.activemq.artemis.api.core.ActiveMQInternalErrorException;
 import org.apache.activemq.artemis.api.core.ActiveMQSecurityException;
+import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
@@ -46,9 +47,11 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
 import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.logs.AuditLogger;
+import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
 /**
@@ -157,6 +160,31 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             ActiveMQServerLogger.LOGGER.incompatibleVersionAfterConnect(request.getVersion(), connection.getChannelVersion());
          }
 
+         if (connection.getTransportConnection().getRedirectTo() != null) {
+            if (!connection.isVersionSupportSupportRedirect()) {
+               throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
+            }
+
+            Connection transportConnection = connection.getTransportConnection();
+            Target target = server.getBalancerManager()
+               .getBalancer(transportConnection.getRedirectTo())
+               .getTarget(transportConnection, request.getUsername());
+
+            if (target != null) {
+               ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);
+
+               if (!target.isLocal()) {
+                  connection.disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
+
+                  throw ActiveMQMessageBundle.BUNDLE.redirectConnection(target.getConnector());
+               }
+            } else {
+               ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
+
+               throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
+            }
+         }
+
          Channel channel = connection.getChannel(request.getSessionChannelID(), request.getWindowSize());
 
          ActiveMQPrincipal activeMQPrincipal = null;
@@ -187,6 +215,8 @@ public class ActiveMQPacketHandler implements ChannelHandler {
          if (e.getType() == ActiveMQExceptionType.INCOMPATIBLE_CLIENT_SERVER_VERSIONS) {
             incompatibleVersion = true;
             logger.debug("Sending ActiveMQException after Incompatible client", e);
+         } else if (e.getType() == ActiveMQExceptionType.REDIRECTED) {
+            logger.debug("Sending ActiveMQException after redirected client", e);
          } else {
             ActiveMQServerLogger.LOGGER.failedToCreateSession(e);
          }
