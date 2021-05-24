@@ -38,6 +38,8 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
+import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
@@ -55,11 +57,13 @@ import org.apache.activemq.artemis.protocol.amqp.sasl.SASLResult;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
 import org.apache.activemq.artemis.utils.ByteUtil;
+import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.VersionLoader;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.amqp.transaction.Coordinator;
+import org.apache.qpid.proton.amqp.transport.ConnectionError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
@@ -469,7 +473,45 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
       } catch (Exception e) {
          log.error("Error init connection", e);
       }
-      if (!validateConnection(connection)) {
+
+      boolean redirected = false;
+      if (connectionCallback.getTransportConnection().getRedirectTo() != null) {
+         org.apache.activemq.artemis.spi.core.remoting.Connection transportConnection = connectionCallback.getTransportConnection();
+         Target target = protocolManager.getServer().getBalancerManager()
+            .getBalancer(transportConnection.getRedirectTo())
+            .getTarget(transportConnection, handler.getSASLResult().getUser());
+
+         if (target != null) {
+            ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);
+
+            if (!target.isLocal()) {
+               String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
+               int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
+
+               ErrorCondition error = new ErrorCondition();
+               error.setCondition(ConnectionError.REDIRECT);
+               error.setDescription(ConnectionError.REDIRECT.toString());
+               Map<Symbol, String> info = new HashMap<>();
+               info.put(AmqpSupport.NETWORK_HOST, host);
+               info.put(AmqpSupport.PORT, Integer.toString(port));
+               error.setInfo(info);
+               connection.setCondition(error);
+
+               redirected = true;
+            }
+         } else {
+            ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
+
+            ErrorCondition error = new ErrorCondition();
+            error.setCondition(ConnectionError.CONNECTION_FORCED);
+            error.setDescription(ConnectionError.CONNECTION_FORCED.toString());
+            connection.setCondition(error);
+
+            redirected = true;
+         }
+      }
+
+      if (redirected || !validateConnection(connection)) {
          connection.close();
       } else {
          connection.setContext(AMQPConnectionContext.this);
