@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class BasePolicyTest {
+public abstract class PolicyTestBase {
    public static final int MULTIPLE_TARGETS = 10;
 
    protected abstract Policy createPolicy();

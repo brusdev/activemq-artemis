@@ -19,19 +19,23 @@ package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
+import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.jboss.logging.Logger;
 
-public class CoreTarget extends AbstractTarget implements FailureListener {
-   private static final Logger logger = Logger.getLogger(CoreTarget.class);
+public class ActiveMQTarget extends AbstractTarget implements FailureListener {
+   private static final Logger logger = Logger.getLogger(ActiveMQTarget.class);
 
    private boolean connected = false;
 
    private final ServerLocator serverLocator;
+
    private ClientSessionFactory sessionFactory;
+   private RemotingConnection remotingConnection;
    private ActiveMQManagementProxy managementProxy;
 
    @Override
@@ -39,19 +43,22 @@ public class CoreTarget extends AbstractTarget implements FailureListener {
       return connected;
    }
 
-   public CoreTarget(TargetReference reference) {
+   public ActiveMQTarget(TargetReference reference) {
       super(reference);
-      this.serverLocator = ActiveMQClient.createServerLocatorWithoutHA(reference.getConnector());
+
+      serverLocator = ActiveMQClient.createServerLocatorWithoutHA(reference.getConnector());
    }
 
 
    @Override
    public void connect() throws Exception {
       sessionFactory = serverLocator.createSessionFactory();
-      sessionFactory.getConnection().addFailureListener(this);
 
-      managementProxy = new ActiveMQManagementProxy(sessionFactory, getUsername(), getPassword());
-      managementProxy.start();
+      remotingConnection = sessionFactory.getConnection();
+      remotingConnection.addFailureListener(this);
+
+      managementProxy = new ActiveMQManagementProxy(sessionFactory.createSession(getUsername(), getPassword(),
+         false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE).start());
 
       connected = true;
 
@@ -60,23 +67,22 @@ public class CoreTarget extends AbstractTarget implements FailureListener {
 
    @Override
    public void disconnect() throws Exception {
-      connected = false;
+      if (connected) {
+         connected = false;
 
-      try {
          managementProxy.close();
-      } catch (Exception e) {
-         logger.debug("Exception on closing the management proxy", e);
+
+         remotingConnection.removeFailureListener(this);
+
+         sessionFactory.close();
+
+         fireDisconnectedEvent();
       }
-
-      sessionFactory.getConnection().removeFailureListener(this);
-      sessionFactory.close();
-
-      fireDisconnectedEvent();
    }
 
    @Override
    public void checkReadiness() throws Exception {
-      if (!(boolean)getAttribute("broker", "Active")) {
+      if (!(boolean)getAttribute("broker", "Active", 3000)) {
          throw new IllegalStateException("Broker not active");
       }
    }
@@ -86,13 +92,13 @@ public class CoreTarget extends AbstractTarget implements FailureListener {
    }
 
    @Override
-   public Object getAttribute(String resourceName, String attributeName) throws Exception {
-      return managementProxy.getAttribute(resourceName, attributeName);
+   public Object getAttribute(String resourceName, String attributeName, int timeout) throws Exception {
+      return managementProxy.getAttribute(resourceName, attributeName, timeout);
    }
 
    @Override
-   public Object invokeOperation(String resourceName, String operationName, Object... operationArgs) throws Exception {
-      return managementProxy.invokeOperation(resourceName, operationName, operationArgs);
+   public Object invokeOperation(String resourceName, String operationName, Object[] operationParams, int timeout) throws Exception {
+      return managementProxy.invokeOperation(resourceName, operationName, operationParams, timeout);
    }
 
    @Override

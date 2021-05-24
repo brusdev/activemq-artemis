@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConsistentHashPolicyTest extends BasePolicyTest {
+public class ConsistentHashPolicyTest extends PolicyTestBase {
 
    @Override
    protected Policy createPolicy() {

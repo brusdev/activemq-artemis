@@ -32,14 +32,14 @@ public class LeastConnectionsPolicy extends Policy {
 
    public static final String UPDATE_CONNECTION_COUNT_TASK_NAME = "UPDATE_CONNECTION_COUNT_TASK";
 
-   private final Map<Target, Integer> connectionCountCache = new HashMap<>();
+   private final Map<Target, Long> connectionCountCache = new HashMap<>();
 
    private final TargetTask[] targetTasks = new TargetTask[]{
       new TargetTask(UPDATE_CONNECTION_COUNT_TASK_NAME) {
          @Override
          public void call(Target target) {
             try {
-               connectionCountCache.put(target, (Integer) target.getAttribute("broker", "ConnectionCount"));
+               connectionCountCache.put(target, (Long)target.getAttribute("broker", "ConnectionCount", 3000));
             } catch (Exception e) {
                e.printStackTrace();
             }
@@ -59,13 +59,13 @@ public class LeastConnectionsPolicy extends Policy {
    @Override
    public List<Target> selectTargets(List<Target> targets, String key) {
       if (targets.size() > 1) {
-         NavigableMap<Integer, List<Target>> sortedTargets = new TreeMap<>();
+         NavigableMap<Long, List<Target>> sortedTargets = new TreeMap<>();
 
          for (Target target : targets) {
-            Integer connectionCount = connectionCountCache.get(target);
+            Long connectionCount = connectionCountCache.get(target);
 
             if (connectionCount == null) {
-               connectionCount = Integer.MAX_VALUE;
+               connectionCount = Long.MAX_VALUE;
             }
 
             List<Target> leastTargets = sortedTargets.get(connectionCount);

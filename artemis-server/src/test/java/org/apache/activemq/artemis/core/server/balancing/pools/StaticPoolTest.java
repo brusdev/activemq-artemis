@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class StaticPoolTest extends BasePoolTest {
+public class StaticPoolTest extends PoolTestBase {
 
    @Override
    protected Pool createPool(TargetFactory targetFactory, int targets) {

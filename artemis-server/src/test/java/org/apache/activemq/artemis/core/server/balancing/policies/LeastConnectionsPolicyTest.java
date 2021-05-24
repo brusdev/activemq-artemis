@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class LeastConnectionsPolicyTest extends BasePolicyTest {
+public class LeastConnectionsPolicyTest extends PolicyTestBase {
 
    @Override
    protected Policy createPolicy() {

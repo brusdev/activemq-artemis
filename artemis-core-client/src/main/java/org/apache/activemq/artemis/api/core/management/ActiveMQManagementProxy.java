@@ -28,81 +28,46 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 
 public class ActiveMQManagementProxy implements AutoCloseable {
 
-   private final String username;
-   private final String password;
-   private final ServerLocator serverLocator;
+   private final ClientSession session;
 
-   private ClientSessionFactory sessionFactory;
-   private ClientSession session;
-   private ClientRequestor requestor;
-
-   public ActiveMQManagementProxy(final ServerLocator serverLocator, final String username, final String password) {
-      this.serverLocator = serverLocator;
-
-      this.username = username;
-
-      this.password = password;
+   public ActiveMQManagementProxy(final ClientSession session) {
+      this.session = session;
    }
 
-   public ActiveMQManagementProxy(ClientSessionFactory sessionFactory, final String username, final String password) {
-      this.serverLocator = null;
+   public Object getAttribute(final String resourceName, final String attributeName, final int timeout) throws Exception {
+      try (ClientRequestor requestor = new ClientRequestor(session, ActiveMQDefaultConfiguration.getDefaultManagementAddress())) {
+         ClientMessage request = session.createMessage(false);
 
-      this.sessionFactory = sessionFactory;
+         ManagementHelper.putAttribute(request, resourceName, attributeName);
 
-      this.username = username;
+         ClientMessage reply = requestor.request(request, timeout);
 
-      this.password = password;
-   }
-
-   public void start() throws Exception {
-      if (serverLocator != null) {
-         sessionFactory = serverLocator.createSessionFactory();
-      }
-
-      session = sessionFactory.createSession(username, password, false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE);
-
-      requestor = new ClientRequestor(session, ActiveMQDefaultConfiguration.getDefaultManagementAddress());
-
-      session.start();
-   }
-
-   public Object getAttribute(final String resourceName, final String attributeName) throws Exception {
-      ClientMessage request = session.createMessage(false);
-
-      ManagementHelper.putAttribute(request, resourceName, attributeName);
-
-      ClientMessage reply = requestor.request(request);
-
-      if (ManagementHelper.hasOperationSucceeded(reply)) {
-         return ManagementHelper.getResult(reply);
-      } else {
-         throw new Exception("Failed to get " + resourceName + "." + attributeName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
+         if (ManagementHelper.hasOperationSucceeded(reply)) {
+            return ManagementHelper.getResult(reply);
+         } else {
+            throw new Exception("Failed to get " + resourceName + "." + attributeName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
+         }
       }
    }
 
-   public Object invokeOperation(final String resourceName, final String operationName, final Object... operationArgs) throws Exception {
-      ClientMessage request = session.createMessage(false);
+   public Object invokeOperation(final String resourceName, final String operationName, final Object[] operationParams, final int timeout) throws Exception {
+      try (ClientRequestor requestor = new ClientRequestor(session, ActiveMQDefaultConfiguration.getDefaultManagementAddress())) {
+         ClientMessage request = session.createMessage(false);
 
-      ManagementHelper.putOperationInvocation(request, resourceName, operationName, operationArgs);
+         ManagementHelper.putOperationInvocation(request, resourceName, operationName, operationParams);
 
-      ClientMessage reply = requestor.request(request);
+         ClientMessage reply = requestor.request(request, timeout);
 
-      if (ManagementHelper.hasOperationSucceeded(reply)) {
-         return ManagementHelper.getResult(reply);
-      } else {
-         throw new Exception("Failed to invoke " + resourceName + "." + operationName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
+         if (ManagementHelper.hasOperationSucceeded(reply)) {
+            return ManagementHelper.getResult(reply);
+         } else {
+            throw new Exception("Failed to invoke " + resourceName + "." + operationName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
+         }
       }
-   }
-
-
-   public void stop() throws ActiveMQException {
-      session.stop();
    }
 
    @Override
    public void close() throws Exception {
-      requestor.close();
       session.close();
-      sessionFactory.close();
    }
 }

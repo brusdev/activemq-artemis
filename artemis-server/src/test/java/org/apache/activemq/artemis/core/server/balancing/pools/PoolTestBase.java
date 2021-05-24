@@ -24,7 +24,7 @@ import org.apache.activemq.artemis.utils.Wait;
 import org.junit.Assert;
 import org.junit.Test;
 
-public abstract class BasePoolTest {
+public abstract class PoolTestBase {
    public static final int CHECK_PERIOD = 100;
    public static final int CHECK_TIMEOUT = 2 * CHECK_PERIOD;
 

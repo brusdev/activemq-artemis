@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FirstElementPolicyTest extends BasePolicyTest {
+public class FirstElementPolicyTest extends PolicyTestBase {
 
    @Override
    protected Policy createPolicy() {

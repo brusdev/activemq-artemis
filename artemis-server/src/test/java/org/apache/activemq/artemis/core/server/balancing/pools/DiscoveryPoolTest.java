@@ -34,7 +34,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Stream;
 
 @RunWith(Parameterized.class)
-public class DiscoveryPoolTest extends BasePoolTest {
+public class DiscoveryPoolTest extends PoolTestBase {
 
    private final boolean autoRemove;
 

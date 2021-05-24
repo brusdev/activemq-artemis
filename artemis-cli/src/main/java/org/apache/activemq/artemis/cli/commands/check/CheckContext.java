@@ -61,7 +61,7 @@ public class CheckContext extends ActionContext {
 
    public String getNodeId() throws Exception {
       if (nodeId == null) {
-         nodeId = (String)managementProxy.invokeOperation("broker", "getNodeID");
+         nodeId = (String)managementProxy.getAttribute("broker", "NodeID", 0);
       }
 
       return nodeId;
@@ -70,7 +70,7 @@ public class CheckContext extends ActionContext {
    public Map<String, NodeInfo> getTopology() throws Exception {
       if (topology == null) {
          topology = Arrays.stream(NodeInfo.from((String)managementProxy.
-            invokeOperation("broker", "listNetworkTopology"))).
+            invokeOperation("broker", "listNetworkTopology", null, 0))).
             collect(Collectors.toMap(node -> node.getId(), node -> node));
       }
 

@@ -34,7 +34,7 @@ import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryService;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
-import org.apache.activemq.artemis.core.server.balancing.targets.CoreTargetFactory;
+import org.apache.activemq.artemis.core.server.balancing.targets.ActiveMQTargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
@@ -88,7 +88,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
    private Pool deployPool(PoolConfiguration config) throws Exception {
       Pool pool;
-      TargetFactory targetFactory = new CoreTargetFactory();
+      TargetFactory targetFactory = new ActiveMQTargetFactory();
 
       if (config.getDiscoveryGroupName() != null) {
          DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().

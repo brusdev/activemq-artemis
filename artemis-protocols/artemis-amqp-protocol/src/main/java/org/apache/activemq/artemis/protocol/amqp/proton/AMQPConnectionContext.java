@@ -38,6 +38,7 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
+import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
@@ -475,8 +476,6 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
       }
 
       if (connectionCallback.getTransportConnection().isRedirectEnabled()) {
-         org.apache.activemq.artemis.spi.core.remoting.Connection transportConnection = connectionCallback.getTransportConnection();
-
          RedirectKeyBuilder redirectKeyBuilder = new RedirectKeyBuilder()
             .setConnection(connectionCallback.getTransportConnection())
             .setUsername(handler.getSASLResult().getUser());
@@ -485,6 +484,8 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
             connectionCallback.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
          if (target != null) {
+            ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connectionCallback.getTransportConnection(), target.getConnector());
+
             String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
             int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
 

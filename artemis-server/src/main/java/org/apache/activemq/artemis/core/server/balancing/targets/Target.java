@@ -48,7 +48,7 @@ public interface Target {
    void checkReadiness() throws Exception;
 
 
-   Object getAttribute(String resourceName, String attributeName) throws Exception;
+   Object getAttribute(String resourceName, String attributeName, int timeout) throws Exception;
 
-   Object invokeOperation(String resourceName, String operationName, Object... operationArgs) throws Exception;
+   Object invokeOperation(String resourceName, String operationName, Object[] operationParams, int timeout) throws Exception;
 }

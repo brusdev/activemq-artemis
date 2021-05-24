@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RoundRobinPolicyTest extends BasePolicyTest {
+public class RoundRobinPolicyTest extends PolicyTestBase {
 
    @Override
    protected Policy createPolicy() {

@@ -43,6 +43,13 @@ import org.junit.Test;
 
 public class RedirectTest extends ClusterTestBase {
 
+
+
+
+
+
+
+
    protected final String groupAddress = ActiveMQTestBase.getUDPDiscoveryAddress();
 
    protected final int groupPort = ActiveMQTestBase.getUDPDiscoveryPort();

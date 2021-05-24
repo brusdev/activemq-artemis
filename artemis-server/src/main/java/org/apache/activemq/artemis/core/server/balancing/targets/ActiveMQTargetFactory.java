@@ -17,9 +17,9 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
-public class CoreTargetFactory implements TargetFactory {
+public class ActiveMQTargetFactory implements TargetFactory {
    @Override
    public Target createTarget(TargetReference reference) {
-      return new CoreTarget(reference);
+      return new ActiveMQTarget(reference);
    }
 }
