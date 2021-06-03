@@ -178,7 +178,7 @@ public class SingleTargetTest extends ClusterTestBase {
             return new JmsConnectionFactory("failover:(amqp://" + host + ":" + port + ")");
          case CORE_PROTOCOL:
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port + "?ha=true");
-            connectionFactory.setReconnectAttempts(30);;
+            connectionFactory.setReconnectAttempts(30);
             return connectionFactory;
          default:
             throw new IllegalStateException("Unexpected value: " + protocol);

@@ -49,7 +49,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.IntPredicate;
 
 @RunWith(Parameterized.class)
 public class MultipleTargetsTest extends ClusterTestBase {
@@ -163,7 +162,7 @@ public class MultipleTargetsTest extends ClusterTestBase {
       final SimpleString queueName = new SimpleString("TEST");
 
       int targetServerIndex;
-      
+
       ConnectionFactory connectionFactory = createFactory(protocol, TransportConstants.DEFAULT_HOST, TransportConstants.DEFAULT_PORT);
 
       try (Connection connection = connectionFactory.createConnection()) {
@@ -174,7 +173,7 @@ public class MultipleTargetsTest extends ClusterTestBase {
          Assert.assertTrue(serverConnectionCounts.stream().filter(count -> count <= 1).count() == TARGETS - 1);
 
          targetServerIndex = serverConnectionCounts.get(2);
-         
+
          try (Session session = connection.createSession()) {
             Queue queue = session.createQueue(queueName.toString());
 
@@ -239,7 +238,7 @@ public class MultipleTargetsTest extends ClusterTestBase {
             return new JmsConnectionFactory("failover:(amqp://" + host + ":" + port + ")");
          case CORE_PROTOCOL:
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port + "?ha=true");
-            connectionFactory.setReconnectAttempts(30);;
+            connectionFactory.setReconnectAttempts(30);
             return connectionFactory;
          default:
             throw new IllegalStateException("Unexpected value: " + protocol);
