@@ -75,5 +75,14 @@ public abstract class DiscoveryService implements ActiveMQComponent {
          this.nodeID = nodeID;
          this.connector = connector;
       }
+
+      @Override
+      public String toString() {
+         StringBuilder stringBuilder = new StringBuilder(Entry.class.getSimpleName());
+         stringBuilder.append("(nodeID=" + nodeID);
+         stringBuilder.append(", connector=" + connector);
+         stringBuilder.append(") ");
+         return stringBuilder.toString();
+      }
    }
 }

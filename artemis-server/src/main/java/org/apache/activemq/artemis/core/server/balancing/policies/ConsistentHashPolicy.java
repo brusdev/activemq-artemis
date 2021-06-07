@@ -38,11 +38,11 @@ public class ConsistentHashPolicy extends Policy {
          NavigableMap<Integer, Target> consistentTargets = new TreeMap<>();
 
          for (Target target : targets) {
-            consistentTargets.put(target.getReference().getNodeID().hashCode(), target);
+            consistentTargets.put(getHash(target.getReference().getNodeID()), target);
          }
 
          if (consistentTargets.size() > 0) {
-            Map.Entry<Integer, Target> consistentEntry = consistentTargets.floorEntry(key.hashCode());
+            Map.Entry<Integer, Target> consistentEntry = consistentTargets.floorEntry(getHash(key));
 
             if (consistentEntry == null) {
                consistentEntry = consistentTargets.firstEntry();
@@ -55,5 +55,18 @@ public class ConsistentHashPolicy extends Policy {
       }
 
       return targets;
+   }
+
+   private int getHash(String str) {
+      final int FNV_INIT = 0x811c9dc5;
+      final int FNV_PRIME = 0x01000193;
+
+      int hash = FNV_INIT;
+
+      for (int i = 0; i < str.length(); i++) {
+         hash = (hash ^ str.charAt(i)) * FNV_PRIME;
+      }
+
+      return hash;
    }
 }

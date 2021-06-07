@@ -32,7 +32,12 @@ public interface Pool extends ActiveMQComponent {
 
    void setPassword(String password);
 
+   int getQuorumSize();
+
+   void setQuorumSize(int quorumSize);
+
    int getCheckPeriod();
+
 
 
    Target getTarget(String nodeId);

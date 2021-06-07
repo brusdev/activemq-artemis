@@ -31,29 +31,43 @@ public class PoolConfiguration {
 
    private int checkPeriod = 5000;
 
+   private int quorumSize = 1;
+
 
    public String getUsername() {
       return username;
    }
 
-   public void setUsername(String username) {
+   public PoolConfiguration setUsername(String username) {
       this.username = username;
+      return this;
    }
 
    public String getPassword() {
       return password;
    }
 
-   public void setPassword(String password) {
+   public PoolConfiguration setPassword(String password) {
       this.password = password;
+      return this;
    }
 
    public int getCheckPeriod() {
       return checkPeriod;
    }
 
-   public void setCheckPeriod(int checkPeriod) {
+   public PoolConfiguration setCheckPeriod(int checkPeriod) {
       this.checkPeriod = checkPeriod;
+      return this;
+   }
+
+   public int getQuorumSize() {
+      return quorumSize;
+   }
+
+   public PoolConfiguration setQuorumSize(int quorumSize) {
+      this.quorumSize = quorumSize;
+      return this;
    }
 
    public List<String> getStaticConnectors() {

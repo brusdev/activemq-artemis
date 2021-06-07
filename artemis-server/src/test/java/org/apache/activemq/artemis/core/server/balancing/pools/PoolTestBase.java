@@ -25,27 +25,68 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public abstract class PoolTestBase {
+   public static final int MULTIPLE_TARGETS = 10;
+
    public static final int CHECK_PERIOD = 100;
    public static final int CHECK_TIMEOUT = 2 * CHECK_PERIOD;
 
+
    protected abstract Pool createPool(TargetFactory targetFactory, int targets);
+
 
    @Test
    public void testPoolWithNoTargets() throws Exception {
-      testPool(0);
+      testPoolTargets(0);
    }
 
    @Test
    public void testPoolWithSingleTarget() throws Exception {
-      testPool(1);
+      testPoolTargets(1);
    }
 
    @Test
    public void testPoolWithMultipleTargets() throws Exception {
-      testPool(10);
+      testPoolTargets(MULTIPLE_TARGETS);
    }
 
-   private void testPool(int targets) throws Exception {
+   @Test
+   public void testPoolQuorumWithMultipleTargets() throws Exception {
+      final int targets = MULTIPLE_TARGETS;
+      final int quorumSize = 2;
+
+      Assert.assertTrue(targets - quorumSize > 2);
+
+      MockTargetFactory targetFactory = new MockTargetFactory().setConnectable(true).setReady(true);
+      Pool pool = createPool(targetFactory, targets);
+
+      pool.setQuorumSize(quorumSize);
+
+      Assert.assertEquals(0, pool.getTargets().size());
+
+      pool.start();
+
+      Wait.assertEquals(targets, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+
+      targetFactory.getCreatedTargets().stream().limit(targets - quorumSize + 1)
+         .forEach(mockTarget -> mockTarget.setReady(false));
+
+      Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+
+      targetFactory.getCreatedTargets().get(0).setReady(true);
+
+      targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(true));
+
+      pool.setQuorumSize(quorumSize + 1);
+
+      Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+
+      targetFactory.getCreatedTargets().get(1).setReady(true);
+
+      Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+   }
+
+
+   private void testPoolTargets(int targets) throws Exception {
       MockTargetFactory targetFactory = new MockTargetFactory();
       MockTargetTask targetTask = new MockTargetTask("TEST", false);
       Pool pool = createPool(targetFactory, targets);

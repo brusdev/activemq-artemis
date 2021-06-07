@@ -36,10 +36,21 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    private final Policy policy;
 
-   private final Cache<String, Target> affinityCache;
+   private final Cache<String, Target> cache;
 
    private volatile boolean started = false;
 
+   public Pool getPool() {
+      return pool;
+   }
+
+   public Policy getPolicy() {
+      return policy;
+   }
+
+   public Cache<String, Target> getCache() {
+      return cache;
+   }
 
    public String getName() {
       return name;
@@ -58,7 +69,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
       this.policy = policy;
 
-      this.affinityCache = CacheBuilder.newBuilder().expireAfterAccess(affinityTimeout, TimeUnit.MILLISECONDS).build();
+      this.cache = CacheBuilder.newBuilder().expireAfterAccess(affinityTimeout, TimeUnit.MILLISECONDS).build();
    }
 
    @Override
@@ -76,12 +87,12 @@ public class BrokerBalancer implements ActiveMQComponent {
    }
 
    public TargetReference getTarget(String key) {
-      Target target = affinityCache.getIfPresent(key);
+      Target target = cache.getIfPresent(key);
 
       if (target != null && !pool.isTargetReady(target.getReference().getNodeID())) {
          target = null;
 
-         affinityCache.invalidate(key);
+         cache.invalidate(key);
       }
 
       if (target == null) {
@@ -91,7 +102,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
          if (selectedTargets.size() > 0) {
             target = selectedTargets.get(0);
-            affinityCache.put(key, target);
+            cache.put(key, target);
          }
       }
 

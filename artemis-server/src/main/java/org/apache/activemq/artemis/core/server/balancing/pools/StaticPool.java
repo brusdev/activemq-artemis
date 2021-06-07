@@ -21,13 +21,13 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class StaticPool extends AbstractPool {
    private final List<TransportConfiguration> staticConnectors;
 
-   public StaticPool(TargetFactory targetFactory,
-                     ScheduledExecutorService scheduledExecutor,
+   public StaticPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
                      int checkPeriod, List<TransportConfiguration> staticConnectors) {
       super(targetFactory, scheduledExecutor, checkPeriod);
 
@@ -39,7 +39,7 @@ public class StaticPool extends AbstractPool {
       super.start();
 
       for (int i = 0; i < staticConnectors.size(); i++) {
-         addTarget(Integer.toString(i), staticConnectors.get(i));
+         addTarget(UUID.randomUUID().toString(), staticConnectors.get(i));
       }
    }
 }

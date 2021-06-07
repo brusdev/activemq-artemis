@@ -112,6 +112,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       pool.setUsername(config.getUsername());
       pool.setPassword(config.getPassword());
+      pool.setQuorumSize(config.getQuorumSize());
 
       return pool;
    }
@@ -153,7 +154,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       for (BrokerBalancer balancer : balancerControllers.values()) {
          balancer.stop();
-         server.getManagementService().registerBrokerBalancer(balancer);
+         server.getManagementService().unregisterBrokerBalancer(balancer.getName());
       }
    }
 }

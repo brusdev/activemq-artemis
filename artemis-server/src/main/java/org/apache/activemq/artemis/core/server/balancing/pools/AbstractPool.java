@@ -26,6 +26,7 @@ import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,6 +51,8 @@ public abstract class AbstractPool implements Pool {
    private String username;
 
    private String password;
+
+   private int quorumSize;
 
    private volatile boolean started = false;
 
@@ -80,13 +83,26 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
+   public int getQuorumSize() {
+      return quorumSize;
+   }
+
+   @Override
+   public void setQuorumSize(int quorumSize) {
+      this.quorumSize = quorumSize;
+   }
+
+   @Override
    public List<Target> getAllTargets() {
       return targetRunners.values().stream().map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
    }
 
    @Override
    public List<Target> getTargets() {
-      return targetRunners.values().stream().filter(targetRunner -> targetRunner.isTargetReady()).map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
+      List<Target> targets = targetRunners.values().stream().filter(targetRunner -> targetRunner.isTargetReady())
+         .map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
+
+      return targets.size() >= quorumSize ? targets : Collections.emptyList();
    }
 
    @Override

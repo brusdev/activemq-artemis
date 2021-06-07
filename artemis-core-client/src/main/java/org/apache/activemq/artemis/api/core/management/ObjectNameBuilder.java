@@ -152,7 +152,7 @@ public final class ObjectNameBuilder {
    /**
     * Returns the ObjectName used by BrokerBalancerControl.
     *
-    * @see BrokerBalancer
+    * @see BrokerBalancerControl
     */
    public ObjectName getBrokerBalancerObjectName(final String name) throws Exception {
       return createObjectName("broker-balancer", name);

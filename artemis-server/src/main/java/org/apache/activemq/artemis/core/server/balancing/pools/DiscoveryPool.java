@@ -37,7 +37,8 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
       this.autoRemove = autoRemove;
    }
 
-   public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod, DiscoveryService discoveryService) {
+   public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
+                        int checkPeriod, DiscoveryService discoveryService) {
       super(targetFactory, scheduledExecutor, checkPeriod);
 
       this.discoveryService = discoveryService;
