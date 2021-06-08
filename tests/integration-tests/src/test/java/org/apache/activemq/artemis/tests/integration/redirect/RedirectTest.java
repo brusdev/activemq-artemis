@@ -34,6 +34,8 @@ import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfigura
 import org.apache.activemq.artemis.core.config.balancing.PolicyConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
+import org.apache.activemq.artemis.core.server.redirect.RedirectKey;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
@@ -72,7 +74,7 @@ public class RedirectTest extends ClusterTestBase {
 
       startServers(0, 1, 2);
 
-      ConnectionFactory connectionFactory = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0);
+      ConnectionFactory connectionFactory = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0, "admin", "admin");
 
       try (Connection connection = connectionFactory.createConnection()) {
          connection.start();
@@ -128,10 +130,67 @@ public class RedirectTest extends ClusterTestBase {
       }
    }
 
-   private ConnectionFactory createFactory(int protocol, String host, int port) {
+   @Test
+   public void testLeastConnections() throws Exception {
+      final SimpleString queueName = new SimpleString("RedirectTestQueue");
+      ArrayList<BrokerBalancerConfiguration> brokerBalancerConfigurations = new ArrayList<>();
+      brokerBalancerConfigurations.add(new BrokerBalancerConfiguration().setName("simple-balancer").
+         setPoolConfiguration(new PoolConfiguration().setDiscoveryGroupName("dg1")).
+         setPolicyConfiguration(new PolicyConfiguration().setName(LeastConnectionsPolicy.NAME)));
+
+      setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
+      setupLiveServerWithDiscovery(1, groupAddress, groupPort, true, true, false);
+      setupLiveServerWithDiscovery(2, groupAddress, groupPort, true, true, false);
+
+      getServer(0).getConfiguration().setBalancerConfigurations(brokerBalancerConfigurations);
+      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-to", "simple-balancer");
+      getServer(0).getConfiguration().getAcceptorConfigurations().iterator().next().getParams().put("redirect-key", RedirectKey.USER_NAME.name());
+
+      startServers(0, 1, 2);
+
+      //ActiveMQServerControl serverControl = (ActiveMQServerControl)getServer(0).getManagementService().getResource(ResourceNames.BROKER);
+      //serverControl.addUser("user1", "user1", "AMQ", true);
+      //serverControl.addUser("user2", "user2", "AMQ", true);
+
+      ConnectionFactory connectionFactory1 = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0, "user1", "user1");
+      ConnectionFactory connectionFactory2 = createFactory(1, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_HOST, org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT + 0, "user2", "user2");
+
+      Assert.assertEquals(0, getServer(0).getTotalConsumerCount());
+      Assert.assertEquals(0, getServer(1).getTotalConsumerCount());
+      Assert.assertEquals(0, getServer(2).getTotalConsumerCount());
+
+      try (Connection connection1 = connectionFactory1.createConnection()) {
+         connection1.start();
+         try (Session session1 = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+            javax.jms.Queue queue1 = session1.createQueue(queueName.toString());
+            try (MessageConsumer consumer1 = session1.createConsumer(queue1)) {
+               Thread.sleep(10000);
+
+               try (Connection connection2 = connectionFactory2.createConnection()) {
+                  connection2.start();
+                  try (Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+                     javax.jms.Queue queue2 = session2.createQueue(queueName.toString());
+                     try (MessageConsumer consumer2 = session2.createConsumer(queue2)) {
+                        Assert.assertEquals(0, getServer(0).getTotalConsumerCount());
+                        Assert.assertEquals(1, getServer(1).getTotalConsumerCount());
+                        Assert.assertEquals(1, getServer(2).getTotalConsumerCount());
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      Assert.assertEquals(0, getServer(0).getTotalConsumerCount());
+      Assert.assertEquals(0, getServer(1).getTotalConsumerCount());
+      Assert.assertEquals(0, getServer(2).getTotalConsumerCount());
+   }
+
+   private ConnectionFactory createFactory(int protocol, String host, int port, String user, String password) {
       switch (protocol) {
          case 1: ActiveMQConnectionFactory coreCF = new ActiveMQConnectionFactory("tcp://" + host + ":" + port + "?ha=true");// core protocol
-            coreCF.setUser("admin");
+            coreCF.setUser(user);
+            coreCF.setPassword(password);
             coreCF.setCompressLargeMessage(true);
             coreCF.setMinLargeMessageSize(10 * 1024);
             coreCF.setReconnectAttempts(30);

@@ -17,6 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
+import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
 
 public class LeastConnectionsPolicy extends Policy {
    public static final String NAME = "LEAST_CONNECTIONS";
@@ -39,7 +41,8 @@ public class LeastConnectionsPolicy extends Policy {
          @Override
          public void call(Target target) {
             try {
-               connectionCountCache.put(target, (Long)target.getAttribute("broker", "ConnectionCount", 3000));
+               Long connectionCount = (Long)target.getAttribute("broker", "ConnectionCount", 3000);
+               connectionCountCache.put(target, connectionCount);
             } catch (Exception e) {
                e.printStackTrace();
             }
@@ -77,6 +80,17 @@ public class LeastConnectionsPolicy extends Policy {
 
             leastTargets.add(target);
          }
+
+         System.out.println("LeastConnectionsPolicy.selectTargets:");
+         sortedTargets.forEach(new BiConsumer<Long, List<Target>>() {
+            @Override
+            public void accept(Long connectionCount, List<Target> targets) {
+               System.out.println("connectionCount:" + connectionCount);
+               for (Target target : targets) {
+                  System.out.println("target:" + target.getReference().getConnector().getParams().get(TransportConstants.PORT_PROP_NAME));
+               }
+            }
+         });
 
          return sortedTargets.firstEntry().getValue();
       } else if (targets.size() > 0) {

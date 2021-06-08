@@ -2119,7 +2119,7 @@
       <xsd:attribute name="name" type="xsd:string" use="required">
          <xsd:annotation>
             <xsd:documentation>
-               a unique name for the divert
+               a unique name for the broker balancer
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>

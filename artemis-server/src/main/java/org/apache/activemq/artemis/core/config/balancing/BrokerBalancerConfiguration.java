@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class BrokerBalancerConfiguration implements Serializable {
 
    private String name = null;
-   private int affinityTimeout = 0;
+   private int affinityTimeout = 60 * 60 * 1000;
    private PoolConfiguration poolConfiguration = null;
    private PolicyConfiguration policyConfiguration = null;
 

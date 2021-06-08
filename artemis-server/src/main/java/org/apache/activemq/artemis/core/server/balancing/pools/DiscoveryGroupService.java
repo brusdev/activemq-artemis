@@ -79,9 +79,9 @@ public class DiscoveryGroupService extends DiscoveryService implements Discovery
       }
 
       oldEntries.forEach((nodeID, entry) -> {
-         entries.remove(nodeID);
+         //entries.remove(nodeID);
 
-         fireEntryRemovedEvent(entry);
+         //fireEntryRemovedEvent(entry);
       });
    }
 }
