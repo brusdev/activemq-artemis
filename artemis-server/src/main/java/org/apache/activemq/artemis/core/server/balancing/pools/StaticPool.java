@@ -21,7 +21,6 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class StaticPool extends AbstractPool {
@@ -38,8 +37,8 @@ public class StaticPool extends AbstractPool {
    public void start() throws Exception {
       super.start();
 
-      for (int i = 0; i < staticConnectors.size(); i++) {
-         addTarget(UUID.randomUUID().toString(), staticConnectors.get(i));
+      for (TransportConfiguration staticConnector : staticConnectors) {
+         addTarget(staticConnector);
       }
    }
 }

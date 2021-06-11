@@ -87,7 +87,7 @@ public class LeastConnectionsPolicy extends Policy {
             public void accept(Long connectionCount, List<Target> targets) {
                System.out.println("connectionCount:" + connectionCount);
                for (Target target : targets) {
-                  System.out.println("target:" + target.getReference().getConnector().getParams().get(TransportConstants.PORT_PROP_NAME));
+                  System.out.println("target:" + target.getConnector().getParams().get(TransportConstants.PORT_PROP_NAME));
                }
             }
          });

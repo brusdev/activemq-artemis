@@ -47,7 +47,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.core.version.Version;
@@ -169,14 +169,18 @@ public class ActiveMQPacketHandler implements ChannelHandler {
                .setConnection(connection.getTransportConnection())
                .setUsername(request.getUsername());
 
-            TargetReference target = server.getBalancerManager().getBalancer(
+            Target target = server.getBalancerManager().getBalancer(
                connection.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
             if (target != null) {
-               ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), target.getConnector());
+               if (target.isLocal()) {
+                  ActiveMQServerLogger.LOGGER.clientConnectionNotRedirected(connection.getTransportConnection());
+               } else {
+                  ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), target.getConnector());
 
-               connection.disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
-               throw ActiveMQMessageBundle.BUNDLE.redirectConnection(target);
+                  connection.disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
+                  throw ActiveMQMessageBundle.BUNDLE.redirectConnection(target.getConnector());
+               }
             } else {
                throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
             }

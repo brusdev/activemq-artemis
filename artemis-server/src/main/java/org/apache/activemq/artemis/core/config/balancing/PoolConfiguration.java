@@ -25,6 +25,8 @@ public class PoolConfiguration {
 
    private String password;
 
+   private boolean localTargetEnabled = false;
+
    private List<String> staticConnectors = Collections.emptyList();
 
    private String discoveryGroupName = null;
@@ -67,6 +69,15 @@ public class PoolConfiguration {
 
    public PoolConfiguration setQuorumSize(int quorumSize) {
       this.quorumSize = quorumSize;
+      return this;
+   }
+
+   public boolean isLocalTargetEnabled() {
+      return localTargetEnabled;
+   }
+
+   public PoolConfiguration setLocalTargetEnabled(boolean localTargetEnabled) {
+      this.localTargetEnabled = localTargetEnabled;
       return this;
    }
 

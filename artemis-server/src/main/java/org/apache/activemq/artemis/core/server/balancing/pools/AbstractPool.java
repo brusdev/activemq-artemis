@@ -21,7 +21,6 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetListener;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 import org.jboss.logging.Logger;
 
@@ -164,23 +163,27 @@ public abstract class AbstractPool implements Pool {
       List<TargetRunner> targetRunners = new ArrayList<>(this.targetRunners.values());
 
       for (TargetRunner targetRunner : targetRunners) {
-         removeTarget(targetRunner.getTarget().getReference().getNodeID());
+         removeTarget(targetRunner.getTarget().getNodeID());
       }
    }
 
+   protected void addTarget(TransportConfiguration connector) throws Exception {
+      addTarget(targetFactory.createTarget(connector));
+   }
 
-   protected void addTarget(String nodeId, TransportConfiguration connector) throws Exception {
-      Target target = targetFactory.createTarget(new TargetReference(nodeId, connector));
+   @Override
+   public void addTarget(Target target) throws Exception {
       TargetRunner targetRunner = new TargetRunner(target);
 
-      targetRunners.put(nodeId, targetRunner);
+      targetRunners.put(target.getNodeID(), targetRunner);
 
       if (started) {
          targetRunner.schedule();
       }
    }
 
-   protected Target removeTarget(String nodeId) throws Exception {
+   @Override
+   public Target removeTarget(String nodeId) throws Exception {
       TargetRunner targetRunner = targetRunners.remove(nodeId);
 
       if (targetRunner != null) {
@@ -240,16 +243,23 @@ public abstract class AbstractPool implements Pool {
                   target.connect();
                }
 
-               target.checkReadiness();
+               if (target.checkReadiness()) {
+                  for (TargetTask targetTask : targetTasks) {
+                     targetTask.call(target);
+                  }
 
-               for (TargetTask targetTask : targetTasks) {
-                  targetTask.call(target);
+                  targetReady = true;
+               } else {
+                  if (targetReady) {
+                     logger.info("Target not ready: " + target.getNodeID());
+                  }
+
+                  targetReady = false;
                }
 
-               targetReady = true;
             }
          } catch (Exception e) {
-            logger.debug("Target not ready", e);
+            logger.warn("Target error", e);
 
             targetReady = false;
          }

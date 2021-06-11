@@ -24,6 +24,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class MockTarget extends AbstractTarget {
+   private boolean local = false;
+
+   private String nodeId = UUID.randomUUID().toString();
+
    private boolean connected = false;
 
    private boolean connectable = false;
@@ -34,6 +38,21 @@ public class MockTarget extends AbstractTarget {
 
    private Map<String, Object> operationReturnValues = new HashMap<>();
 
+
+   @Override
+   public boolean isLocal() {
+      return false;
+   }
+
+   public MockTarget setLocal(boolean local) {
+      this.local = local;
+      return this;
+   }
+
+   @Override
+   public String getNodeID() {
+      return null;
+   }
 
    @Override
    public boolean isConnected() {
@@ -80,11 +99,11 @@ public class MockTarget extends AbstractTarget {
    }
 
    public MockTarget() {
-      super(new TargetReference(UUID.randomUUID().toString(), new TransportConfiguration()));
+      super(null);
    }
 
-   public MockTarget(TargetReference reference) {
-      super(reference);
+   public MockTarget(TransportConfiguration connector) {
+      super(connector);
    }
 
    @Override
@@ -106,12 +125,8 @@ public class MockTarget extends AbstractTarget {
    }
 
    @Override
-   public void checkReadiness() throws Exception {
-      checkConnection();
-
-      if (!ready) {
-         throw new IllegalStateException("Target not ready");
-      }
+   public boolean checkReadiness() {
+      return ready;
    }
 
    @Override

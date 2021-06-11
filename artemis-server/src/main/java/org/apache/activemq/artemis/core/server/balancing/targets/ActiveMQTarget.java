@@ -18,16 +18,20 @@
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.jboss.logging.Logger;
 
 public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    private static final Logger logger = Logger.getLogger(ActiveMQTarget.class);
+
+   private String nodeId;
 
    private boolean connected = false;
 
@@ -38,14 +42,29 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    private ActiveMQManagementProxy managementProxy;
 
    @Override
+   public boolean isLocal() {
+      return false;
+   }
+
+   @Override
+   public String getNodeID() {
+      return nodeId;
+   }
+
+   @Override
+   public TransportConfiguration getConnector() {
+      return null;
+   }
+
+   @Override
    public boolean isConnected() {
       return connected;
    }
 
-   public ActiveMQTarget(TargetReference reference) {
-      super(reference);
+   public ActiveMQTarget(TransportConfiguration connector) {
+      super(connector);
 
-      serverLocator = ActiveMQClient.createServerLocatorWithoutHA(reference.getConnector());
+      serverLocator = ActiveMQClient.createServerLocatorWithoutHA(connector);
    }
 
 
@@ -58,6 +77,8 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
 
       managementProxy = new ActiveMQManagementProxy(sessionFactory.createSession(getUsername(), getPassword(),
          false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE).start());
+
+      nodeId = (String)getAttribute(ResourceNames.BROKER, "NodeId", 3000);
 
       connected = true;
 
@@ -80,14 +101,14 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    }
 
    @Override
-   public void checkReadiness() throws Exception {
-      if (!(boolean)getAttribute("broker", "Active", 3000)) {
-         throw new IllegalStateException("Broker not active");
+   public boolean checkReadiness() {
+      try {
+         return (boolean)getAttribute(ResourceNames.BROKER, "Active", 3000);
+      } catch (Exception e) {
+         logger.warn("Error on check readiness", e);
       }
-   }
 
-   public <T> T getAttribute(String resourceName, String attributeName, String t) throws Exception {
-      return null;
+      return false;
    }
 
    @Override

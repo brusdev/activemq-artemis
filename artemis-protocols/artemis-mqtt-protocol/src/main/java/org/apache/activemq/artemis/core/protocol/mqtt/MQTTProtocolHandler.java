@@ -28,6 +28,7 @@ import io.netty.handler.codec.mqtt.MqttFixedHeader;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader;
 import io.netty.handler.codec.mqtt.MqttMessageType;
+import io.netty.handler.codec.mqtt.MqttProperties;
 import io.netty.handler.codec.mqtt.MqttPubAckMessage;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttPublishVariableHeader;
@@ -38,9 +39,14 @@ import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubAckMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
 import io.netty.util.ReferenceCountUtil;
+import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.logs.AuditLogger;
 import org.apache.activemq.artemis.spi.core.protocol.ConnectionEntry;
+import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.actors.Actor;
 
 /**
@@ -176,6 +182,40 @@ public class MQTTProtocolHandler extends ChannelInboundHandlerAdapter {
     * @param connect
     */
    void handleConnect(MqttConnectMessage connect) throws Exception {
+      if (connection.getTransportConnection().isRedirectEnabled()) {
+
+         RedirectKeyBuilder redirectKeyBuilder = new RedirectKeyBuilder()
+            .setConnection(connection.getTransportConnection())
+            .setUsername(connect.payload().userName());
+
+         Target target = server.getBalancerManager().getBalancer(
+            connection.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
+
+         if (target != null && target.isLocal()) {
+            if (target.isLocal()) {
+               ActiveMQServerLogger.LOGGER.clientConnectionNotRedirected(connection.getTransportConnection());
+            } else {
+               ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connection.getTransportConnection(), target.getConnector());
+
+               String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
+               int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
+
+               MqttProperties mqttProperties = new MqttProperties();
+               mqttProperties.add(new MqttProperties.StringProperty(MqttProperties.MqttPropertyType.SERVER_REFERENCE.value(), String.format("{0}:{1}", host, port)));
+
+               session.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER);
+               session.getProtocolHandler().disconnect(true);
+
+               return;
+            }
+         } else {
+            session.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+            session.getProtocolHandler().disconnect(true);
+
+            return;
+         }
+      }
+
       connectionEntry.ttl = connect.variableHeader().keepAliveTimeSeconds() * 1500L;
 
       String clientId = connect.payload().clientIdentifier();
@@ -187,8 +227,12 @@ public class MQTTProtocolHandler extends ChannelInboundHandlerAdapter {
    }
 
    void sendConnack(MqttConnectReturnCode returnCode) {
+      sendConnack(returnCode, null);
+   }
+
+   void sendConnack(MqttConnectReturnCode returnCode, MqttProperties properties) {
       MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
-      MqttConnAckVariableHeader varHeader = new MqttConnAckVariableHeader(returnCode, true);
+      MqttConnAckVariableHeader varHeader = properties == null ? new MqttConnAckVariableHeader(returnCode, true) : new MqttConnAckVariableHeader(returnCode, true, properties);
       MqttConnAckMessage message = new MqttConnAckMessage(fixedHeader, varHeader);
       sendToClient(message);
    }

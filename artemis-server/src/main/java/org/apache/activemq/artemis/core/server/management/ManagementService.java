@@ -141,4 +141,8 @@ public interface ManagementService extends NotificationService, ActiveMQComponen
    void registerHawtioSecurity(ArtemisMBeanServerGuard securityMBean) throws Exception;
 
    void unregisterHawtioSecurity() throws Exception;
+
+   Object getAttribute(String resourceName, String attribute);
+
+   Object invokeOperation(String resourceName, String operation, Object[] params) throws Exception;
 }

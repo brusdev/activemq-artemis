@@ -23,7 +23,6 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -86,10 +85,10 @@ public class BrokerBalancer implements ActiveMQComponent {
       pool.stop();
    }
 
-   public TargetReference getTarget(String key) {
+   public Target getTarget(String key) {
       Target target = cache.getIfPresent(key);
 
-      if (target != null && !pool.isTargetReady(target.getReference().getNodeID())) {
+      if (target != null && !pool.isTargetReady(target.getNodeID())) {
          target = null;
 
          cache.invalidate(key);
@@ -106,6 +105,6 @@ public class BrokerBalancer implements ActiveMQComponent {
          }
       }
 
-      return target != null ? target.getReference() : null;
+      return target;
    }
 }

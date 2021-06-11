@@ -362,6 +362,16 @@ public class ClusteredResetMockTest extends ActiveMQTestBase {
       }
 
       @Override
+      public Object getAttribute(String resourceName, String attribute) {
+         return null;
+      }
+
+      @Override
+      public Object invokeOperation(String resourceName, String operation, Object[] params) throws Exception {
+         return null;
+      }
+
+      @Override
       public void start() throws Exception {
 
       }

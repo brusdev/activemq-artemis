@@ -35,6 +35,7 @@ import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryService;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
 import org.apache.activemq.artemis.core.server.balancing.targets.ActiveMQTargetFactory;
+import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
@@ -113,6 +114,10 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       pool.setUsername(config.getUsername());
       pool.setPassword(config.getPassword());
       pool.setQuorumSize(config.getQuorumSize());
+
+      if (config.isLocalTargetEnabled()) {
+         pool.addTarget(new LocalTarget(server));
+      }
 
       return pool;
    }

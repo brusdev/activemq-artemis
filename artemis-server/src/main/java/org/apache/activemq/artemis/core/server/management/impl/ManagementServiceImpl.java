@@ -851,6 +851,7 @@ public class ManagementServiceImpl implements ManagementService {
       notificationsEnabled = enabled;
    }
 
+   @Override
    public Object getAttribute(final String resourceName, final String attribute) {
       try {
          Object resource = registry.get(resourceName);
@@ -877,7 +878,8 @@ public class ManagementServiceImpl implements ManagementService {
       }
    }
 
-   private Object invokeOperation(final String resourceName,
+   @Override
+   public Object invokeOperation(final String resourceName,
                                   final String operation,
                                   final Object[] params) throws Exception {
       Object resource = registry.get(resourceName);

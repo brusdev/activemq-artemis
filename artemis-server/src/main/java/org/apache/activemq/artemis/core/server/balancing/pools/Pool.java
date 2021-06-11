@@ -48,6 +48,10 @@ public interface Pool extends ActiveMQComponent {
 
    List<Target> getAllTargets();
 
+   void addTarget(Target target) throws Exception;
+
+   Target removeTarget(String nodeId) throws Exception;
+
 
    List<TargetTask> getTargetTasks();
 

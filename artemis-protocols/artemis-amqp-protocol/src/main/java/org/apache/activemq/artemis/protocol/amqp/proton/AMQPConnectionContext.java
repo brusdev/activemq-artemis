@@ -39,7 +39,7 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.redirect.RedirectKeyBuilder;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
@@ -480,23 +480,27 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
             .setConnection(connectionCallback.getTransportConnection())
             .setUsername(handler.getSASLResult().getUser());
 
-         TargetReference target = protocolManager.getServer().getBalancerManager().getBalancer(
+         Target target = protocolManager.getServer().getBalancerManager().getBalancer(
             connectionCallback.getTransportConnection().getRedirectTo()).getTarget(redirectKeyBuilder.build());
 
          if (target != null) {
-            ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connectionCallback.getTransportConnection(), target.getConnector());
+            if (target.isLocal()) {
+               ActiveMQServerLogger.LOGGER.clientConnectionNotRedirected(connectionCallback.getTransportConnection());
+            } else {
+               ActiveMQServerLogger.LOGGER.clientConnectionRedirected(connectionCallback.getTransportConnection(), target.getConnector());
 
-            String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
-            int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
+               String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
+               int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
 
-            ErrorCondition error = new ErrorCondition();
-            error.setCondition(ConnectionError.REDIRECT);
-            error.setDescription(ConnectionError.REDIRECT.toString());
-            Map<Symbol, String> info = new HashMap<>();
-            info.put(AmqpSupport.NETWORK_HOST, host);
-            info.put(AmqpSupport.PORT, Integer.toString(port));
-            error.setInfo(info);
-            connection.setCondition(error);
+               ErrorCondition error = new ErrorCondition();
+               error.setCondition(ConnectionError.REDIRECT);
+               error.setDescription(ConnectionError.REDIRECT.toString());
+               Map<Symbol, String> info = new HashMap<>();
+               info.put(AmqpSupport.NETWORK_HOST, host);
+               info.put(AmqpSupport.PORT, Integer.toString(port));
+               error.setInfo(info);
+               connection.setCondition(error);
+            }
          } else {
             ErrorCondition error = new ErrorCondition();
             error.setCondition(ConnectionError.CONNECTION_FORCED);

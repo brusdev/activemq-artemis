@@ -17,10 +17,12 @@
 
 package org.apache.activemq.artemis.core.management.impl;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.management.BrokerBalancerControl;
 import org.apache.activemq.artemis.core.persistence.StorageManager;
 import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.utils.JsonLoader;
 
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanOperationInfo;
@@ -36,13 +38,19 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
 
    @Override
    public Object getTarget(String key) {
-      TargetReference target = balancer.getTarget(key);
+      Target target = balancer.getTarget(key);
 
       if (target != null) {
-         return new Object[] {target.getNodeID(), new Object[] {
-            target.getConnector().getName(),
-            target.getConnector().getFactoryClassName(),
-            target.getConnector().getParams()}
+         TransportConfiguration connector = target.getConnector();
+
+         return new Object[] {
+            target.getNodeID(),
+            target.isLocal(),
+            connector == null ? null : new Object[] {
+               connector.getName(),
+               connector.getFactoryClassName(),
+               connector.getParams()
+            }
          };
       }
 
@@ -51,10 +59,15 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
 
    @Override
    public String getTargetAsJSON(String key) {
-      TargetReference target = balancer.getTarget(key);
+      Target target = balancer.getTarget(key);
 
       if (target != null) {
-         return target.toJson().toString();
+         TransportConfiguration connector = target.getConnector();
+
+         return JsonLoader.createObjectBuilder()
+            .add("nodeID", target.getNodeID())
+            .add("local", target.isLocal())
+            .add("connector", target == null ? null : target.getConnector().toJson()).build().toString();
       }
 
       return null;

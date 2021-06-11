@@ -67,7 +67,7 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
    @Override
    public void entryAdded(DiscoveryService.Entry entry) {
       try {
-         addTarget(entry.getNodeID(), entry.getConnector());
+         addTarget(entry.getConnector());
       } catch (Exception e) {
          logger.debug("Error on adding the target for " + entry);
       }
@@ -89,7 +89,7 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
       try {
          removeTarget(oldEntry.getNodeID());
 
-         addTarget(newEntry.getNodeID(), newEntry.getConnector());
+         addTarget(newEntry.getConnector());
       } catch (Exception e) {
          logger.debug("Error on updating the target for " + newEntry);
       }

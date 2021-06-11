@@ -17,8 +17,10 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+
 public abstract class AbstractTarget implements Target {
-   private final TargetReference reference;
+   private final TransportConfiguration connector;
 
    private String username;
 
@@ -69,13 +71,13 @@ public abstract class AbstractTarget implements Target {
    }
 
    @Override
-   public TargetReference getReference() {
-      return reference;
+   public TransportConfiguration getConnector() {
+      return connector;
    }
 
 
-   public AbstractTarget(TargetReference reference) {
-      this.reference = reference;
+   public AbstractTarget(TransportConfiguration connector) {
+      this.connector = connector;
    }
 
 

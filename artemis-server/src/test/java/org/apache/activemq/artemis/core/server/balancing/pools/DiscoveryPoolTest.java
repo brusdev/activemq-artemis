@@ -144,7 +144,7 @@ public class DiscoveryPoolTest extends PoolTestBase {
             List<String> removingNodeIDs = new ArrayList<>();
             for (int i = 0; i < removingEntries; i++) {
                removingNodeIDs.add(discoveryService.removeEntry(targetFactory.
-                  getCreatedTargets().get(i).getReference().getNodeID()).getNodeID());
+                  getCreatedTargets().get(i).getNodeID()).getNodeID());
             }
 
             if (autoRemove) {

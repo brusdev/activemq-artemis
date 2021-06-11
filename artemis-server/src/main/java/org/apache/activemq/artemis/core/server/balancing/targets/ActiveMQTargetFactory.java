@@ -17,9 +17,11 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+
 public class ActiveMQTargetFactory implements TargetFactory {
    @Override
-   public Target createTarget(TargetReference reference) {
-      return new ActiveMQTarget(reference);
+   public Target createTarget(TransportConfiguration connector) {
+      return new ActiveMQTarget(connector);
    }
 }

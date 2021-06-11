@@ -26,7 +26,7 @@ import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHash
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.RoundRobinPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetReference;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.activemq.artemis.utils.RandomUtil;
@@ -155,25 +155,25 @@ public abstract class BalancingTestBase extends ClusterTestBase {
       Wait.assertTrue(() -> balancer.getTarget(key) != null, POOL_CHECK_PERIOD * 3, WAIT_PERIOD);
 
       if (FirstElementPolicy.NAME.equals(policyName)) {
-         TargetReference target = balancer.getTarget(key);
+         Target target = balancer.getTarget(key);
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertEquals(target, balancer.getTarget(key));
          }
       } else if (RoundRobinPolicy.NAME.equals(policyName)) {
-         List<TargetReference> targets = new ArrayList<>();
+         List<Target> targets = new ArrayList<>();
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertTrue(!targets.contains(balancer.getTarget(key)));
          }
       } else if (ConsistentHashPolicy.NAME.equals(policyName)) {
-         TargetReference target = balancer.getTarget(key);
+         Target target = balancer.getTarget(key);
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertEquals(target, balancer.getTarget(key));
          }
       } else if (LeastConnectionsPolicy.NAME.equals(policyName)) {
-         TargetReference target = balancer.getTarget(key);
+         Target target = balancer.getTarget(key);
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertEquals(target, balancer.getTarget(key));
@@ -188,19 +188,19 @@ public abstract class BalancingTestBase extends ClusterTestBase {
       Wait.assertTrue(() -> balancer.getTarget(RandomUtil.randomString()) != null, POOL_CHECK_PERIOD * 3, WAIT_PERIOD);
 
       if (FirstElementPolicy.NAME.equals(policyName)) {
-         TargetReference target = balancer.getTarget(RandomUtil.randomString());
+         Target target = balancer.getTarget(RandomUtil.randomString());
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertEquals(target, balancer.getTarget(RandomUtil.randomString()));
          }
       } else if (RoundRobinPolicy.NAME.equals(policyName)) {
-         List<TargetReference> targets = new ArrayList<>();
+         List<Target> targets = new ArrayList<>();
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertTrue(!targets.contains(balancer.getTarget(RandomUtil.randomString())));
          }
       } else if (ConsistentHashPolicy.NAME.equals(policyName)) {
-         Map<TargetReference, String> targets = new HashMap<>();
+         Map<Target, String> targets = new HashMap<>();
          for (int i = 0; i < 100 * TARGETS && targets.size() < TARGETS; i++) {
             String key = RandomUtil.randomString();
             targets.put(balancer.getTarget(key), key);
@@ -208,7 +208,7 @@ public abstract class BalancingTestBase extends ClusterTestBase {
 
          Assert.assertEquals(TARGETS, targets.size());
       } else if (LeastConnectionsPolicy.NAME.equals(policyName)) {
-         TargetReference target = balancer.getTarget(RandomUtil.randomString());
+         Target target = balancer.getTarget(RandomUtil.randomString());
 
          for (int i = 0; i < TARGETS; i++) {
             Assert.assertEquals(target, balancer.getTarget(RandomUtil.randomString()));

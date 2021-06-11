@@ -17,6 +17,8 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +76,8 @@ public class MockTargetFactory implements TargetFactory {
    }
 
    @Override
-   public Target createTarget(TargetReference reference) {
-      MockTarget target = new MockTarget(reference);
+   public Target createTarget(TransportConfiguration connector) {
+      MockTarget target = new MockTarget(connector);
 
       createdTargets.add(target);
 

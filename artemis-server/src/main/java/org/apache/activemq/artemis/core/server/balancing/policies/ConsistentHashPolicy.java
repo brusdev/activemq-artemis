@@ -38,7 +38,7 @@ public class ConsistentHashPolicy extends Policy {
          NavigableMap<Integer, Target> consistentTargets = new TreeMap<>();
 
          for (Target target : targets) {
-            consistentTargets.put(getHash(target.getReference().getNodeID()), target);
+            consistentTargets.put(getHash(target.getNodeID()), target);
          }
 
          if (consistentTargets.size() > 0) {

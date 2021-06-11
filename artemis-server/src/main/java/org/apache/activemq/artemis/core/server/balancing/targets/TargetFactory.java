@@ -17,6 +17,8 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+
 public interface TargetFactory {
-   Target createTarget(TargetReference reference);
+   Target createTarget(TransportConfiguration connector);
 }

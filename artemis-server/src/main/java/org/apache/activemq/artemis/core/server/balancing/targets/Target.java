@@ -17,9 +17,15 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+
 public interface Target {
 
-   TargetReference getReference();
+   boolean isLocal();
+
+   String getNodeID();
+
+   TransportConfiguration getConnector();
 
    String getUsername();
 
@@ -39,13 +45,12 @@ public interface Target {
 
    boolean isConnected();
 
-
    void connect() throws Exception;
 
    void disconnect() throws Exception;
 
 
-   void checkReadiness() throws Exception;
+   boolean checkReadiness();
 
 
    Object getAttribute(String resourceName, String attributeName, int timeout) throws Exception;

@@ -454,12 +454,16 @@ public interface ActiveMQServerLogger extends BasicLogger {
    void requestedQuorumVotes(int vote);
 
    @LogMessage(level = Logger.Level.INFO)
-   @Message(id = 221086, value = "Initializing balancer policy plugin {0} with properties: {1}", format = Message.Format.MESSAGE_FORMAT)
+   @Message(id = 221085, value = "Initializing balancer policy plugin {0} with properties: {1}", format = Message.Format.MESSAGE_FORMAT)
    void initializingBalancerPolicyPlugin(String clazz, String properties);
 
    @LogMessage(level = Logger.Level.INFO)
-   @Message(id = 221085, value = "Client connection {0} redirected to {1}", format = Message.Format.MESSAGE_FORMAT)
+   @Message(id = 221086, value = "Client connection {0} redirected to {1}", format = Message.Format.MESSAGE_FORMAT)
    void clientConnectionRedirected(Connection connection, TransportConfiguration targetConnector);
+
+   @LogMessage(level = Logger.Level.INFO)
+   @Message(id = 221087, value = "Client connection {0} not redirected", format = Message.Format.MESSAGE_FORMAT)
+   void clientConnectionNotRedirected(Connection connection);
 
    @LogMessage(level = Logger.Level.WARN)
    @Message(id = 222000, value = "ActiveMQServer is being finalized and has not been stopped. Please remember to stop the server before letting it go out of scope",
