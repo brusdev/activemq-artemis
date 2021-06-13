@@ -23,37 +23,33 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ConsistentHashPolicyTest extends PolicyTestBase {
 
    @Override
-   protected Policy createPolicy() {
+   protected AbstractPolicy createPolicy() {
       return new ConsistentHashPolicy();
    }
 
    @Test
    public void testPolicyWithMultipleTargets() {
-      Policy policy = createPolicy();
+      AbstractPolicy policy = createPolicy();
       Target selectedTarget;
-      List<Target> selectedTargets;
+      Target previousTarget;
 
       ArrayList<Target> targets = new ArrayList<>();
       for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          targets.add(new MockTarget());
       }
 
-      selectedTargets = policy.selectTargets(targets, "test");
-      Assert.assertEquals(1, selectedTargets.size());
-      selectedTarget = selectedTargets.get(0);
+      selectedTarget = policy.selectTarget(targets, "test");
+      previousTarget = selectedTarget;
 
-      selectedTargets = policy.selectTargets(targets, "test");
-      Assert.assertEquals(1, selectedTargets.size());
-      Assert.assertEquals(selectedTarget, selectedTargets.get(0));
+      selectedTarget = policy.selectTarget(targets, "test");
+      Assert.assertEquals(previousTarget, selectedTarget);
 
-      targets.remove(selectedTarget);
-      selectedTargets = policy.selectTargets(targets, "test");
-      Assert.assertEquals(1, selectedTargets.size());
-      Assert.assertNotEquals(selectedTarget, selectedTargets.get(0));
+      targets.remove(previousTarget);
+      selectedTarget = policy.selectTarget(targets, "test");
+      Assert.assertNotEquals(previousTarget, selectedTarget);
    }
 }

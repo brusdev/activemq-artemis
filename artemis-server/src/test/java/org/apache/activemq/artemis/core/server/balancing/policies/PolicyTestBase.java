@@ -24,32 +24,29 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public abstract class PolicyTestBase {
    public static final int MULTIPLE_TARGETS = 10;
 
-   protected abstract Policy createPolicy();
+   protected abstract AbstractPolicy createPolicy();
 
    @Test
    public void testPolicyWithNoTarget() {
-      Policy policy = createPolicy();
+      AbstractPolicy policy = createPolicy();
 
-      List<Target> selectedTargets = policy.selectTargets(Collections.emptyList(), "test");
+      Target selectedTarget = policy.selectTarget(Collections.emptyList(), "test");
 
-      Assert.assertEquals(0, selectedTargets.size());
+      Assert.assertNull(selectedTarget);
    }
 
    @Test
    public void testPolicyWithSingleTarget() {
-      Policy policy = createPolicy();
+      AbstractPolicy policy = createPolicy();
 
       ArrayList<Target> targets = new ArrayList<>();
       targets.add(new MockTarget());
 
-      List<Target> selectedTargets = policy.selectTargets(targets, "test");
-
-      Assert.assertEquals(1, selectedTargets.size());
-      Assert.assertEquals(selectedTargets.get(0), targets.get(0));
+      Target selectedTarget = policy.selectTarget(targets, "test");
+      Assert.assertEquals(selectedTarget, targets.get(0));
    }
 }

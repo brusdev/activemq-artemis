@@ -17,23 +17,22 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
-import java.util.List;
+public abstract class AbstractPolicy implements Policy {
+   private final String name;
 
-public class FirstElementPolicy extends AbstractPolicy {
-   public static final String NAME = "FIRST_ELEMENT";
-
-   public FirstElementPolicy() {
-      super(NAME);
+   @Override
+   public String getName() {
+      return name;
    }
 
    @Override
-   public Target selectTarget(List<Target> targets, String key) {
-      if (targets.size() > 0) {
-         return targets.get(0);
-      }
-
+   public TargetTask[] getTargetTasks() {
       return null;
+   }
+
+   public AbstractPolicy(final String name) {
+      this.name = name;
    }
 }

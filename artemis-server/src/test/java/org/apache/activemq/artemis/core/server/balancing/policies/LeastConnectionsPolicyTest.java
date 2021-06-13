@@ -24,26 +24,34 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class LeastConnectionsPolicyTest extends PolicyTestBase {
 
    @Override
-   protected Policy createPolicy() {
+   protected AbstractPolicy createPolicy() {
       return new LeastConnectionsPolicy();
    }
 
    @Test
    public void testPolicyWithMultipleTargets() {
-      Policy policy = createPolicy();
-      List<Target> selectedTargets;
+      AbstractPolicy policy = createPolicy();
+      Target selectedTarget = null;
+      Set<Target> selectedTargets;
+
 
       ArrayList<Target> targets = new ArrayList<>();
       for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          targets.add(new MockTarget().setConnected(true).setReady(true));
       }
 
-      selectedTargets = policy.selectTargets(targets, "test");
+
+      selectedTargets = new HashSet<>();
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
+         selectedTarget = policy.selectTarget(targets, "test");
+         selectedTargets.add(selectedTarget);
+      }
       Assert.assertEquals(MULTIPLE_TARGETS, selectedTargets.size());
 
 
@@ -51,21 +59,36 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
          ((MockTarget)target).setAttributeValue("broker", "ConnectionCount", 3);
          Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target));
       });
-      selectedTargets = policy.selectTargets(targets, "test");
+
+      selectedTargets = new HashSet<>();
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
+         selectedTarget = policy.selectTarget(targets, "test");
+         selectedTargets.add(selectedTarget);
+      }
       Assert.assertEquals(MULTIPLE_TARGETS, selectedTargets.size());
 
 
       ((MockTarget)targets.get(0)).setAttributeValue("broker", "ConnectionCount", 2);
       targets.forEach(target -> Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target)));
-      selectedTargets = policy.selectTargets(targets, "test");
+
+      selectedTargets = new HashSet<>();
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
+         selectedTarget = policy.selectTarget(targets, "test");
+         selectedTargets.add(selectedTarget);
+      }
       Assert.assertEquals(1, selectedTargets.size());
-      Assert.assertEquals(targets.get(0), selectedTargets.get(0));
+      Assert.assertTrue(selectedTargets.contains(targets.get(0)));
 
 
       ((MockTarget)targets.get(1)).setAttributeValue("broker", "ConnectionCount", 1);
       ((MockTarget)targets.get(2)).setAttributeValue("broker", "ConnectionCount", 1);
       targets.forEach(target -> Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target)));
-      selectedTargets = policy.selectTargets(targets, "test");
+
+      selectedTargets = new HashSet<>();
+      for (int i = 0; i < MULTIPLE_TARGETS; i++) {
+         selectedTarget = policy.selectTarget(targets, "test");
+         selectedTargets.add(selectedTarget);
+      }
       Assert.assertEquals(2, selectedTargets.size());
       Assert.assertTrue(selectedTargets.contains(targets.get(1)));
       Assert.assertTrue(selectedTargets.contains(targets.get(2)));

@@ -23,19 +23,22 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class RoundRobinPolicyTest extends PolicyTestBase {
 
    @Override
-   protected Policy createPolicy() {
+   protected AbstractPolicy createPolicy() {
       return new RoundRobinPolicy();
    }
 
    @Test
    public void testPolicyWithMultipleTargets() {
-      Policy policy = createPolicy();
-      List<Target> selectedTargets;
+      AbstractPolicy policy = createPolicy();
+      Target selectedTarget = null;
+      Set<Target> selectedTargets = new HashSet<>();
       List<Target> previousTargets = new ArrayList<>();
 
       ArrayList<Target> targets = new ArrayList<>();
@@ -43,11 +46,13 @@ public class RoundRobinPolicyTest extends PolicyTestBase {
          targets.add(new MockTarget());
       }
 
+      selectedTargets = new HashSet<>();
       for (int i = 0; i < MULTIPLE_TARGETS; i++) {
-         selectedTargets = policy.selectTargets(targets, "test");
-         Assert.assertEquals(1, selectedTargets.size());
-         Assert.assertTrue("Iteration failed: " + i, !previousTargets.contains(selectedTargets.get(0)));
-         previousTargets.add(selectedTargets.get(0));
+         selectedTarget = policy.selectTarget(targets, "test");
+         selectedTargets.add(selectedTarget);
+         Assert.assertTrue("Iteration failed: " + i, !previousTargets.contains(selectedTarget));
+         previousTargets.add(selectedTarget);
       }
+      Assert.assertEquals(MULTIPLE_TARGETS, selectedTargets.size());
    }
 }

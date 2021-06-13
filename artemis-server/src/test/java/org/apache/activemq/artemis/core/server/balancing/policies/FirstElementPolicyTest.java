@@ -23,27 +23,25 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class FirstElementPolicyTest extends PolicyTestBase {
 
    @Override
-   protected Policy createPolicy() {
+   protected AbstractPolicy createPolicy() {
       return new FirstElementPolicy();
    }
 
    @Test
    public void testPolicyWithMultipleTargets() {
-      Policy policy = createPolicy();
+      AbstractPolicy policy = createPolicy();
 
       ArrayList<Target> targets = new ArrayList<>();
       for (int i = 0; i < MULTIPLE_TARGETS; i++) {
          targets.add(new MockTarget());
       }
 
-      List<Target> selectedTargets = policy.selectTargets(targets, "test");
+      Target selectedTarget = policy.selectTarget(targets, "test");
 
-      Assert.assertEquals(1, selectedTargets.size());
-      Assert.assertEquals(selectedTargets.get(0), targets.get(0));
+      Assert.assertEquals(selectedTarget, targets.get(0));
    }
 }

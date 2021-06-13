@@ -29,7 +29,7 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
-public class LeastConnectionsPolicy extends Policy {
+public class LeastConnectionsPolicy extends RoundRobinPolicy {
    public static final String NAME = "LEAST_CONNECTIONS";
 
    public static final String UPDATE_CONNECTION_COUNT_TASK_NAME = "UPDATE_CONNECTION_COUNT_TASK";
@@ -60,7 +60,7 @@ public class LeastConnectionsPolicy extends Policy {
    }
 
    @Override
-   public List<Target> selectTargets(List<Target> targets, String key) {
+   public Target selectTarget(List<Target> targets, String key) {
       if (targets.size() > 1) {
          NavigableMap<Long, List<Target>> sortedTargets = new TreeMap<>();
 
@@ -92,11 +92,17 @@ public class LeastConnectionsPolicy extends Policy {
             }
          });
 
-         return sortedTargets.firstEntry().getValue();
+         List<Target> selectedTargets = sortedTargets.firstEntry().getValue();
+
+         if (selectedTargets.size() > 1) {
+            return super.selectTarget(selectedTargets, key);
+         } else {
+            return selectedTargets.get(0);
+         }
       } else if (targets.size() > 0) {
-         return selectNextTargets(targets, key);
+         return targets.get(0);
       }
 
-      return targets;
+      return null;
    }
 }

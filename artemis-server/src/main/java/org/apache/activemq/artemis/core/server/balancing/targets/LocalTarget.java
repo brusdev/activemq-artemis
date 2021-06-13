@@ -17,6 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.management.ManagementService;
 
@@ -24,8 +25,8 @@ public class LocalTarget extends AbstractTarget {
    private final ActiveMQServer server;
    private final ManagementService managementService;
 
-   public LocalTarget(ActiveMQServer server) {
-      super(null);
+   public LocalTarget(TransportConfiguration connector, ActiveMQServer server) {
+      super(connector);
 
       this.server = server;
       this.managementService = server.getManagementService();

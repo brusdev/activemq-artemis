@@ -91,16 +91,16 @@ public class BrokerBalancer implements ActiveMQComponent {
       if (target != null && !pool.isTargetReady(target.getNodeID())) {
          target = null;
 
+         //Todo check if keeping the target not ready until replacement
          cache.invalidate(key);
       }
 
       if (target == null) {
          List<Target> targets = pool.getTargets();
 
-         List<Target> selectedTargets = policy.selectTargets(targets, key);
+         target = policy.selectTarget(targets, key);
 
-         if (selectedTargets.size() > 0) {
-            target = selectedTargets.get(0);
+         if (target != null) {
             cache.put(key, target);
          }
       }

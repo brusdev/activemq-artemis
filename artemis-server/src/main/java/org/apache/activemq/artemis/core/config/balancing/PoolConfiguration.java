@@ -25,7 +25,7 @@ public class PoolConfiguration {
 
    private String password;
 
-   private boolean localTargetEnabled = false;
+   private String localConnector = null;
 
    private List<String> staticConnectors = Collections.emptyList();
 
@@ -72,12 +72,12 @@ public class PoolConfiguration {
       return this;
    }
 
-   public boolean isLocalTargetEnabled() {
-      return localTargetEnabled;
+   public String getLocalConnector() {
+      return localConnector;
    }
 
-   public PoolConfiguration setLocalTargetEnabled(boolean localTargetEnabled) {
-      this.localTargetEnabled = localTargetEnabled;
+   public PoolConfiguration setLocalConnector(String localConnector) {
+      this.localConnector = localConnector;
       return this;
    }
 

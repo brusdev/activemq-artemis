@@ -20,10 +20,9 @@ package org.apache.activemq.artemis.core.server.balancing.policies;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
-import java.util.Collections;
 import java.util.List;
 
-public class RoundRobinPolicy extends Policy {
+public class RoundRobinPolicy extends AbstractPolicy {
    public static final String NAME = "ROUND_ROBIN";
 
    private int pos = RandomUtil.randomInterval(0, Integer.MAX_VALUE);
@@ -32,15 +31,17 @@ public class RoundRobinPolicy extends Policy {
       super(NAME);
    }
 
+   protected RoundRobinPolicy(String name) {
+      super(name);
+   }
+
    @Override
-   public List<Target> selectTargets(List<Target> targets, String key) {
-      if (targets.size() > 1) {
+   public Target selectTarget(List<Target> targets, String key) {
+      if (targets.size() > 0) {
          pos = pos % targets.size();
-         return selectNextTargets(Collections.singletonList(targets.get(pos++)), key);
-      } else if (targets.size() > 0) {
-         return selectNextTargets(targets, key);
+         return targets.get(pos++);
       }
 
-      return targets;
+      return null;
    }
 }

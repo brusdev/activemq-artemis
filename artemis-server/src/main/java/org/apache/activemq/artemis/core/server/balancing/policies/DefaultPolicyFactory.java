@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class DefaultPolicyFactory extends PolicyFactory {
-   private static final Map<String, Supplier<Policy>> supportedPolicies = new HashMap<>();
+   private static final Map<String, Supplier<AbstractPolicy>> supportedPolicies = new HashMap<>();
 
    static {
       supportedPolicies.put(ConsistentHashPolicy.NAME, () -> new ConsistentHashPolicy());
@@ -37,8 +37,8 @@ public class DefaultPolicyFactory extends PolicyFactory {
    }
 
    @Override
-   public Policy createPolicy(String policyName) {
-      Supplier<Policy> policySupplier = supportedPolicies.get(policyName);
+   public AbstractPolicy createPolicy(String policyName) {
+      Supplier<AbstractPolicy> policySupplier = supportedPolicies.get(policyName);
 
       if (policySupplier == null) {
          throw new IllegalArgumentException("Policy not supported: " + policyName);

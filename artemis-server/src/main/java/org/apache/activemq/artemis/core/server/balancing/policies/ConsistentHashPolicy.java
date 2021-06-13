@@ -19,13 +19,12 @@ package org.apache.activemq.artemis.core.server.balancing.policies;
 
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class ConsistentHashPolicy extends Policy {
+public class ConsistentHashPolicy extends AbstractPolicy {
    public static final String NAME = "CONSISTENT_HASH";
 
    public ConsistentHashPolicy() {
@@ -33,7 +32,7 @@ public class ConsistentHashPolicy extends Policy {
    }
 
    @Override
-   public List<Target> selectTargets(List<Target> targets, String key) {
+   public Target selectTarget(List<Target> targets, String key) {
       if (targets.size() > 1) {
          NavigableMap<Integer, Target> consistentTargets = new TreeMap<>();
 
@@ -48,13 +47,13 @@ public class ConsistentHashPolicy extends Policy {
                consistentEntry = consistentTargets.firstEntry();
             }
 
-            return selectNextTargets(Collections.singletonList(consistentEntry.getValue()), key);
+            return consistentEntry.getValue();
          }
       } else if (targets.size() > 0) {
-         return selectNextTargets(targets, key);
+         return targets.get(0);
       }
 
-      return targets;
+      return null;
    }
 
    private int getHash(String str) {

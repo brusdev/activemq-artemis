@@ -38,6 +38,7 @@ import org.apache.activemq.artemis.core.server.balancing.targets.ActiveMQTargetF
 import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +47,8 @@ import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
 public final class BrokerBalancerManager implements ActiveMQComponent {
+   private static final Logger logger = Logger.getLogger(BrokerBalancerManager.class);
+
    private final Configuration config;
 
    private final ActiveMQServer server;
@@ -105,7 +108,13 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
          List<TransportConfiguration> staticConnectors = new ArrayList<>();
          for (String staticConnector : config.getStaticConnectors()) {
-            staticConnectors.add(connectorConfigurations.get(staticConnector));
+            TransportConfiguration connector = connectorConfigurations.get(staticConnector);
+
+            if (connector != null) {
+               staticConnectors.add(connector);
+            } else {
+               logger.warn("Static connector not found: " + config.getLocalConnector());
+            }
          }
 
          pool = new StaticPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), staticConnectors);
@@ -115,8 +124,15 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       pool.setPassword(config.getPassword());
       pool.setQuorumSize(config.getQuorumSize());
 
-      if (config.isLocalTargetEnabled()) {
-         pool.addTarget(new LocalTarget(server));
+      if (config.getLocalConnector() != null) {
+         TransportConfiguration connector = server.getConfiguration().
+            getConnectorConfigurations().get(config.getLocalConnector());
+
+         if (connector != null) {
+            pool.addTarget(new LocalTarget(connector, server));
+         } else {
+            logger.warn("Local connector not found: " + config.getLocalConnector());
+         }
       }
 
       return pool;
@@ -131,10 +147,6 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          for (TargetTask targetTask : policy.getTargetTasks()) {
             pool.addTargetTask(targetTask);
          }
-      }
-
-      if (policyConfig.getNext() != null) {
-         policy.setNext(deployPolicy(policyConfig.getNext(), pool));
       }
 
       return policy;

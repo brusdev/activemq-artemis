@@ -46,7 +46,7 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
          return new Object[] {
             target.getNodeID(),
             target.isLocal(),
-            connector == null ? null : new Object[] {
+            new Object[] {
                connector.getName(),
                connector.getFactoryClassName(),
                connector.getParams()
@@ -67,7 +67,7 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
          return JsonLoader.createObjectBuilder()
             .add("nodeID", target.getNodeID())
             .add("local", target.isLocal())
-            .add("connector", target == null ? null : target.getConnector().toJson()).build().toString();
+            .add("connector", connector.toJson()).build().toString();
       }
 
       return null;

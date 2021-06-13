@@ -22,39 +22,10 @@ import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 
 import java.util.List;
 
-public abstract class Policy {
-   private final String name;
+public interface Policy {
+   String getName();
 
-   private Policy next;
+   TargetTask[] getTargetTasks();
 
-   public String getName() {
-      return name;
-   }
-
-   public TargetTask[] getTargetTasks() {
-      return null;
-   }
-
-   public Policy getNext() {
-      return next;
-   }
-
-   public Policy setNext(Policy next) {
-      this.next = next;
-      return this;
-   }
-
-   public Policy(final String name) {
-      this.name = name;
-   }
-
-   public abstract List<Target> selectTargets(List<Target> targets, String key);
-
-   protected List<Target> selectNextTargets(List<Target> targets, String key) {
-      if (next == null) {
-         return targets;
-      }
-
-      return next.selectTargets(targets, key);
-   }
+   Target selectTarget(List<Target> targets, String key);
 }
