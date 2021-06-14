@@ -811,6 +811,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
          } else {
             if (!session.handleFailover(connection, cause)) {
                sessionFailoverError = true;
+               return false;
             }
          }
       }
