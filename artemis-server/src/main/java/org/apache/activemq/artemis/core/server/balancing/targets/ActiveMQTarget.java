@@ -31,8 +31,6 @@ import org.jboss.logging.Logger;
 public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    private static final Logger logger = Logger.getLogger(ActiveMQTarget.class);
 
-   private String nodeId;
-
    private boolean connected = false;
 
    private final ServerLocator serverLocator;
@@ -47,22 +45,12 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    }
 
    @Override
-   public String getNodeID() {
-      return nodeId;
-   }
-
-   @Override
-   public TransportConfiguration getConnector() {
-      return null;
-   }
-
-   @Override
    public boolean isConnected() {
       return connected;
    }
 
-   public ActiveMQTarget(TransportConfiguration connector) {
-      super(connector);
+   public ActiveMQTarget(TransportConfiguration connector, String nodeID) {
+      super(connector, nodeID);
 
       serverLocator = ActiveMQClient.createServerLocatorWithoutHA(connector);
    }
@@ -77,8 +65,6 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
 
       managementProxy = new ActiveMQManagementProxy(sessionFactory.createSession(getUsername(), getPassword(),
          false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE).start());
-
-      nodeId = (String)getAttribute(ResourceNames.BROKER, "NodeId", 3000);
 
       connected = true;
 
@@ -103,6 +89,10 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    @Override
    public boolean checkReadiness() {
       try {
+         if (getNodeID() == null) {
+            setNodeID((String)getAttribute(ResourceNames.BROKER, "NodeId", 3000));
+         }
+
          return (boolean)getAttribute(ResourceNames.BROKER, "Active", 3000);
       } catch (Exception e) {
          logger.warn("Error on check readiness", e);

@@ -74,7 +74,7 @@ public abstract class PoolTestBase {
 
       targetFactory.getCreatedTargets().get(0).setReady(true);
 
-      targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(true));
+      Wait.assertEquals(quorumSize, () -> pool.getTargets().size(), CHECK_TIMEOUT);
 
       pool.setQuorumSize(quorumSize + 1);
 
@@ -82,7 +82,7 @@ public abstract class PoolTestBase {
 
       targetFactory.getCreatedTargets().get(1).setReady(true);
 
-      Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+      Wait.assertEquals(quorumSize + 1, () -> pool.getTargets().size(), CHECK_TIMEOUT);
    }
 
 
@@ -97,7 +97,7 @@ public abstract class PoolTestBase {
       Assert.assertEquals(0, pool.getAllTargets().size());
       Assert.assertEquals(0, targetFactory.getCreatedTargets().size());
       targetFactory.getCreatedTargets().forEach(mockTarget -> {
-         Assert.assertFalse(pool.isTargetReady(mockTarget.getNodeID()));
+         Assert.assertFalse(pool.isTargetReady(mockTarget));
          Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
       });
 
@@ -108,7 +108,7 @@ public abstract class PoolTestBase {
          Assert.assertEquals(targets, pool.getAllTargets().size());
          Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
          targetFactory.getCreatedTargets().forEach(mockTarget -> {
-            Assert.assertFalse(pool.isTargetReady(mockTarget.getNodeID()));
+            Assert.assertFalse(pool.isTargetReady(mockTarget));
             Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
          });
 
@@ -119,7 +119,7 @@ public abstract class PoolTestBase {
             Assert.assertEquals(targets, pool.getAllTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
-               Assert.assertFalse(pool.isTargetReady(mockTarget.getNodeID()));
+               Assert.assertFalse(pool.isTargetReady(mockTarget));
                Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
             });
 
@@ -129,7 +129,7 @@ public abstract class PoolTestBase {
             Assert.assertEquals(targets, pool.getAllTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
-               Assert.assertFalse(pool.isTargetReady(mockTarget.getNodeID()));
+               Assert.assertFalse(pool.isTargetReady(mockTarget));
                Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
             });
 
@@ -139,7 +139,7 @@ public abstract class PoolTestBase {
             Assert.assertEquals(targets, pool.getAllTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
-               Assert.assertTrue(pool.isTargetReady(mockTarget.getNodeID()));
+               Assert.assertTrue(pool.isTargetReady(mockTarget));
                Assert.assertTrue(targetTask.getTargetExecutions(mockTarget) > 0);
             });
 
@@ -157,7 +157,7 @@ public abstract class PoolTestBase {
             Assert.assertEquals(targets, pool.getAllTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
-               Assert.assertFalse(pool.isTargetReady(mockTarget.getNodeID()));
+               Assert.assertFalse(pool.isTargetReady(mockTarget));
                Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
             });
 
@@ -167,7 +167,7 @@ public abstract class PoolTestBase {
             Assert.assertEquals(targets, pool.getAllTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
-               Assert.assertTrue(pool.isTargetReady(mockTarget.getNodeID()));
+               Assert.assertTrue(pool.isTargetReady(mockTarget));
                Assert.assertTrue(targetTask.getTargetExecutions(mockTarget) > 0);
             });
 
@@ -178,7 +178,7 @@ public abstract class PoolTestBase {
             Assert.assertEquals(targets, pool.getAllTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
-               Assert.assertFalse(pool.isTargetReady(mockTarget.getNodeID()));
+               Assert.assertFalse(pool.isTargetReady(mockTarget));
                Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
             });
          }

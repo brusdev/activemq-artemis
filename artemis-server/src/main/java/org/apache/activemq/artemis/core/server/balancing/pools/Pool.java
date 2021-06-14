@@ -42,7 +42,7 @@ public interface Pool extends ActiveMQComponent {
 
    Target getTarget(String nodeId);
 
-   boolean isTargetReady(String nodeId);
+   boolean isTargetReady(Target target);
 
    List<Target> getTargets();
 
@@ -50,7 +50,7 @@ public interface Pool extends ActiveMQComponent {
 
    void addTarget(Target target) throws Exception;
 
-   Target removeTarget(String nodeId) throws Exception;
+   Target removeTarget(Target target) throws Exception;
 
 
    List<TargetTask> getTargetTasks();

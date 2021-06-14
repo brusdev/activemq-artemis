@@ -80,11 +80,13 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
    private final ClientProtocolManager clientProtocolManager;
 
-   private TransportConfiguration connectorConfig;
+   private final TransportConfiguration connectorConfig;
+
+   private TransportConfiguration previousConnectorConfig;
 
    private TransportConfiguration currentConnectorConfig;
 
-   private volatile TransportConfiguration backupConfig;
+   private volatile TransportConfiguration backupConnectorConfig;
 
    private ConnectorFactory connectorFactory;
 
@@ -185,6 +187,8 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
       this.clientProtocolManager.setSessionFactory(this);
 
+      this.connectorConfig = connectorConfig.getA();
+
       this.currentConnectorConfig = connectorConfig.getA();
 
       connectorFactory = instantiateConnectorFactory(connectorConfig.getA().getFactoryClassName());
@@ -232,7 +236,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       connectionReadyForWrites = true;
 
       if (connectorConfig.getB() != null) {
-         this.backupConfig = connectorConfig.getB();
+         this.backupConnectorConfig = connectorConfig.getB();
       }
    }
 
@@ -254,8 +258,8 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
       if (connection == null) {
          StringBuilder msg = new StringBuilder("Unable to connect to server using configuration ").append(currentConnectorConfig);
-         if (backupConfig != null) {
-            msg.append(" and backup configuration ").append(backupConfig);
+         if (backupConnectorConfig != null) {
+            msg.append(" and backup configuration ").append(backupConnectorConfig);
          }
          throw new ActiveMQNotConnectedException(msg.toString());
       }
@@ -289,7 +293,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
          if (logger.isDebugEnabled()) {
             logger.debug("Setting up backup config = " + backUp + " for live = " + live);
          }
-         backupConfig = backUp;
+         backupConnectorConfig = backUp;
       } else {
          if (logger.isDebugEnabled()) {
             logger.debug("ClientSessionFactoryImpl received backup update for live/backup pair = " + live +
@@ -303,7 +307,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
    @Override
    public Object getBackupConnector() {
-      return backupConfig;
+      return backupConnectorConfig;
    }
 
    @Override
@@ -1144,72 +1148,37 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       Connection transportConnection = null;
 
       try {
-         if (logger.isDebugEnabled()) {
-            logger.debug("Trying to connect with connectorFactory = " + connectorFactory +
-                           ", connectorConfig=" + currentConnectorConfig);
+         //Try to connect with the current connector configuration
+         transportConnection = createTransportConnection("current", currentConnectorConfig, connectorFactory);
+         if (transportConnection != null) {
+            return transportConnection;
          }
 
-         Connector liveConnector = createConnector(connectorFactory, currentConnectorConfig);
 
-         if ((transportConnection = openTransportConnection(liveConnector)) != null) {
-            // if we can't connect the connect method will return null, hence we have to try the backup
-            connector = liveConnector;
-            return transportConnection;
-         } else if (backupConfig != null) {
-            if (logger.isDebugEnabled()) {
-               logger.debug("Trying backup config = " + backupConfig);
-            }
-
-            ConnectorFactory backupConnectorFactory = instantiateConnectorFactory(backupConfig.getFactoryClassName());
-
-            Connector backupConnector = createConnector(backupConnectorFactory, backupConfig);
-
-            transportConnection = openTransportConnection(backupConnector);
-
+         if (backupConnectorConfig != null) {
+            //Try to connect with the backup connector configuration
+            transportConnection = createTransportConnection("backup", backupConnectorConfig, null);
             if (transportConnection != null) {
-            /*looks like the backup is now live, let's use that*/
-
-               if (logger.isDebugEnabled()) {
-                  logger.debug("Connected to the backup at " + backupConfig);
-               }
-
-               // Switching backup as live
-               connector = backupConnector;
-               connectorConfig = currentConnectorConfig;
-               currentConnectorConfig = backupConfig;
-               connectorFactory = backupConnectorFactory;
                return transportConnection;
             }
          }
 
-         if (logger.isDebugEnabled()) {
-            logger.debug("Backup is not active, trying original connection configuration now.");
+         if (previousConnectorConfig != null && !currentConnectorConfig.equals(previousConnectorConfig)) {
+            //Try to connect with the previous connector configuration
+            transportConnection = createTransportConnection("previous", previousConnectorConfig, null);
+            if (transportConnection != null) {
+               return transportConnection;
+            }
          }
 
-
-         if (currentConnectorConfig.equals(connectorConfig) || connectorConfig == null) {
-
-            // There was no changes on current and original connectors, just return null here and let the retry happen at the first portion of this method on the next retry
-            return null;
-         }
-
-         ConnectorFactory lastConnectorFactory = instantiateConnectorFactory(connectorConfig.getFactoryClassName());
-
-         Connector lastConnector = createConnector(lastConnectorFactory, connectorConfig);
-
-         transportConnection = openTransportConnection(lastConnector);
-
+         //Try to connect with the initial connector configuration
+         transportConnection = createTransportConnection("initial", connectorConfig, null);
          if (transportConnection != null) {
-            logger.debug("Returning into original connector");
-            connector = lastConnector;
-            TransportConfiguration temp = currentConnectorConfig;
-            currentConnectorConfig = connectorConfig;
-            connectorConfig = temp;
             return transportConnection;
-         } else {
-            logger.debug("no connection been made, returning null");
-            return null;
          }
+
+         logger.debug("no connection been made, returning null");
+         return null;
       } catch (Exception cause) {
          // Sanity catch for badly behaved remoting plugins
 
@@ -1232,6 +1201,37 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
          return null;
       }
 
+   }
+
+   private Connection createTransportConnection(String transportConfigurationName, TransportConfiguration transportConnectorConfig, ConnectorFactory transportConnectorFactory) {
+      Connection transportConnection = null;
+
+      if (logger.isDebugEnabled()) {
+         logger.debug("Trying to connect with " + transportConfigurationName
+            + " connector configuration: " + transportConnectorConfig);
+      }
+
+      if (transportConnectorFactory == null) {
+         transportConnectorFactory = instantiateConnectorFactory(transportConnectorConfig.getFactoryClassName());
+      }
+
+      Connector transportConnector = createConnector(transportConnectorFactory, transportConnectorConfig);
+
+      transportConnection = openTransportConnection(transportConnector);
+
+      if (transportConnection != null) {
+         if (logger.isDebugEnabled()) {
+            logger.debug("Connected with the " + transportConfigurationName
+               + " connector configuration: " + transportConnectorConfig);
+         }
+
+         connector = transportConnector;
+         connectorFactory = transportConnectorFactory;
+         previousConnectorConfig = currentConnectorConfig;
+         currentConnectorConfig = transportConnectorConfig;
+      }
+
+      return transportConnection;
    }
 
    private class DelegatingBufferHandler implements BufferHandler {
@@ -1441,7 +1441,20 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
          String scaleDownTargetNodeID = null;
          if (reason.isRedirect()) {
-            backupConfig = currentConnectorConfig;
+            if (serverLocator.isHA()) {
+               TopologyMemberImpl topologyMember = serverLocator.getTopology().getMember(nodeID);
+
+               if (topologyMember != null) {
+                  if (topologyMember.getConnector().getB() != null) {
+                     backupConnectorConfig = topologyMember.getConnector().getB();
+                  } else {
+                     logger.info("member " + nodeID + " with connector " + tagetConnector + " has no backup");
+                  }
+               } else {
+                  logger.info("member " + nodeID + " with connector " + tagetConnector + " not found");
+               }
+            }
+
             currentConnectorConfig = tagetConnector;
          } else if (reason.isScaleDown()) {
             scaleDownTargetNodeID = targetNodeID;

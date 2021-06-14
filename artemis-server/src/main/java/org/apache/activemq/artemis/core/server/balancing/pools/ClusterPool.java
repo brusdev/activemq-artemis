@@ -17,15 +17,18 @@
 
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
+import org.apache.activemq.artemis.api.core.client.ClusterTopologyListener;
+import org.apache.activemq.artemis.api.core.client.TopologyMember;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
+import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
 import org.jboss.logging.Logger;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-public class DiscoveryPool extends AbstractPool implements DiscoveryService.Listener {
-   private static final Logger logger = Logger.getLogger(DiscoveryPool.class);
+public class ClusterPool extends AbstractPool implements ClusterTopologyListener {
+   private static final Logger logger = Logger.getLogger(ClusterTopologyListener.class);
 
-   private final DiscoveryService discoveryService;
+   private final ClusterConnection clusterConnection;
 
    private boolean autoRemove = false;
 
@@ -37,61 +40,44 @@ public class DiscoveryPool extends AbstractPool implements DiscoveryService.List
       this.autoRemove = autoRemove;
    }
 
-   public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
-                        int checkPeriod, DiscoveryService discoveryService) {
+   public ClusterPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
+                      int checkPeriod, ClusterConnection clusterConnection) {
       super(targetFactory, scheduledExecutor, checkPeriod);
 
-      this.discoveryService = discoveryService;
+      this.clusterConnection = clusterConnection;
    }
 
    @Override
    public void start() throws Exception {
       super.start();
 
-      discoveryService.setListener(this);
-
-      discoveryService.start();
+      clusterConnection.addClusterTopologyListener(this);
    }
 
    @Override
    public void stop() throws Exception {
+      clusterConnection.removeClusterTopologyListener(this);
+
       super.stop();
-
-      if (discoveryService != null) {
-         discoveryService.setListener(null);
-
-         discoveryService.stop();
-      }
    }
 
    @Override
-   public void entryAdded(DiscoveryService.Entry entry) {
+   public void nodeUP(TopologyMember member, boolean last) {
       try {
-         addTarget(entry.getConnector(), entry.getNodeID());
+         addTarget(member.getLive(), member.getNodeId());
       } catch (Exception e) {
-         logger.debug("Error on adding the target for " + entry);
+         logger.debug("Error on adding the target for " + member);
       }
    }
 
    @Override
-   public void entryRemoved(DiscoveryService.Entry entry) {
+   public void nodeDown(long eventUID, String nodeID) {
       if (autoRemove) {
          try {
-            removeTarget(getTarget(entry.getNodeID()));
+            removeTarget(getTarget(nodeID));
          } catch (Exception e) {
-            logger.debug("Error on removing the target for " + entry);
+            logger.debug("Error on removing the target for " + nodeID);
          }
-      }
-   }
-
-   @Override
-   public void entryUpdated(DiscoveryService.Entry oldEntry, DiscoveryService.Entry newEntry) {
-      try {
-         removeTarget(getTarget(oldEntry.getNodeID()));
-
-         addTarget(newEntry.getConnector(), newEntry.getNodeID());
-      } catch (Exception e) {
-         logger.debug("Error on updating the target for " + newEntry);
       }
    }
 }

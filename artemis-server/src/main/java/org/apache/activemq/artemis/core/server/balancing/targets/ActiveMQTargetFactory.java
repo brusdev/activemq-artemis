@@ -21,7 +21,7 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
 public class ActiveMQTargetFactory implements TargetFactory {
    @Override
-   public Target createTarget(TransportConfiguration connector) {
-      return new ActiveMQTarget(connector);
+   public Target createTarget(TransportConfiguration connector, String nodeID) {
+      return new ActiveMQTarget(connector, nodeID);
    }
 }

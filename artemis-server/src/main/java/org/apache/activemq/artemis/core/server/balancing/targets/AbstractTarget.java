@@ -22,6 +22,8 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 public abstract class AbstractTarget implements Target {
    private final TransportConfiguration connector;
 
+   private String nodeID;
+
    private String username;
 
    private String password;
@@ -29,6 +31,15 @@ public abstract class AbstractTarget implements Target {
    private int checkPeriod;
 
    private TargetListener listener;
+
+   @Override
+   public String getNodeID() {
+      return nodeID;
+   }
+
+   protected void setNodeID(String nodeID) {
+      this.nodeID = nodeID;
+   }
 
    @Override
    public String getUsername() {
@@ -76,8 +87,9 @@ public abstract class AbstractTarget implements Target {
    }
 
 
-   public AbstractTarget(TransportConfiguration connector) {
+   public AbstractTarget(TransportConfiguration connector, String nodeID) {
       this.connector = connector;
+      this.nodeID = nodeID;
    }
 
 

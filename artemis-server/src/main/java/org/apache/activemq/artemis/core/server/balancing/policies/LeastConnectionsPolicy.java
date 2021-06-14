@@ -59,6 +59,10 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
       super(NAME);
    }
 
+   protected LeastConnectionsPolicy(String name) {
+      super(name);
+   }
+
    @Override
    public Target selectTarget(List<Target> targets, String key) {
       if (targets.size() > 1) {

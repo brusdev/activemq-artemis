@@ -94,7 +94,7 @@ public class DiscoveryPoolTest extends PoolTestBase {
          Wait.assertEquals(initialEntries, () -> pool.getTargets().size(), CHECK_TIMEOUT);
          Assert.assertEquals(initialEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries, targetFactory.getCreatedTargets().size());
-         initialNodeIDs.forEach(nodeID -> Assert.assertTrue(pool.isTargetReady(nodeID)));
+         initialNodeIDs.forEach(nodeID -> Assert.assertTrue(pool.isTargetReady(pool.getTarget(nodeID))));
 
          // Simulate adding entries.
          List<String> addedNodeIDs = new ArrayList<>();
@@ -106,11 +106,11 @@ public class DiscoveryPoolTest extends PoolTestBase {
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
          initialNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.isTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(pool.getTarget(nodeID)));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
          addedNodeIDs.forEach(nodeID -> {
-            Assert.assertFalse(pool.isTargetReady(nodeID));
+            Assert.assertFalse(pool.isTargetReady(pool.getTarget(nodeID)));
             Assert.assertEquals(0, targetTask.getTargetExecutions(pool.getTarget(nodeID)));
          });
 
@@ -121,11 +121,11 @@ public class DiscoveryPoolTest extends PoolTestBase {
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
          initialNodeIDs.forEach(nodeID -> {
-            Assert.assertTrue(pool.isTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(pool.getTarget(nodeID)));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
          addedNodeIDs.forEach(nodeID -> {
-            Assert.assertFalse(pool.isTargetReady(nodeID));
+            Assert.assertFalse(pool.isTargetReady(pool.getTarget(nodeID)));
             Assert.assertEquals(0, targetTask.getTargetExecutions(pool.getTarget(nodeID)));
          });
 
@@ -135,7 +135,7 @@ public class DiscoveryPoolTest extends PoolTestBase {
          Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
          Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
          Stream.concat(initialNodeIDs.stream(), addedNodeIDs.stream()).forEach(nodeID -> {
-            Assert.assertTrue(pool.isTargetReady(nodeID));
+            Assert.assertTrue(pool.isTargetReady(pool.getTarget(nodeID)));
             Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
          });
 
@@ -153,10 +153,10 @@ public class DiscoveryPoolTest extends PoolTestBase {
                Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
                Stream.concat(initialNodeIDs.stream(), addedNodeIDs.stream()).forEach(nodeID -> {
                   if (removingNodeIDs.contains(nodeID)) {
-                     Assert.assertFalse(pool.isTargetReady(nodeID));
+                     Assert.assertNull(pool.getTarget(nodeID));
                      Assert.assertEquals(0, targetTask.getTargetExecutions(pool.getTarget(nodeID)));
                   } else {
-                     Assert.assertTrue(pool.isTargetReady(nodeID));
+                     Assert.assertTrue(pool.isTargetReady(pool.getTarget(nodeID)));
                      Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
                   }
                });
@@ -165,7 +165,7 @@ public class DiscoveryPoolTest extends PoolTestBase {
                Assert.assertEquals(initialEntries + addingEntries, pool.getAllTargets().size());
                Assert.assertEquals(initialEntries + addingEntries, targetFactory.getCreatedTargets().size());
                Stream.concat(initialNodeIDs.stream(), addedNodeIDs.stream()).forEach(nodeID -> {
-                  Assert.assertTrue(pool.isTargetReady(nodeID));
+                  Assert.assertTrue(pool.isTargetReady(pool.getTarget(nodeID)));
                   Assert.assertTrue(targetTask.getTargetExecutions(pool.getTarget(nodeID)) > 0);
                });
             }

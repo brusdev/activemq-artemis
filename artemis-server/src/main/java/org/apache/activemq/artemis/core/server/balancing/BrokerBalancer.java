@@ -88,7 +88,7 @@ public class BrokerBalancer implements ActiveMQComponent {
    public Target getTarget(String key) {
       Target target = cache.getIfPresent(key);
 
-      if (target != null && !pool.isTargetReady(target.getNodeID())) {
+      if (target != null && !pool.isTargetReady(target)) {
          target = null;
 
          //Todo check if keeping the target not ready until replacement

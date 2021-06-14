@@ -45,7 +45,7 @@ public abstract class AbstractPool implements Pool {
 
    private final List<TargetTask> targetTasks = new ArrayList<>();
 
-   private final Map<String, TargetRunner> targetRunners = new ConcurrentHashMap<>();
+   private final Map<Target, TargetRunner> targetRunners = new ConcurrentHashMap<>();
 
    private String username;
 
@@ -93,7 +93,7 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public List<Target> getAllTargets() {
-      return targetRunners.values().stream().map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
+      return targetRunners.keySet().stream().collect(Collectors.toList());
    }
 
    @Override
@@ -125,14 +125,18 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public Target getTarget(String nodeId) {
-      TargetRunner targetRunner = targetRunners.get(nodeId);
+      for (Target target : targetRunners.keySet()) {
+         if (nodeId.equals(target.getNodeID())) {
+            return target;
+         }
+      }
 
-      return targetRunner != null ? targetRunner.getTarget() : null;
+      return null;
    }
 
    @Override
-   public boolean isTargetReady(String nodeId) {
-      TargetRunner targetRunner = targetRunners.get(nodeId);
+   public boolean isTargetReady(Target target) {
+      TargetRunner targetRunner = targetRunners.get(target);
 
       return targetRunner != null ? targetRunner.isTargetReady() : false;
    }
@@ -163,19 +167,19 @@ public abstract class AbstractPool implements Pool {
       List<TargetRunner> targetRunners = new ArrayList<>(this.targetRunners.values());
 
       for (TargetRunner targetRunner : targetRunners) {
-         removeTarget(targetRunner.getTarget().getNodeID());
+         removeTarget(targetRunner.getTarget());
       }
    }
 
-   protected void addTarget(TransportConfiguration connector) throws Exception {
-      addTarget(targetFactory.createTarget(connector));
+   protected void addTarget(TransportConfiguration connector, String noderID) throws Exception {
+      addTarget(targetFactory.createTarget(connector, noderID));
    }
 
    @Override
    public void addTarget(Target target) throws Exception {
       TargetRunner targetRunner = new TargetRunner(target);
 
-      targetRunners.put(target.getNodeID(), targetRunner);
+      targetRunners.put(target, targetRunner);
 
       if (started) {
          targetRunner.schedule();
@@ -183,8 +187,8 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
-   public Target removeTarget(String nodeId) throws Exception {
-      TargetRunner targetRunner = targetRunners.remove(nodeId);
+   public Target removeTarget(Target target) throws Exception {
+      TargetRunner targetRunner = targetRunners.remove(target);
 
       if (targetRunner != null) {
          targetRunner.cancel();

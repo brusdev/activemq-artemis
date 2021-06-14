@@ -26,8 +26,6 @@ import java.util.UUID;
 public class MockTarget extends AbstractTarget {
    private boolean local = false;
 
-   private String nodeId = UUID.randomUUID().toString();
-
    private boolean connected = false;
 
    private boolean connectable = false;
@@ -47,11 +45,6 @@ public class MockTarget extends AbstractTarget {
    public MockTarget setLocal(boolean local) {
       this.local = local;
       return this;
-   }
-
-   @Override
-   public String getNodeID() {
-      return null;
    }
 
    @Override
@@ -99,17 +92,21 @@ public class MockTarget extends AbstractTarget {
    }
 
    public MockTarget() {
-      super(null);
+      this(new TransportConfiguration(), UUID.randomUUID().toString());
    }
 
-   public MockTarget(TransportConfiguration connector) {
-      super(connector);
+   public MockTarget(TransportConfiguration connector, String nodeID) {
+      super(connector, nodeID);
    }
 
    @Override
    public void connect() throws Exception {
       if (!connectable) {
          throw new IllegalStateException("Target not connectable");
+      }
+
+      if (getNodeID() == null) {
+         setNodeID(UUID.randomUUID().toString());
       }
 
       connected = true;

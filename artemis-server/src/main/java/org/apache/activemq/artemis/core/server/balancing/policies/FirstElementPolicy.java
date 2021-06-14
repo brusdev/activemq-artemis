@@ -28,6 +28,10 @@ public class FirstElementPolicy extends AbstractPolicy {
       super(NAME);
    }
 
+   protected FirstElementPolicy(String name) {
+      super(name);
+   }
+
    @Override
    public Target selectTarget(List<Target> targets, String key) {
       if (targets.size() > 0) {

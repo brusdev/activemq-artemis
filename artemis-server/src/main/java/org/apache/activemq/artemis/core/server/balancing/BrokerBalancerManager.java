@@ -29,6 +29,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
+import org.apache.activemq.artemis.core.server.balancing.pools.ClusterPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryGroupService;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryService;
@@ -38,6 +39,7 @@ import org.apache.activemq.artemis.core.server.balancing.targets.ActiveMQTargetF
 import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
@@ -94,7 +96,12 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       Pool pool;
       TargetFactory targetFactory = new ActiveMQTargetFactory();
 
-      if (config.getDiscoveryGroupName() != null) {
+      if (config.getClusterConnection() != null) {
+         ClusterConnection clusterConnection = server.getClusterManager()
+            .getClusterConnection(config.getClusterConnection());
+
+         pool = new ClusterPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), clusterConnection);
+      } else if (config.getDiscoveryGroupName() != null) {
          DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().
             getDiscoveryGroupConfigurations().get(config.getDiscoveryGroupName());
 
@@ -102,7 +109,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
             discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null));
 
          pool = new DiscoveryPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryService);
-      } else {
+      } else if (config.getStaticConnectors() != null) {
          Map<String, TransportConfiguration> connectorConfigurations =
             server.getConfiguration().getConnectorConfigurations();
 
@@ -118,6 +125,8 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          }
 
          pool = new StaticPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), staticConnectors);
+      } else {
+         throw new IllegalStateException("Pool configuration not valid");
       }
 
       pool.setUsername(config.getUsername());

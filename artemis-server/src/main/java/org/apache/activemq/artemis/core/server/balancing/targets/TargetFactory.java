@@ -20,5 +20,5 @@ package org.apache.activemq.artemis.core.server.balancing.targets;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
 public interface TargetFactory {
-   Target createTarget(TransportConfiguration connector);
+   Target createTarget(TransportConfiguration connector, String nodeID);
 }

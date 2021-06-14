@@ -27,6 +27,8 @@ public class PoolConfiguration {
 
    private String localConnector = null;
 
+   private String clusterConnection = null;
+
    private List<String> staticConnectors = Collections.emptyList();
 
    private String discoveryGroupName = null;
@@ -78,6 +80,15 @@ public class PoolConfiguration {
 
    public PoolConfiguration setLocalConnector(String localConnector) {
       this.localConnector = localConnector;
+      return this;
+   }
+
+   public String getClusterConnection() {
+      return clusterConnection;
+   }
+
+   public PoolConfiguration setClusterConnection(String clusterConnection) {
+      this.clusterConnection = clusterConnection;
       return this;
    }
 

@@ -76,8 +76,8 @@ public class MockTargetFactory implements TargetFactory {
    }
 
    @Override
-   public Target createTarget(TransportConfiguration connector) {
-      MockTarget target = new MockTarget(connector);
+   public Target createTarget(TransportConfiguration connector, String nodeID) {
+      MockTarget target = new MockTarget(connector, nodeID);
 
       createdTargets.add(target);
 

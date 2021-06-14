@@ -132,10 +132,11 @@ public class RedirectTest extends ClusterTestBase {
 
    @Test
    public void testLeastConnections() throws Exception {
-      final SimpleString queueName = new SimpleString("RedirectTestQueue");
+      final SimpleString queueName1 = new SimpleString("RedirectTestQueue1");
+      final SimpleString queueName2 = new SimpleString("RedirectTestQueue2");
       ArrayList<BrokerBalancerConfiguration> brokerBalancerConfigurations = new ArrayList<>();
       brokerBalancerConfigurations.add(new BrokerBalancerConfiguration().setName("simple-balancer").
-         setPoolConfiguration(new PoolConfiguration().setDiscoveryGroupName("dg1")).
+         setPoolConfiguration(new PoolConfiguration().setDiscoveryGroupName("dg1").setQuorumSize(2)).
          setPolicyConfiguration(new PolicyConfiguration().setName(LeastConnectionsPolicy.NAME)));
 
       setupLiveServerWithDiscovery(0, groupAddress, groupPort, true, true, false);
@@ -162,15 +163,44 @@ public class RedirectTest extends ClusterTestBase {
       try (Connection connection1 = connectionFactory1.createConnection()) {
          connection1.start();
          try (Session session1 = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
-            javax.jms.Queue queue1 = session1.createQueue(queueName.toString());
-            try (MessageConsumer consumer1 = session1.createConsumer(queue1)) {
-               Thread.sleep(10000);
+            javax.jms.Queue queue1 = session1.createQueue(queueName1.toString());
+            try (MessageProducer producer1 = session1.createProducer(queue1)) {
+               producer1.send(session1.createTextMessage(queueName1.toString()));
 
                try (Connection connection2 = connectionFactory2.createConnection()) {
                   connection2.start();
                   try (Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
-                     javax.jms.Queue queue2 = session2.createQueue(queueName.toString());
+                     javax.jms.Queue queue2 = session2.createQueue(queueName2.toString());
+                     try (MessageProducer producer2 = session2.createProducer(queue2)) {
+                        producer2.send(session2.createTextMessage(queueName2.toString()));
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      Assert.assertEquals(0, getServer(0).getTotalConsumerCount());
+      Assert.assertEquals(0, getServer(1).getTotalConsumerCount());
+      Assert.assertEquals(0, getServer(2).getTotalConsumerCount());
+
+      try (Connection connection1 = connectionFactory1.createConnection()) {
+         connection1.start();
+         try (Session session1 = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+            javax.jms.Queue queue1 = session1.createQueue(queueName1.toString());
+            try (MessageConsumer consumer1 = session1.createConsumer(queue1)) {
+
+               TextMessage message1 = (TextMessage)consumer1.receive();
+               Assert.assertEquals(queueName1.toString(), message1.getText());
+
+               try (Connection connection2 = connectionFactory2.createConnection()) {
+                  connection2.start();
+                  try (Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+                     javax.jms.Queue queue2 = session2.createQueue(queueName2.toString());
                      try (MessageConsumer consumer2 = session2.createConsumer(queue2)) {
+                        TextMessage message2 = (TextMessage)consumer2.receive();
+                        Assert.assertEquals(queueName2.toString(), message2.getText());
+
                         Assert.assertEquals(0, getServer(0).getTotalConsumerCount());
                         Assert.assertEquals(1, getServer(1).getTotalConsumerCount());
                         Assert.assertEquals(1, getServer(2).getTotalConsumerCount());

@@ -26,7 +26,7 @@ public class LocalTarget extends AbstractTarget {
    private final ManagementService managementService;
 
    public LocalTarget(TransportConfiguration connector, ActiveMQServer server) {
-      super(connector);
+      super(connector, server.getNodeID().toString());
 
       this.server = server;
       this.managementService = server.getManagementService();
@@ -35,11 +35,6 @@ public class LocalTarget extends AbstractTarget {
    @Override
    public boolean isLocal() {
       return true;
-   }
-
-   @Override
-   public String getNodeID() {
-      return server.getNodeID().toString();
    }
 
    @Override

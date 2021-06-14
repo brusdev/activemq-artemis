@@ -31,6 +31,10 @@ public class ConsistentHashPolicy extends AbstractPolicy {
       super(NAME);
    }
 
+   protected ConsistentHashPolicy(String name) {
+      super(name);
+   }
+
    @Override
    public Target selectTarget(List<Target> targets, String key) {
       if (targets.size() > 1) {

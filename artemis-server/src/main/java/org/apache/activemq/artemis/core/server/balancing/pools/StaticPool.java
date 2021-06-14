@@ -38,7 +38,7 @@ public class StaticPool extends AbstractPool {
       super.start();
 
       for (TransportConfiguration staticConnector : staticConnectors) {
-         addTarget(staticConnector);
+         addTarget(staticConnector, null);
       }
    }
 }
