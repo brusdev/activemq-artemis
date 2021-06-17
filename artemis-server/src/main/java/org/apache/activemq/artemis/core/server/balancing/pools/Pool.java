@@ -19,7 +19,7 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
 import java.util.List;
 
@@ -48,14 +48,14 @@ public interface Pool extends ActiveMQComponent {
 
    List<Target> getAllTargets();
 
-   void addTarget(Target target) throws Exception;
+   boolean addTarget(Target target);
 
-   Target removeTarget(Target target) throws Exception;
+   boolean removeTarget(Target target);
 
 
-   List<TargetTask> getTargetTasks();
+   List<TargetProbe> getTargetProbes();
 
-   void addTargetTask(TargetTask task);
+   void addTargetProbe(TargetProbe probe);
 
-   void removeTargetTask(TargetTask task);
+   void removeTargetProbe(TargetProbe probe);
 }

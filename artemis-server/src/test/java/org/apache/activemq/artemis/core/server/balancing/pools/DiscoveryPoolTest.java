@@ -18,7 +18,7 @@
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetFactory;
-import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetProbe;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.utils.Wait;
 import org.junit.Assert;
@@ -70,10 +70,10 @@ public class DiscoveryPoolTest extends PoolTestBase {
 
    private void testPoolChangingEntries(int initialEntries, int addingEntries, int removingEntries) throws Exception {
       MockTargetFactory targetFactory = new MockTargetFactory();
-      MockTargetTask targetTask = new MockTargetTask("TEST", true);
+      MockTargetProbe targetTask = new MockTargetProbe("TEST", true);
       MockDiscoveryService discoveryService = new MockDiscoveryService();
 
-      targetTask.setExecutable(true);
+      targetTask.setChecked(true);
 
       // Simulate initial entries.
       List<String> initialNodeIDs = new ArrayList<>();
@@ -83,7 +83,7 @@ public class DiscoveryPoolTest extends PoolTestBase {
 
       Pool pool = createDiscoveryPool(targetFactory, discoveryService);
 
-      pool.addTargetTask(targetTask);
+      pool.addTargetProbe(targetTask);
 
       pool.start();
 

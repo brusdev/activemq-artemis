@@ -18,7 +18,7 @@
 package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetFactory;
-import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetProbe;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.utils.Wait;
 import org.junit.Assert;
@@ -88,10 +88,10 @@ public abstract class PoolTestBase {
 
    private void testPoolTargets(int targets) throws Exception {
       MockTargetFactory targetFactory = new MockTargetFactory();
-      MockTargetTask targetTask = new MockTargetTask("TEST", false);
+      MockTargetProbe targetTask = new MockTargetProbe("TEST", false);
       Pool pool = createPool(targetFactory, targets);
 
-      pool.addTargetTask(targetTask);
+      pool.addTargetProbe(targetTask);
 
       Assert.assertEquals(0, pool.getTargets().size());
       Assert.assertEquals(0, pool.getAllTargets().size());
@@ -133,7 +133,7 @@ public abstract class PoolTestBase {
                Assert.assertEquals(0, targetTask.getTargetExecutions(mockTarget));
             });
 
-            targetTask.setExecutable(true);
+            targetTask.setChecked(true);
 
             Wait.assertEquals(targets, () -> pool.getTargets().size(), CHECK_TIMEOUT);
             Assert.assertEquals(targets, pool.getAllTargets().size());
@@ -171,7 +171,7 @@ public abstract class PoolTestBase {
                Assert.assertTrue(targetTask.getTargetExecutions(mockTarget) > 0);
             });
 
-            targetTask.setExecutable(false);
+            targetTask.setChecked(false);
             targetTask.clearTargetExecutions();
 
             Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);

@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
 public abstract class AbstractPolicy implements Policy {
    private final String name;
@@ -28,7 +28,7 @@ public abstract class AbstractPolicy implements Policy {
    }
 
    @Override
-   public TargetTask[] getTargetTasks() {
+   public TargetProbe getTargetProbe() {
       return null;
    }
 

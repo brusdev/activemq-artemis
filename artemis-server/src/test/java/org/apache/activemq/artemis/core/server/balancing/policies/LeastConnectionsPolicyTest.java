@@ -23,7 +23,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,7 +56,7 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
 
       targets.forEach(target -> {
          ((MockTarget)target).setAttributeValue("broker", "ConnectionCount", Long.valueOf(3));
-         Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target));
+         policy.getTargetProbe().check(target);
       });
 
       selectedTargets = new HashSet<>();
@@ -69,7 +68,7 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
 
 
       ((MockTarget)targets.get(0)).setAttributeValue("broker", "ConnectionCount", Long.valueOf(2));
-      targets.forEach(target -> Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target)));
+      targets.forEach(target -> policy.getTargetProbe().check(target));
 
       selectedTargets = new HashSet<>();
       for (int i = 0; i < MULTIPLE_TARGETS; i++) {
@@ -82,7 +81,7 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
 
       ((MockTarget)targets.get(1)).setAttributeValue("broker", "ConnectionCount", Long.valueOf(1));
       ((MockTarget)targets.get(2)).setAttributeValue("broker", "ConnectionCount", Long.valueOf(1));
-      targets.forEach(target -> Arrays.stream(policy.getTargetTasks()).forEach(targetTask -> targetTask.call(target)));
+      targets.forEach(target -> policy.getTargetProbe().check(target));
 
       selectedTargets = new HashSet<>();
       for (int i = 0; i < MULTIPLE_TARGETS; i++) {

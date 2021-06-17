@@ -20,32 +20,30 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetListener;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
-import org.jboss.logging.Logger;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetMonitor;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public abstract class AbstractPool implements Pool {
-   private static final Logger logger = Logger.getLogger(Pool.class);
-
    private final TargetFactory targetFactory;
 
    private final ScheduledExecutorService scheduledExecutor;
 
    private final int checkPeriod;
 
-   private final List<TargetTask> targetTasks = new ArrayList<>();
+   private final List<TargetProbe> targetProbes = new ArrayList<>();
 
-   private final Map<Target, TargetRunner> targetRunners = new ConcurrentHashMap<>();
+   private final Map<Target, TargetMonitor> targets = new ConcurrentHashMap<>();
+
+   private final List<TargetMonitor> targetMonitors = new CopyOnWriteArrayList<>();
 
    private String username;
 
@@ -93,20 +91,20 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public List<Target> getAllTargets() {
-      return targetRunners.keySet().stream().collect(Collectors.toList());
+      return targetMonitors.stream().map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
    }
 
    @Override
    public List<Target> getTargets() {
-      List<Target> targets = targetRunners.values().stream().filter(targetRunner -> targetRunner.isTargetReady())
-         .map(targetRunner -> targetRunner.getTarget()).collect(Collectors.toList());
+      List<Target> targets = targetMonitors.stream().filter(targetMonitor -> targetMonitor.isTargetReady())
+         .map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
 
       return targets.size() >= quorumSize ? targets : Collections.emptyList();
    }
 
    @Override
-   public List<TargetTask> getTargetTasks() {
-      return targetTasks;
+   public List<TargetProbe> getTargetProbes() {
+      return targetProbes;
    }
 
    @Override
@@ -125,9 +123,9 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public Target getTarget(String nodeId) {
-      for (Target target : targetRunners.keySet()) {
-         if (nodeId.equals(target.getNodeID())) {
-            return target;
+      for (TargetMonitor targetMonitor : targetMonitors) {
+         if (nodeId.equals(targetMonitor.getTarget().getNodeID())) {
+            return targetMonitor.getTarget();
          }
       }
 
@@ -136,147 +134,76 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public boolean isTargetReady(Target target) {
-      TargetRunner targetRunner = targetRunners.get(target);
+      TargetMonitor targetMonitor = targets.get(target);
 
-      return targetRunner != null ? targetRunner.isTargetReady() : false;
+      return targetMonitor != null ? targetMonitor.isTargetReady() : false;
    }
 
    @Override
-   public void addTargetTask(TargetTask task) {
-      targetTasks.add(task);
+   public void addTargetProbe(TargetProbe probe) {
+      targetProbes.add(probe);
    }
 
    @Override
-   public void removeTargetTask(TargetTask task) {
-      targetTasks.remove(task);
+   public void removeTargetProbe(TargetProbe probe) {
+      targetProbes.remove(probe);
    }
 
    @Override
    public void start() throws Exception {
-      for (TargetRunner targetRunner : targetRunners.values()) {
-         targetRunner.schedule();
-      }
-
       started = true;
+
+      for (TargetMonitor targetMonitor : targetMonitors) {
+         targetMonitor.start();
+      }
    }
 
    @Override
    public void stop() throws Exception {
       started = false;
 
-      List<TargetRunner> targetRunners = new ArrayList<>(this.targetRunners.values());
+      List<TargetMonitor> targetMonitors = new ArrayList<>(this.targetMonitors);
 
-      for (TargetRunner targetRunner : targetRunners) {
-         removeTarget(targetRunner.getTarget());
+      for (TargetMonitor targetMonitor : targetMonitors) {
+         removeTarget(targetMonitor.getTarget());
       }
    }
 
-   protected void addTarget(TransportConfiguration connector, String noderID) throws Exception {
-      addTarget(targetFactory.createTarget(connector, noderID));
+   protected void addTarget(TransportConfiguration connector, String nodeID) throws Exception {
+      addTarget(targetFactory.createTarget(connector, nodeID));
    }
 
    @Override
-   public void addTarget(Target target) throws Exception {
-      TargetRunner targetRunner = new TargetRunner(target);
+   public boolean addTarget(Target target) {
+      if (targets.containsKey(target)) {
+         return false;
+      }
 
-      targetRunners.put(target, targetRunner);
+      TargetMonitor targetMonitor = new TargetMonitor(scheduledExecutor, checkPeriod, target, targetProbes);
+
+      targets.put(target, targetMonitor);
+
+      targetMonitors.add(targetMonitor);
 
       if (started) {
-         targetRunner.schedule();
+         targetMonitor.start();
       }
+
+      return true;
    }
 
    @Override
-   public Target removeTarget(Target target) throws Exception {
-      TargetRunner targetRunner = targetRunners.remove(target);
+   public boolean removeTarget(Target target) {
+      TargetMonitor targetMonitor = targets.remove(target);
 
-      if (targetRunner != null) {
-         targetRunner.cancel();
+      if (targetMonitor == null) {
+         return false;
       }
 
-      return targetRunner != null ? targetRunner.getTarget() : null;
-   }
+      targetMonitors.remove(targetMonitor);
 
-   class TargetRunner implements Runnable, TargetListener {
-      private final Target target;
+      targetMonitor.stop();
 
-      private ScheduledFuture scheduledFuture;
-
-      private volatile boolean targetReady = false;
-
-      public Target getTarget() {
-         return target;
-      }
-
-      public boolean isTargetReady() {
-         return targetReady;
-      }
-
-
-      TargetRunner(Target target) {
-         this.target = target;
-
-         this.target.setListener(this);
-      }
-
-
-      public void schedule() {
-         scheduledFuture = scheduledExecutor.scheduleWithFixedDelay(
-            this, 0, checkPeriod, TimeUnit.MILLISECONDS);
-      }
-
-      public void cancel() throws Exception {
-         targetReady = false;
-
-         target.setListener(null);
-
-         if (scheduledFuture != null) {
-            scheduledFuture.cancel(true);
-
-            scheduledFuture = null;
-
-            target.disconnect();
-         }
-      }
-
-      @Override
-      public void run() {
-         try {
-            if (scheduledFuture != null) {
-               if (!target.isConnected()) {
-                  target.connect();
-               }
-
-               if (target.checkReadiness()) {
-                  for (TargetTask targetTask : targetTasks) {
-                     targetTask.call(target);
-                  }
-
-                  targetReady = true;
-               } else {
-                  if (targetReady) {
-                     logger.info("Target not ready: " + target.getNodeID());
-                  }
-
-                  targetReady = false;
-               }
-
-            }
-         } catch (Exception e) {
-            logger.warn("Target error", e);
-
-            targetReady = false;
-         }
-      }
-
-      @Override
-      public void targetConnected() {
-
-      }
-
-      @Override
-      public void targetDisconnected() {
-         targetReady = false;
-      }
+      return true;
    }
 }

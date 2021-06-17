@@ -23,11 +23,14 @@ import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class BrokerBalancer implements ActiveMQComponent {
+   private static final Logger logger = Logger.getLogger(BrokerBalancer.class);
+
 
    private final String name;
 
@@ -89,16 +92,21 @@ public class BrokerBalancer implements ActiveMQComponent {
       Target target = cache.getIfPresent(key);
 
       if (target != null && !pool.isTargetReady(target)) {
-         target = null;
+         if (logger.isDebugEnabled()) {
+            logger.debug("The cache returns [" + target + "] not ready for " + key);
+         }
 
-         //Todo check if keeping the target not ready until replacement
-         cache.invalidate(key);
+         target = null;
       }
 
       if (target == null) {
          List<Target> targets = pool.getTargets();
 
          target = policy.selectTarget(targets, key);
+
+         if (logger.isDebugEnabled()) {
+            logger.debug("The policy selects [" + target + "] from " + targets + " for " + key);
+         }
 
          if (target != null) {
             cache.put(key, target);

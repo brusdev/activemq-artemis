@@ -18,14 +18,14 @@
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
 import java.util.List;
 
 public interface Policy {
    String getName();
 
-   TargetTask[] getTargetTasks();
+   TargetProbe getTargetProbe();
 
    Target selectTarget(List<Target> targets, String key);
 }

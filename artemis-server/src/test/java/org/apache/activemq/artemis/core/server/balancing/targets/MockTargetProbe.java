@@ -20,23 +20,23 @@ package org.apache.activemq.artemis.core.server.balancing.targets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MockTargetTask extends TargetTask {
+public class MockTargetProbe extends TargetProbe {
    private final Map<Target, Integer> targetExecutions = new HashMap<>();
 
-   private boolean executable;
+   private boolean checked;
 
-   public boolean isExecutable() {
-      return executable;
+   public boolean isChecked() {
+      return checked;
    }
 
-   public void setExecutable(boolean executable) {
-      this.executable = executable;
+   public void setChecked(boolean checked) {
+      this.checked = checked;
    }
 
-   public MockTargetTask(String name, boolean executable) {
+   public MockTargetProbe(String name, boolean checked) {
       super(name);
 
-      this.executable = executable;
+      this.checked = checked;
    }
 
    public int getTargetExecutions(Target target) {
@@ -53,11 +53,9 @@ public class MockTargetTask extends TargetTask {
    }
 
    @Override
-   public void call(Target target) {
-      if (!executable) {
-         throw new IllegalStateException("TargetTask not executable");
-      }
-
+   public boolean check(Target target) {
       targetExecutions.compute(target, (t, e) -> e == null ? 1 : e++);
+
+      return checked;
    }
 }

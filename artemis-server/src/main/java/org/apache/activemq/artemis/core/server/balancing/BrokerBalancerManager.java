@@ -38,7 +38,6 @@ import org.apache.activemq.artemis.core.server.balancing.pools.StaticPool;
 import org.apache.activemq.artemis.core.server.balancing.targets.ActiveMQTargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
 import org.jboss.logging.Logger;
 
@@ -50,6 +49,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public final class BrokerBalancerManager implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BrokerBalancerManager.class);
+
 
    private final Configuration config;
 
@@ -152,10 +152,8 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       Policy policy = policyFactory.createPolicy(policyConfig.getName());
 
-      if (policy.getTargetTasks() != null) {
-         for (TargetTask targetTask : policy.getTargetTasks()) {
-            pool.addTargetTask(targetTask);
-         }
+      if (policy.getTargetProbe() != null) {
+         pool.addTargetProbe(policy.getTargetProbe());
       }
 
       return policy;

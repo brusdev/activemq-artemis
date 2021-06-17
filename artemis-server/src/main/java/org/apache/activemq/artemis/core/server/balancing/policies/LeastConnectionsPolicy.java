@@ -17,50 +17,50 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
-import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetTask;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LeastConnectionsPolicy extends RoundRobinPolicy {
+   private static final Logger logger = Logger.getLogger(LeastConnectionsPolicy.class);
+
    public static final String NAME = "LEAST_CONNECTIONS";
 
-   public static final String UPDATE_CONNECTION_COUNT_TASK_NAME = "UPDATE_CONNECTION_COUNT_TASK";
+   public static final String UPDATE_CONNECTION_COUNT_PROBE_NAME = "UPDATE_CONNECTION_COUNT_PROBE";
 
-   private final Map<Target, Long> connectionCountCache = new HashMap<>();
+   private final Map<Target, Long> connectionCountCache = new ConcurrentHashMap<>();
 
-   private final TargetTask[] targetTasks = new TargetTask[]{
-      new TargetTask(UPDATE_CONNECTION_COUNT_TASK_NAME) {
-         @Override
-         public void call(Target target) {
-            try {
-               Long connectionCount = (Long)target.getAttribute("broker", "ConnectionCount", 3000);
-               connectionCountCache.put(target, connectionCount);
-            } catch (Exception e) {
-               e.printStackTrace();
-            }
+   private final TargetProbe targetProbe = new TargetProbe(UPDATE_CONNECTION_COUNT_PROBE_NAME) {
+      @Override
+      public boolean check(Target target) {
+         try {
+            Long connectionCount = (Long)target.getAttribute("broker", "ConnectionCount", 3000);
+
+            connectionCountCache.put(target, connectionCount);
+
+            return true;
+         } catch (Exception e) {
+            logger.warn("Error on updating the connectionCount for the target " + target, e);
+
+            return false;
          }
       }
    };
 
    @Override
-   public TargetTask[] getTargetTasks() {
-      return targetTasks;
+   public TargetProbe getTargetProbe() {
+      return targetProbe;
    }
 
    public LeastConnectionsPolicy() {
       super(NAME);
-   }
-
-   protected LeastConnectionsPolicy(String name) {
-      super(name);
    }
 
    @Override
@@ -85,16 +85,9 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
             leastTargets.add(target);
          }
 
-         System.out.println("LeastConnectionsPolicy.selectTargets:");
-         sortedTargets.forEach(new BiConsumer<Long, List<Target>>() {
-            @Override
-            public void accept(Long connectionCount, List<Target> targets) {
-               System.out.println("connectionCount:" + connectionCount);
-               for (Target target : targets) {
-                  System.out.println("target:" + target.getConnector().getParams().get(TransportConstants.PORT_PROP_NAME));
-               }
-            }
-         });
+         if (logger.isDebugEnabled()) {
+            logger.debug("LeastConnectionsPolicy.sortedTargets: " + sortedTargets);
+         }
 
          List<Target> selectedTargets = sortedTargets.firstEntry().getValue();
 

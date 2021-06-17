@@ -51,14 +51,10 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.client.SessionFailureListener;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryImpl;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryInternal;
-<<<<<<< HEAD
-import org.apache.activemq.artemis.core.protocol.core.Channel;
-import org.apache.activemq.artemis.core.protocol.core.Packet;
-=======
 import org.apache.activemq.artemis.core.client.impl.ClientSessionInternal;
 import org.apache.activemq.artemis.core.protocol.core.Channel;
+import org.apache.activemq.artemis.core.protocol.core.Packet;
 import org.apache.activemq.artemis.core.protocol.core.impl.ActiveMQSessionContext;
->>>>>>> 62f581d1a4... ARTEMIS-3275 Lock CORE client communication during failover retries
 import org.apache.activemq.artemis.core.protocol.core.impl.ChannelImpl;
 import org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl;
 import org.apache.activemq.artemis.core.protocol.core.impl.RemotingConnectionImpl;

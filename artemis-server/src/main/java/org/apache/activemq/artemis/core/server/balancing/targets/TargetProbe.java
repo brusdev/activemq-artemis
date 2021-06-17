@@ -17,16 +17,16 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
-public abstract class TargetTask {
+public abstract class TargetProbe {
    private final String name;
 
    public String getName() {
       return name;
    }
 
-   public TargetTask(String name) {
+   public TargetProbe(String name) {
       this.name = name;
    }
 
-   public abstract void call(Target target);
+   public abstract boolean check(Target target);
 }

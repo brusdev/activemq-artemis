@@ -104,4 +104,9 @@ public abstract class AbstractTarget implements Target {
          listener.targetDisconnected();
       }
    }
+
+   @Override
+   public String toString() {
+      return this.getClass().getSimpleName() + " [connector=" + connector + ", nodeID=" + nodeID + "]";
+   }
 }
