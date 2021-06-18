@@ -1055,11 +1055,13 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    public class CloseRunnable implements Runnable {
 
       private final RemotingConnection conn;
-      private final String scaleDownTargetNodeID;
+      private final DisconnectReason reason;
+      private final String targetNodeID;
 
-      public CloseRunnable(RemotingConnection conn, String scaleDownTargetNodeID) {
+      public CloseRunnable(RemotingConnection conn, DisconnectReason reason, String targetNodeID) {
          this.conn = conn;
-         this.scaleDownTargetNodeID = scaleDownTargetNodeID;
+         this.reason = reason;
+         this.targetNodeID = targetNodeID;
       }
 
       // Must be executed on new thread since cannot block the Netty thread for a long time and fail
@@ -1068,10 +1070,12 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       public void run() {
          try {
             CLOSE_RUNNABLES.add(this);
-            if (scaleDownTargetNodeID == null) {
-               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected());
+            if (reason.isRedirect()) {
+               conn.fail(ActiveMQClientMessageBundle.BUNDLE.redirected());
+            } else if (reason.isScaleDown()) {
+               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected(), targetNodeID);
             } else {
-               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected(), scaleDownTargetNodeID);
+               conn.fail(ActiveMQClientMessageBundle.BUNDLE.disconnected());
             }
          } finally {
             CLOSE_RUNNABLES.remove(this);
@@ -1442,7 +1446,6 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
          serverLocator.notifyNodeDown(System.currentTimeMillis(), nodeID);
 
-         String scaleDownTargetNodeID = null;
          if (reason.isRedirect()) {
             if (serverLocator.isHA()) {
                TopologyMemberImpl topologyMember = serverLocator.getTopology().getMember(nodeID);
@@ -1450,20 +1453,18 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                if (topologyMember != null) {
                   if (topologyMember.getConnector().getB() != null) {
                      backupConnectorConfig = topologyMember.getConnector().getB();
-                  } else {
-                     logger.info("member " + nodeID + " with connector " + tagetConnector + " has no backup");
+                  } else if (logger.isDebugEnabled()) {
+                     logger.debug("The topology member " + nodeID + " with connector " + tagetConnector + " has no backup");
                   }
-               } else {
-                  logger.info("member " + nodeID + " with connector " + tagetConnector + " not found");
+               } else if (logger.isDebugEnabled()) {
+                  logger.debug("The topology member " + nodeID + " with connector " + tagetConnector + " not found");
                }
             }
 
             currentConnectorConfig = tagetConnector;
-         } else if (reason.isScaleDown()) {
-            scaleDownTargetNodeID = targetNodeID;
          }
 
-         closeExecutor.execute(new CloseRunnable(conn, scaleDownTargetNodeID));
+         closeExecutor.execute(new CloseRunnable(conn, reason, targetNodeID));
 
       }
 
