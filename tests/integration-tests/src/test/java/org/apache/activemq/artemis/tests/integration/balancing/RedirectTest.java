@@ -50,7 +50,7 @@ public class RedirectTest extends BalancingTestBase {
    public static Collection<Object[]> data() {
       Collection<Object[]> data = new ArrayList<>();
 
-      for (String protocol : Arrays.asList(new String[] {AMQP_PROTOCOL, CORE_PROTOCOL})) {
+      for (String protocol : Arrays.asList(new String[] {OPENWIRE_PROTOCOL})) {
          for (boolean discovery : Arrays.asList(new Boolean[] {false, true})) {
             data.add(new Object[] {protocol, discovery});
          }

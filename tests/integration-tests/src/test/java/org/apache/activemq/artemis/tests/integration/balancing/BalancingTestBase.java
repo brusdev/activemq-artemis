@@ -40,6 +40,8 @@ public class BalancingTestBase extends ClusterTestBase {
 
    protected static final String CORE_PROTOCOL = "CORE";
 
+   protected static final String OPENWIRE_PROTOCOL = "OPENWIRE";
+
    protected static final String BROKER_BALANCER_NAME = "bb1";
 
    protected static final String DEFAULT_CONNECTOR_NAME = "DEFAULT";
@@ -117,15 +119,9 @@ public class BalancingTestBase extends ClusterTestBase {
 
    protected ConnectionFactory createFactory(String protocol, String host, int port, String user, String password) {
       switch (protocol) {
-         case CORE_PROTOCOL: ActiveMQConnectionFactory coreCF = new ActiveMQConnectionFactory("tcp://" + host + ":" + port + "?ha=true");// core protocol
-            coreCF.setUser(user);
-            coreCF.setPassword(password);
-            coreCF.setCompressLargeMessage(true);
-            coreCF.setMinLargeMessageSize(10 * 1024);
-            coreCF.setReconnectAttempts(30);
-            return coreCF;
-         case AMQP_PROTOCOL: return new JmsConnectionFactory(user, password, "failover:(amqp://" + host + ":" + port + ")"); // amqp
-         case "OPENWIRE": return new org.apache.activemq.ActiveMQConnectionFactory("tcp://" + host + ":" + port); // openwire
+         case CORE_PROTOCOL: return new ActiveMQConnectionFactory("tcp://" + host + ":" + port + "?ha=true&reconnectAttempts=-1").setUser(user).setPassword(password);
+         case AMQP_PROTOCOL: return new JmsConnectionFactory(user, password, "failover:(amqp://" + host + ":" + port + ")");
+         case OPENWIRE_PROTOCOL: return new org.apache.activemq.ActiveMQConnectionFactory(user, password, "failover:(tcp://" + host + ":" + port + ")"); // openwire
          default: return null;
       }
    }
