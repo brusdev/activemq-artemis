@@ -24,6 +24,7 @@ import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
@@ -35,12 +36,12 @@ import java.util.regex.Pattern;
 public class BrokerBalancer implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BrokerBalancer.class);
 
-   private static final Pattern ipv4Pattern = Pattern.compile("^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\\.(?!$)|$)){4}$");
-
 
    private final String name;
 
    private final TargetKey targetKey;
+
+   private final TargetKeyResolver targetKeyResolver;
 
    private final Pattern localFilter;
 
@@ -93,6 +94,8 @@ public class BrokerBalancer implements ActiveMQComponent {
 
       this.targetKey = targetKey;
 
+      this.targetKeyResolver = new TargetKeyResolver(targetKey);
+
       this.localFilter = localFilter != null ? Pattern.compile(localFilter) : null;
 
       this.localTarget = localTarget;
@@ -118,34 +121,8 @@ public class BrokerBalancer implements ActiveMQComponent {
       pool.stop();
    }
 
-   public Target getTarget(Connection connection, String username) {
-      String key = null;
-
-      switch (targetKey) {
-         case SNI_HOST:
-            key = connection.getSNIHostName();
-            break;
-         case SOURCE_IP:
-            if (connection.getRemoteAddress() != null) {
-               Matcher ipv4Matcher = ipv4Pattern.matcher(connection.getRemoteAddress());
-
-               if (ipv4Matcher.find()) {
-                  key = ipv4Matcher.group();
-               }
-            }
-            break;
-         case USER_NAME:
-            key = username;
-            break;
-         default:
-            throw new IllegalStateException("Unexpected value: " + targetKey);
-      }
-
-      if (key == null) {
-         key = "DEFAULT";
-      }
-
-      return getTarget(key);
+   public Target getTarget(Connection connection, String clientID, String username) {
+      return getTarget(targetKeyResolver.resolve(connection, clientID, username));
    }
 
    public Target getTarget(String key) {

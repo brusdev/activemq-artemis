@@ -99,9 +99,10 @@ public class RedirectTest extends BalancingTestBase {
       ConnectionFactory connectionFactory = createFactory(protocol, TransportConstants.DEFAULT_HOST,
          TransportConstants.DEFAULT_PORT + 0, "admin", "admin");
 
-
       try (Connection connection = connectionFactory.createConnection()) {
+         connection.setClientID("TEST2");
          connection.start();
+         //connection.setClientID("TEST1");
          try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
             javax.jms.Queue queue = session.createQueue(queueName);
             try (MessageProducer producer = session.createProducer(queue)) {
@@ -114,7 +115,9 @@ public class RedirectTest extends BalancingTestBase {
       Assert.assertEquals(1, queueControl1.countMessages());
 
       try (Connection connection = connectionFactory.createConnection()) {
+         connection.setClientID("TEST2");
          connection.start();
+         connection.setClientID("TEST2");
          try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
             try (MessageConsumer consumer = session.createConsumer(session.createQueue(queueName))) {
                TextMessage message = (TextMessage) consumer.receive(1000);

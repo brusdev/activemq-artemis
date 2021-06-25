@@ -479,7 +479,7 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          org.apache.activemq.artemis.spi.core.remoting.Connection transportConnection = connectionCallback.getTransportConnection();
          Target target = protocolManager.getServer().getBalancerManager()
             .getBalancer(transportConnection.getRedirectTo())
-            .getTarget(transportConnection, handler.getSASLResult().getUser());
+            .getTarget(transportConnection, connection.getRemoteContainer(), handler.getSASLResult().getUser());
 
          if (target != null) {
             ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);

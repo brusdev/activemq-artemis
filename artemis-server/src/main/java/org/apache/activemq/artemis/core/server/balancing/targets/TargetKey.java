@@ -18,7 +18,7 @@
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
 public enum TargetKey {
-   SNI_HOST, SOURCE_IP, USER_NAME;
+   CLIENT_ID, SNI_HOST, SOURCE_IP, USER_NAME;
 
    public static final String validValues;
 
@@ -38,6 +38,8 @@ public enum TargetKey {
 
    public static TargetKey getType(String type) {
       switch (type) {
+         case "CLIENT_ID":
+            return CLIENT_ID;
          case "SNI_HOST":
             return SNI_HOST;
          case "SOURCE_IP":
