@@ -37,6 +37,7 @@ import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CheckFailo
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CheckFailoverReplyMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateQueueMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionResponseMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ReattachSessionMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ReattachSessionResponseMessage;
@@ -89,7 +90,8 @@ public class ActiveMQPacketHandler implements ChannelHandler {
       }
 
       switch (type) {
-         case PacketImpl.CREATESESSION: {
+         case PacketImpl.CREATESESSION:
+         case PacketImpl.CREATESESSION_V2: {
             CreateSessionMessage request = (CreateSessionMessage) packet;
 
             handleCreateSession(request);
@@ -155,6 +157,10 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             connection.setChannelVersion(request.getVersion());
          } else if (connection.getChannelVersion() != request.getVersion()) {
             ActiveMQServerLogger.LOGGER.incompatibleVersionAfterConnect(request.getVersion(), connection.getChannelVersion());
+         }
+
+         if (request instanceof CreateSessionMessage_V2) {
+            connection.setClientID(((CreateSessionMessage_V2) request).getClientID());
          }
 
          Channel channel = connection.getChannel(request.getSessionChannelID(), request.getWindowSize());
