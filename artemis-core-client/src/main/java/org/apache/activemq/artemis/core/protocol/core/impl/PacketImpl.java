@@ -279,6 +279,7 @@ public class PacketImpl implements Packet {
 
    public static final byte FEDERATION_DOWNSTREAM_CONNECT = -16;
 
+   public static final byte CREATESESSION_V2 = -17;
 
    // Static --------------------------------------------------------
 

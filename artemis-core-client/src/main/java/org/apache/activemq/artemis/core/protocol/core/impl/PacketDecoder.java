@@ -33,6 +33,7 @@ import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateAddr
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateQueueMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateQueueMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionResponseMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSharedQueueMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSharedQueueMessage_V2;
@@ -100,6 +101,7 @@ import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CLU
 import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CLUSTER_TOPOLOGY_V3;
 import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CREATESESSION;
 import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CREATESESSION_RESP;
+import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CREATESESSION_V2;
 import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CREATE_ADDRESS;
 import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CREATE_QUEUE;
 import static org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl.CREATE_QUEUE_V2;
@@ -475,6 +477,10 @@ public abstract class PacketDecoder implements Serializable {
          }
          case FEDERATION_DOWNSTREAM_CONNECT: {
             packet = new FederationDownstreamConnectMessage();
+            break;
+         }
+         case CREATESESSION_V2: {
+            packet = new CreateSessionMessage_V2();
             break;
          }
          default: {

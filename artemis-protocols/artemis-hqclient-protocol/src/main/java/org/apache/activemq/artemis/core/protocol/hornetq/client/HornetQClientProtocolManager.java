@@ -31,6 +31,8 @@ import org.apache.activemq.artemis.core.version.Version;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.activemq.artemis.spi.core.remoting.SessionContext;
 
+import java.util.Map;
+
 public class HornetQClientProtocolManager extends ActiveMQClientProtocolManager {
 
    private static final int VERSION_PLAYED = 123;
@@ -59,7 +61,8 @@ public class HornetQClientProtocolManager extends ActiveMQClientProtocolManager 
                                            boolean preAcknowledge,
                                            int minLargeMessageSize,
                                            int confirmationWindowSize,
-                                           long sessionChannelID) {
+                                           long sessionChannelID,
+                                           Map<String, String> metadata) {
       return new CreateSessionMessage(name, sessionChannelID, VERSION_PLAYED, username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, confirmationWindowSize, null);
    }
 

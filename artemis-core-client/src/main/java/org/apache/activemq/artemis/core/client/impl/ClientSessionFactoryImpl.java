@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -312,43 +313,55 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                                       final boolean autoCommitSends,
                                       final boolean autoCommitAcks,
                                       final boolean preAcknowledge,
+                                      final int ackBatchSize,
+                                      final Map<String, String> metadata) throws ActiveMQException {
+      return createSessionInternal(username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, ackBatchSize, metadata);
+   }
+
+   @Override
+   public ClientSession createSession(final String username,
+                                      final String password,
+                                      final boolean xa,
+                                      final boolean autoCommitSends,
+                                      final boolean autoCommitAcks,
+                                      final boolean preAcknowledge,
                                       final int ackBatchSize) throws ActiveMQException {
-      return createSessionInternal(username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, ackBatchSize);
+      return createSessionInternal(username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, ackBatchSize, null);
    }
 
    @Override
    public ClientSession createSession(final boolean autoCommitSends,
                                       final boolean autoCommitAcks,
                                       final int ackBatchSize) throws ActiveMQException {
-      return createSessionInternal(null, null, false, autoCommitSends, autoCommitAcks, serverLocator.isPreAcknowledge(), ackBatchSize);
+      return createSessionInternal(null, null, false, autoCommitSends, autoCommitAcks, serverLocator.isPreAcknowledge(), ackBatchSize, null);
    }
 
    @Override
    public ClientSession createXASession() throws ActiveMQException {
-      return createSessionInternal(null, null, true, false, false, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize());
+      return createSessionInternal(null, null, true, false, false, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize(), null);
    }
 
    @Override
    public ClientSession createTransactedSession() throws ActiveMQException {
-      return createSessionInternal(null, null, false, false, false, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize());
+      return createSessionInternal(null, null, false, false, false, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize(), null);
    }
 
    @Override
    public ClientSession createSession() throws ActiveMQException {
-      return createSessionInternal(null, null, false, true, true, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize());
+      return createSessionInternal(null, null, false, true, true, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize(), null);
    }
 
    @Override
    public ClientSession createSession(final boolean autoCommitSends,
                                       final boolean autoCommitAcks) throws ActiveMQException {
-      return createSessionInternal(null, null, false, autoCommitSends, autoCommitAcks, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize());
+      return createSessionInternal(null, null, false, autoCommitSends, autoCommitAcks, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize(), null);
    }
 
    @Override
    public ClientSession createSession(final boolean xa,
                                       final boolean autoCommitSends,
                                       final boolean autoCommitAcks) throws ActiveMQException {
-      return createSessionInternal(null, null, xa, autoCommitSends, autoCommitAcks, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize());
+      return createSessionInternal(null, null, xa, autoCommitSends, autoCommitAcks, serverLocator.isPreAcknowledge(), serverLocator.getAckBatchSize(), null);
    }
 
    @Override
@@ -356,7 +369,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                                       final boolean autoCommitSends,
                                       final boolean autoCommitAcks,
                                       final boolean preAcknowledge) throws ActiveMQException {
-      return createSessionInternal(null, null, xa, autoCommitSends, autoCommitAcks, preAcknowledge, serverLocator.getAckBatchSize());
+      return createSessionInternal(null, null, xa, autoCommitSends, autoCommitAcks, preAcknowledge, serverLocator.getAckBatchSize(), null);
    }
 
    // ClientConnectionLifeCycleListener implementation --------------------------------------------------
@@ -717,10 +730,11 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                                                final boolean autoCommitSends,
                                                final boolean autoCommitAcks,
                                                final boolean preAcknowledge,
-                                               final int ackBatchSize) throws ActiveMQException {
+                                               final int ackBatchSize,
+                                               final Map<String, String> metadata) throws ActiveMQException {
       String name = UUIDGenerator.getInstance().generateStringUUID();
 
-      SessionContext context = createSessionChannel(name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge);
+      SessionContext context = createSessionChannel(name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, metadata);
 
       ClientSessionInternal session = new ClientSessionImpl(this, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, serverLocator.isBlockOnAcknowledge(), serverLocator.isAutoGroup(), ackBatchSize, serverLocator.getConsumerWindowSize(), serverLocator.getConsumerMaxRate(), serverLocator.getConfirmationWindowSize(), serverLocator.getProducerWindowSize(), serverLocator.getProducerMaxRate(), serverLocator.isBlockOnNonDurableSend(), serverLocator.isBlockOnDurableSend(), serverLocator.isCacheLargeMessagesClient(), serverLocator.getMinLargeMessageSize(), serverLocator.isCompressLargeMessage(), serverLocator.getInitialMessagePacketSize(), serverLocator.getGroupID(), context, orderedExecutorFactory.getExecutor(), orderedExecutorFactory.getExecutor(), orderedExecutorFactory.getExecutor());
 
@@ -1413,9 +1427,10 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                                                  final boolean xa,
                                                  final boolean autoCommitSends,
                                                  final boolean autoCommitAcks,
-                                                 final boolean preAcknowledge) throws ActiveMQException {
+                                                 final boolean preAcknowledge,
+                                                 final Map<String, String> metadata) throws ActiveMQException {
       synchronized (createSessionLock) {
-         return clientProtocolManager.createSessionContext(name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, serverLocator.getMinLargeMessageSize(), serverLocator.getConfirmationWindowSize());
+         return clientProtocolManager.createSessionContext(name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, serverLocator.getMinLargeMessageSize(), serverLocator.getConfirmationWindowSize(), metadata);
       }
    }
 

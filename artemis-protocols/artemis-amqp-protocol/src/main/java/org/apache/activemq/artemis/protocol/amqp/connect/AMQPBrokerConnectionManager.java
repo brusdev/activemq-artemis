@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.protocol.amqp.connect;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 
@@ -215,7 +216,8 @@ public class AMQPBrokerConnectionManager implements ActiveMQComponent, ClientCon
                                                  boolean autoCommitAcks,
                                                  boolean preAcknowledge,
                                                  int minLargeMessageSize,
-                                                 int confirmationWindowSize) throws ActiveMQException {
+                                                 int confirmationWindowSize,
+                                                 Map<String, String> metadata) throws ActiveMQException {
          return null;
       }
 

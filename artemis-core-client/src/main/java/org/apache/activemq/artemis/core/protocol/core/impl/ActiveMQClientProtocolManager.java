@@ -17,6 +17,7 @@
 package org.apache.activemq.artemis.core.protocol.core.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +46,7 @@ import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CheckFailo
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage_V3;
-import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionResponseMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectMessage_V2;
@@ -243,10 +244,11 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
                                               boolean autoCommitAcks,
                                               boolean preAcknowledge,
                                               int minLargeMessageSize,
-                                              int confirmationWindowSize) throws ActiveMQException {
+                                              int confirmationWindowSize,
+                                              Map<String, String> metadata) throws ActiveMQException {
       for (Version clientVersion : VersionLoader.getClientVersions()) {
          try {
-            return createSessionContext(clientVersion, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize);
+            return createSessionContext(clientVersion, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, metadata);
          } catch (ActiveMQException e) {
             if (e.getType() != ActiveMQExceptionType.INCOMPATIBLE_CLIENT_SERVER_VERSIONS) {
                throw e;
@@ -266,7 +268,8 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
                                               boolean autoCommitAcks,
                                               boolean preAcknowledge,
                                               int minLargeMessageSize,
-                                              int confirmationWindowSize) throws ActiveMQException {
+                                              int confirmationWindowSize,
+                                              Map<String, String> metadata) throws ActiveMQException {
       if (!isAlive())
          throw ActiveMQClientMessageBundle.BUNDLE.clientSessionClosed();
 
@@ -293,7 +296,7 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
 
             long sessionChannelID = connection.generateChannelID();
 
-            Packet request = newCreateSessionPacket(clientVersion, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, sessionChannelID);
+            Packet request = newCreateSessionPacket(clientVersion, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, sessionChannelID, metadata);
 
             try {
                // channel1 reference here has to go away
@@ -353,8 +356,9 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
                                            boolean preAcknowledge,
                                            int minLargeMessageSize,
                                            int confirmationWindowSize,
-                                           long sessionChannelID) {
-      return new CreateSessionMessage(name, sessionChannelID, clientVersion.getIncrementingVersion(), username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, confirmationWindowSize, null);
+                                           long sessionChannelID,
+                                           Map<String, String> metadata) {
+      return new CreateSessionMessage_V2(name, sessionChannelID, clientVersion.getIncrementingVersion(), username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, confirmationWindowSize, null, metadata);
    }
 
    protected SessionContext newSessionContext(String name,
