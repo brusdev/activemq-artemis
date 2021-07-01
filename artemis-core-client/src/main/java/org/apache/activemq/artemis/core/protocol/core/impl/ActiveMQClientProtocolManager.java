@@ -47,6 +47,8 @@ import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CheckFailo
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage_V3;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.ClusterTopologyChangeMessage_V4;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage_V2;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionResponseMessage;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.DisconnectMessage;
@@ -298,7 +300,7 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
 
             long sessionChannelID = connection.generateChannelID();
 
-            Packet request = newCreateSessionPacket(clientVersion, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, sessionChannelID, metadata);
+            Packet request = newCreateSessionPacket(clientVersion.getIncrementingVersion(), name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, sessionChannelID, metadata);
 
             try {
                // channel1 reference here has to go away
@@ -345,11 +347,19 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
       }
       while (retry);
       sessionChannel.getConnection().setChannelVersion(response.getServerVersion());
-      return newSessionContext(name, confirmationWindowSize, sessionChannel, response);
 
+      SessionContext sessionContext = newSessionContext(name, confirmationWindowSize, sessionChannel, response);
+
+      if (metadata != null && !connection.isVersionSupportInitialMetadata()) {
+         for (Map.Entry<String, String> metadataEntry : metadata.entrySet()) {
+            sessionContext.addSessionMetadata(metadataEntry.getKey(), metadataEntry.getValue());
+         }
+      }
+
+      return sessionContext;
    }
 
-   protected Packet newCreateSessionPacket(Version clientVersion,
+   protected Packet newCreateSessionPacket(int clientVersion,
                                            String name,
                                            String username,
                                            String password,
@@ -361,7 +371,11 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
                                            int confirmationWindowSize,
                                            long sessionChannelID,
                                            Map<String, String> metadata) {
-      return new CreateSessionMessage_V2(name, sessionChannelID, clientVersion.getIncrementingVersion(), username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, confirmationWindowSize, null, metadata);
+      if (connection.isVersionSupportInitialMetadata()) {
+         return new CreateSessionMessage_V2(name, sessionChannelID, clientVersion, username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, confirmationWindowSize, null, metadata);
+      } else {
+         return new CreateSessionMessage(name, sessionChannelID, clientVersion, username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, confirmationWindowSize, null);
+      }
    }
 
    protected SessionContext newSessionContext(String name,
@@ -484,6 +498,10 @@ public class ActiveMQClientProtocolManager implements ClientProtocolManager {
          } else if (type == PacketImpl.CLUSTER_TOPOLOGY_V3) {
             ClusterTopologyChangeMessage_V3 topMessage = (ClusterTopologyChangeMessage_V3) packet;
             notifyTopologyChange(updateTransportConfiguration(topMessage));
+         } else if (type == PacketImpl.CLUSTER_TOPOLOGY_V4) {
+            ClusterTopologyChangeMessage_V4 topMessage = (ClusterTopologyChangeMessage_V4) packet;
+            notifyTopologyChange(updateTransportConfiguration(topMessage));
+            connection.setChannelVersion(topMessage.getServerVersion());
          } else if (type == PacketImpl.CHECK_FOR_FAILOVER_REPLY) {
             System.out.println("Channel0Handler.handlePacket");
          }

@@ -169,7 +169,7 @@ public class ActiveMQPacketHandler implements ChannelHandler {
          }
 
          if (connection.getTransportConnection().getRedirectTo() != null) {
-            if (!connection.isVersionSupportSupportRedirect()) {
+            if (!connection.isVersionSupportRedirect()) {
                throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
             }
 

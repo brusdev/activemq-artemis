@@ -51,7 +51,12 @@ public interface CoreRemotingConnection extends RemotingConnection {
       return  version >= PacketImpl.ARTEMIS_2_7_0_VERSION;
    }
 
-   default boolean isVersionSupportSupportRedirect() {
+   default boolean isVersionSupportRedirect() {
+      int version = getChannelVersion();
+      return  version >= PacketImpl.ARTEMIS_2_18_0_VERSION;
+   }
+
+   default boolean isVersionSupportInitialMetadata() {
       int version = getChannelVersion();
       return  version >= PacketImpl.ARTEMIS_2_18_0_VERSION;
    }
