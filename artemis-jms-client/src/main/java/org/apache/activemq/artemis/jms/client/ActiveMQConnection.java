@@ -19,9 +19,7 @@ package org.apache.activemq.artemis.jms.client;
 import java.lang.ref.WeakReference;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -598,19 +596,18 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
          ClientSession session;
          boolean isBlockOnAcknowledge = sessionFactory.getServerLocator().isBlockOnAcknowledge();
          int ackBatchSize = sessionFactory.getServerLocator().getAckBatchSize();
-         Map<String, String> metadata = getSessionMetaData();
          if (acknowledgeMode == Session.SESSION_TRANSACTED) {
-            session = sessionFactory.createSession(username, password, isXA, false, false, sessionFactory.getServerLocator().isPreAcknowledge(), transactionBatchSize, metadata);
+            session = sessionFactory.createSession(username, password, isXA, false, false, sessionFactory.getServerLocator().isPreAcknowledge(), transactionBatchSize, clientID);
          } else if (acknowledgeMode == Session.AUTO_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), 0, metadata);
+            session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), 0, clientID);
          } else if (acknowledgeMode == Session.DUPS_OK_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), dupsOKBatchSize, metadata);
+            session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), dupsOKBatchSize, clientID);
          } else if (acknowledgeMode == Session.CLIENT_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, false, sessionFactory.getServerLocator().isPreAcknowledge(), isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize, metadata);
+            session = sessionFactory.createSession(username, password, isXA, true, false, sessionFactory.getServerLocator().isPreAcknowledge(), isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize, clientID);
          } else if (acknowledgeMode == ActiveMQJMSConstants.INDIVIDUAL_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, false, false, isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize, metadata);
+            session = sessionFactory.createSession(username, password, isXA, true, false, false, isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize, clientID);
          } else if (acknowledgeMode == ActiveMQJMSConstants.PRE_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, false, true, transactionBatchSize, metadata);
+            session = sessionFactory.createSession(username, password, isXA, true, false, true, transactionBatchSize, clientID);
          } else {
             throw new JMSRuntimeException("Invalid ackmode: " + acknowledgeMode);
          }
@@ -674,7 +671,17 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
 
    public void authorize(boolean validateClientId) throws JMSException {
       try {
-         initialSession = sessionFactory.createSession(username, password, false, false, false, false, 0, getSessionMetaData());
+         initialSession = sessionFactory.createSession(username, password, false, false, false, false, 0, clientID);
+
+         if (clientID != null) {
+            if (validateClientId) {
+               validateClientID(initialSession, clientID);
+            } else {
+               initialSession.addMetaData(ClientSession.JMS_SESSION_CLIENT_ID_PROPERTY, clientID);
+            }
+         }
+
+         addSessionMetaData(initialSession);
 
          initialSession.addFailureListener(listener);
          initialSession.addFailoverListener(failoverListener);
@@ -683,21 +690,10 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
       }
    }
 
-   private Map<String, String> getSessionMetaData() throws ActiveMQException {
-      Map<String, String> metadata = new HashMap<>();
-
-      metadata.put(ClientSession.JMS_SESSION_IDENTIFIER_PROPERTY, "");
-      if (clientID != null) {
-         metadata.put(ClientSession.JMS_SESSION_CLIENT_ID_PROPERTY, clientID);
-      }
-
-      return metadata;
-   }
-
    private void addSessionMetaData(ClientSession session) throws ActiveMQException {
-      Map<String, String> metadata = getSessionMetaData();
-      for (Map.Entry<String, String> metadataEntry : metadata.entrySet()) {
-         session.addMetaData(metadataEntry.getKey(), metadataEntry.getValue());
+      session.addMetaData(ClientSession.JMS_SESSION_IDENTIFIER_PROPERTY, "");
+      if (clientID != null) {
+         session.addMetaData(ClientSession.JMS_SESSION_CLIENT_ID_PROPERTY, clientID);
       }
    }
 

@@ -29,8 +29,6 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnectorFactor
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.activemq.artemis.spi.core.remoting.SessionContext;
 
-import java.util.Map;
-
 public class HornetQClientProtocolManager extends ActiveMQClientProtocolManager {
 
    private static final int VERSION_PLAYED = 123;
@@ -60,8 +58,8 @@ public class HornetQClientProtocolManager extends ActiveMQClientProtocolManager 
                                            int minLargeMessageSize,
                                            int confirmationWindowSize,
                                            long sessionChannelID,
-                                           Map<String, String> metadata) {
-      return super.newCreateSessionPacket(VERSION_PLAYED, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, sessionChannelID, metadata);
+                                           String clientID) {
+      return super.newCreateSessionPacket(VERSION_PLAYED, name, username, password, xa, autoCommitSends, autoCommitAcks, preAcknowledge, minLargeMessageSize, confirmationWindowSize, sessionChannelID, clientID);
    }
 
    @Override

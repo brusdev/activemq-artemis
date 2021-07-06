@@ -20,8 +20,6 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 
-import java.util.Map;
-
 /**
  * A ClientSessionFactory is the entry point to create and configure ActiveMQ Artemis resources to produce and consume messages.
  * <br>
@@ -150,7 +148,7 @@ public interface ClientSessionFactory extends AutoCloseable {
     * @param autoCommitSends <code>true</code> to automatically commit message sends, <code>false</code> to commit manually
     * @param autoCommitAcks  <code>true</code> to automatically commit message acknowledgement, <code>false</code> to commit manually
     * @param preAcknowledge  <code>true</code> to pre-acknowledge messages on the server, <code>false</code> to let the client acknowledge the messages
-    * @param metadata        the session metadata
+    * @param clientID        the session clientID
     * @return a ClientSession
     * @throws ActiveMQException if an exception occurs while creating the session
     */
@@ -161,7 +159,7 @@ public interface ClientSessionFactory extends AutoCloseable {
                                boolean autoCommitAcks,
                                boolean preAcknowledge,
                                int ackBatchSize,
-                               Map<String, String> metadata) throws ActiveMQException;
+                               String clientID) throws ActiveMQException;
 
    /**
     * Closes this factory and any session created by it.

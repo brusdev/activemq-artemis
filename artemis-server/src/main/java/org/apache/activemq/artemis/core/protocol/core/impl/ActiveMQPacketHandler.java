@@ -27,7 +27,6 @@ import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.core.persistence.OperationContext;
 import org.apache.activemq.artemis.core.protocol.core.Channel;
 import org.apache.activemq.artemis.core.protocol.core.ChannelHandler;
@@ -163,18 +162,14 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             ActiveMQServerLogger.LOGGER.incompatibleVersionAfterConnect(request.getVersion(), connection.getChannelVersion());
          }
 
-         Map<String, String> metadata = null;
-         if (request instanceof CreateSessionMessage_V2) {
-            metadata = ((CreateSessionMessage_V2) request).getMetadata();
-         }
-
          if (connection.getTransportConnection().getRedirectTo() != null) {
             if (!connection.isVersionSupportRedirect()) {
                throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
             }
 
             Connection transportConnection = connection.getTransportConnection();
-            String clientID = metadata != null ? metadata.get(ClientSession.JMS_SESSION_CLIENT_ID_PROPERTY) : null;
+            String clientID = (request instanceof CreateSessionMessage_V2) ?
+               ((CreateSessionMessage_V2) request).getClientID() : null;
             Target target = server.getBalancerManager()
                .getBalancer(transportConnection.getRedirectTo())
                .getTarget(transportConnection, clientID, request.getUsername());
@@ -208,13 +203,6 @@ public class ActiveMQPacketHandler implements ChannelHandler {
 
          CoreSessionCallback sessionCallback = new CoreSessionCallback(request.getName(), protocolManager, channel, connection);
          ServerSession session = server.createSession(request.getName(), activeMQPrincipal == null ? request.getUsername() : activeMQPrincipal.getUserName(), activeMQPrincipal == null ? request.getPassword() : activeMQPrincipal.getPassword(), request.getMinLargeMessageSize(), connection, request.isAutoCommitSends(), request.isAutoCommitAcks(), request.isPreAcknowledge(), request.isXA(), request.getDefaultAddress(), sessionCallback, true, sessionOperationContext, routingTypeMap, protocolManager.getSecurityDomain());
-
-         if (metadata != null) {
-            for (Map.Entry<String, String> metadataEntry : metadata.entrySet()) {
-               session.addMetaData(metadataEntry.getKey(), metadataEntry.getValue());
-            }
-         }
-
          ServerProducer serverProducer = new ServerProducerImpl(session.getName(), "CORE", request.getDefaultAddress());
          session.addProducer(serverProducer);
          ServerSessionPacketHandler handler = new ServerSessionPacketHandler(server, session, channel);

@@ -17,7 +17,6 @@
 package org.apache.activemq.artemis.spi.core.remoting;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 
@@ -71,7 +70,7 @@ public interface ClientProtocolManager {
                                        boolean preAcknowledge,
                                        int minLargeMessageSize,
                                        int confirmationWindowSize,
-                                       Map<String, String> metadata) throws ActiveMQException;
+                                       String clientID) throws ActiveMQException;
 
    boolean cleanupBeforeFailover(ActiveMQException cause);
 

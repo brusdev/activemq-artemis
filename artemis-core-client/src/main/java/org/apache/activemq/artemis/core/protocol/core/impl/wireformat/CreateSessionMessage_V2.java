@@ -18,12 +18,9 @@ package org.apache.activemq.artemis.core.protocol.core.impl.wireformat;
 
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class CreateSessionMessage_V2 extends CreateSessionMessage {
 
-   private Map<String, String> metadata = new HashMap<>();
+   private String clientID = null;
 
    public CreateSessionMessage_V2(final String name,
                                final long sessionChannelID,
@@ -37,10 +34,10 @@ public class CreateSessionMessage_V2 extends CreateSessionMessage {
                                final boolean preAcknowledge,
                                final int windowSize,
                                final String defaultAddress,
-                               final Map<String, String> metadata) {
+                               final String clientID) {
       super(CREATESESSION_V2, name, sessionChannelID, version, username, password, minLargeMessageSize, xa, autoCommitSends, autoCommitAcks, preAcknowledge, windowSize, defaultAddress);
 
-      this.metadata = metadata;
+      this.clientID = clientID;
    }
 
    public CreateSessionMessage_V2() {
@@ -50,39 +47,28 @@ public class CreateSessionMessage_V2 extends CreateSessionMessage {
    // Public --------------------------------------------------------
 
 
-   public Map<String, String> getMetadata() {
-      return metadata;
+   public String getClientID() {
+      return clientID;
    }
 
    @Override
    public void encodeRest(final ActiveMQBuffer buffer) {
       super.encodeRest(buffer);
 
-      buffer.writeInt(metadata == null ? 0 : metadata.size());
-      if (metadata != null) {
-         for (Map.Entry<String, String> metadataEntry : metadata.entrySet()) {
-            buffer.writeString(metadataEntry.getKey());
-            buffer.writeNullableString(metadataEntry.getValue());
-         }
-      }
+      buffer.writeNullableString(clientID);
    }
 
    @Override
    public void decodeRest(final ActiveMQBuffer buffer) {
       super.decodeRest(buffer);
 
-      int metadataSize = buffer.readInt();
-      for (int i = 0; i < metadataSize; i++) {
-         String key = buffer.readString();
-         String value = buffer.readNullableString();
-         metadata.put(key, value);
-      }
+      clientID = buffer.readNullableString();
    }
 
    @Override
    public String toString() {
       StringBuffer buf = new StringBuffer(getParentString());
-      buf.append(", metadata=" + metadata);
+      buf.append(", metadata=" + clientID);
       buf.append("]");
       return buf.toString();
    }
@@ -91,7 +77,7 @@ public class CreateSessionMessage_V2 extends CreateSessionMessage {
    public int hashCode() {
       final int prime = 31;
       int result = super.hashCode();
-      result = prime * result + ((metadata == null) ? 0 : metadata.hashCode());
+      result = prime * result + ((clientID == null) ? 0 : clientID.hashCode());
       return result;
    }
 
@@ -107,10 +93,10 @@ public class CreateSessionMessage_V2 extends CreateSessionMessage {
          return false;
       }
       CreateSessionMessage_V2 other = (CreateSessionMessage_V2) obj;
-      if (metadata == null) {
-         if (other.metadata != null)
+      if (clientID == null) {
+         if (other.clientID != null)
             return false;
-      } else if (!metadata.equals(other.metadata))
+      } else if (!clientID.equals(other.clientID))
          return false;
       return true;
    }
