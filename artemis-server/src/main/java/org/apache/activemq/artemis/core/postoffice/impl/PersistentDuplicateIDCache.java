@@ -240,6 +240,8 @@ final class PersistentDuplicateIDCache implements DuplicateIDCache {
          }
 
          if (instantAdd) {
+            // Uncomment the following line to get the test working.
+            //addToCacheInMemory(holder, recordID);
             tx.addOperation(new AddDuplicateIDOperation(holder, recordID, false));
          } else {
             // For a tx, it's important that the entry is not added to the cache until commit
