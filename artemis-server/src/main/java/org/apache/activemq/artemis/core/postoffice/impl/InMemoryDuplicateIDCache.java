@@ -158,6 +158,7 @@ final class InMemoryDuplicateIDCache implements DuplicateIDCache {
          }
 
          if (instantAdd) {
+            addToCacheInMemory(holder);
             tx.addOperation(new AddDuplicateIDOperation(holder, false));
          } else {
             // For a tx, it's important that the entry is not added to the cache until commit
@@ -262,9 +263,9 @@ final class InMemoryDuplicateIDCache implements DuplicateIDCache {
       }
 
       @Override
-      public void beforeCommit(Transaction tx) throws Exception {
+      public void beforeRollback(Transaction tx) throws Exception {
          if (!afterCommit) {
-            process();
+            deleteFromCache(id.bytes);
          }
       }
 

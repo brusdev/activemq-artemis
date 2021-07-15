@@ -240,6 +240,7 @@ final class PersistentDuplicateIDCache implements DuplicateIDCache {
          }
 
          if (instantAdd) {
+            addToCacheInMemory(holder, recordID);
             tx.addOperation(new AddDuplicateIDOperation(holder, recordID, false));
          } else {
             // For a tx, it's important that the entry is not added to the cache until commit
@@ -379,9 +380,9 @@ final class PersistentDuplicateIDCache implements DuplicateIDCache {
       }
 
       @Override
-      public void beforeCommit(Transaction tx) throws Exception {
+      public void beforeRollback(Transaction tx) throws Exception {
          if (!afterCommit) {
-            process();
+            deleteFromCache(holder.bytes);
          }
       }
 
