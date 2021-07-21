@@ -246,7 +246,7 @@ public class TransportConstants {
 
    public static final boolean DEFAULT_WANT_CLIENT_AUTH = false;
 
-   public static final boolean DEFAULT_VERIFY_HOST = false;
+   public static final boolean DEFAULT_VERIFY_HOST = true;
 
    public static final String DEFAULT_SSL_PROVIDER = "JDK";
 
