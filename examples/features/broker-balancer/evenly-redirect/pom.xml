@@ -84,27 +84,11 @@ under the License.
                   </goals>
                   <configuration>
                      <ignore>${noServer}</ignore>
-                     <instance>${basedir}/target/server1</instance>
+                     <instance>${basedir}/target/server2</instance>
                      <allowAnonymous>true</allowAnonymous>
                      <configuration>${basedir}/target/classes/activemq/server2</configuration>
                      <!-- this makes it easier in certain envs -->
                      <javaOptions>-Djava.net.preferIPv4Stack=true</javaOptions>
-                  </configuration>
-               </execution>
-               <execution>
-                  <id>start0</id>
-                  <goals>
-                     <goal>cli</goal>
-                  </goals>
-                  <configuration>
-                     <spawn>true</spawn>
-                     <ignore>${noServer}</ignore>
-                     <location>${basedir}/target/server0</location>
-                     <testURI>tcp://localhost:61616</testURI>
-                     <args>
-                        <param>run</param>
-                     </args>
-                     <name>server0</name>
                   </configuration>
                </execution>
                <execution>
@@ -137,6 +121,22 @@ under the License.
                         <param>run</param>
                      </args>
                      <name>server1</name>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>start0</id>
+                  <goals>
+                     <goal>cli</goal>
+                  </goals>
+                  <configuration>
+                     <spawn>true</spawn>
+                     <ignore>${noServer}</ignore>
+                     <location>${basedir}/target/server0</location>
+                     <testURI>tcp://localhost:61616</testURI>
+                     <args>
+                        <param>run</param>
+                     </args>
+                     <name>server0</name>
                   </configuration>
                </execution>
                <execution>
@@ -192,8 +192,8 @@ under the License.
             </executions>
             <dependencies>
                <dependency>
-                  <groupId>org.apache.activemq.examples.broker-connection</groupId>
-                  <artifactId>amqp-receiving-messages</artifactId>
+                  <groupId>org.apache.activemq.examples</groupId>
+                  <artifactId>evenly-redirect</artifactId>
                   <version>${project.version}</version>
                </dependency>
             </dependencies>

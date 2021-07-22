@@ -17,16 +17,29 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
+public abstract class AbstractTargetFactory implements TargetFactory {
 
-public interface TargetFactory {
-   String getUsername();
+   private String username;
 
-   void setUsername(String username);
+   private String password;
 
-   String getPassword();
+   @Override
+   public String getUsername() {
+      return username;
+   }
 
-   void setPassword(String password);
+   @Override
+   public void setUsername(String username) {
+      this.username = username;
+   }
 
-   Target createTarget(TransportConfiguration connector, String nodeID);
+   @Override
+   public String getPassword() {
+      return password;
+   }
+
+   @Override
+   public void setPassword(String password) {
+      this.password = password;
+   }
 }

@@ -34,8 +34,8 @@ public class EvenlyRedirectExample {
 
    public static void main(final String[] args) throws Exception {
 
-      ConnectionFactory connectionFactoryClient0 = new ActiveMQConnectionFactory("tcp://localhost:61616&clientID=CLIENT_0");
-      ConnectionFactory connectionFactoryClient1 = new ActiveMQConnectionFactory("tcp://localhost:61616&clientID=CLIENT_1");
+      ConnectionFactory connectionFactoryClient0 = new ActiveMQConnectionFactory("tcp://localhost:61616?ha=true&reconnectAttempts=30&clientID=CLIENT_0");
+      ConnectionFactory connectionFactoryClient1 = new ActiveMQConnectionFactory("tcp://localhost:61616?ha=true&reconnectAttempts=30&clientID=CLIENT_1");
 
       /**
        * Step 1. Create a connection for producer0 and producer1, and send a few messages.

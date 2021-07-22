@@ -127,17 +127,17 @@ public class MockTarget extends AbstractTarget {
    }
 
    @Override
-   public Object getAttribute(String resourceName, String attributeName, int timeout) throws Exception {
+   public <T> T getAttribute(String resourceName, String attributeName, Class<T> attributeClass, int timeout) throws Exception {
       checkConnection();
 
-      return attributeValues.get(resourceName + attributeName);
+      return (T)attributeValues.get(resourceName + attributeName);
    }
 
    @Override
-   public Object invokeOperation(String resourceName, String operationName, Object[] operationParams, int timeout) throws Exception {
+   public <T> T invokeOperation(String resourceName, String operationName, Object[] operationParams, Class<T> operationClass, int timeout) throws Exception {
       checkConnection();
 
-      return operationReturnValues.get(resourceName + operationName);
+      return (T)operationReturnValues.get(resourceName + operationName);
    }
 
    public void setAttributeValue(String resourceName, String attributeName, Object value) {
