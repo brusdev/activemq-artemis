@@ -2621,7 +2621,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          poolConfiguration.getCheckPeriod(), Validators.MINUS_ONE_OR_GE_ZERO));
 
       poolConfiguration.setQuorumSize(getInteger(e, "quorum-size",
-         poolConfiguration.getCheckPeriod(), Validators.MINUS_ONE_OR_GE_ZERO));
+         poolConfiguration.getQuorumSize(), Validators.MINUS_ONE_OR_GE_ZERO));
 
       poolConfiguration.setLocalTargetEnabled(getBoolean(e, "local-target-enabled", poolConfiguration.isLocalTargetEnabled()));
 

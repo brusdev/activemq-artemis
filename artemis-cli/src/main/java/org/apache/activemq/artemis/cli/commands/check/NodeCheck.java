@@ -138,7 +138,7 @@ public class NodeCheck extends CheckAbstract {
    }
 
    private void checkNodeUp(final CheckContext context) throws Exception {
-      if (!(boolean)context.getManagementProxy().getAttribute("broker", "Started", 0)) {
+      if (!context.getManagementProxy().getAttribute("broker", "Started", Boolean.class, 0)) {
          throw new CheckException("The node isn't started.");
       }
    }
@@ -182,29 +182,29 @@ public class NodeCheck extends CheckAbstract {
    }
 
    private void checkNodeDiskUsage(final CheckContext context) throws Exception {
-      long maxDiskUsage;
+      Integer maxDiskUsage;
 
       if (diskUsage == -1) {
-         maxDiskUsage = (long)context.getManagementProxy().
-            getAttribute("broker", "MaxDiskUsage", 0);
+         maxDiskUsage = context.getManagementProxy().
+            getAttribute("broker", "MaxDiskUsage", Integer.class, 0);
       } else {
          maxDiskUsage = diskUsage;
       }
 
-      double diskStoreUsage = (double)context.getManagementProxy().
-         getAttribute("broker", "DiskStoreUsage", 0);
+      Double diskStoreUsage = context.getManagementProxy().
+         getAttribute("broker", "DiskStoreUsage", Double.class, 0);
 
-      checkNodeResourceUsage("DiskStoreUsage", (long)(diskStoreUsage *  100), maxDiskUsage);
+      checkNodeResourceUsage("DiskStoreUsage", (int)(diskStoreUsage *  100), maxDiskUsage);
    }
 
    private void checkNodeMemoryUsage(final CheckContext context) throws Exception {
-      long addressMemoryUsagePercentage = (long)context.getManagementProxy().
-         getAttribute("broker", "AddressMemoryUsagePercentage", 0);
+      int addressMemoryUsagePercentage = context.getManagementProxy().
+         getAttribute("broker", "AddressMemoryUsagePercentage", Integer.class, 0);
 
       checkNodeResourceUsage("MemoryUsage", addressMemoryUsagePercentage, memoryUsage);
    }
 
-   private void checkNodeResourceUsage(final String resourceName, final long usageValue, final long thresholdValue) throws Exception {
+   private void checkNodeResourceUsage(final String resourceName, final int usageValue, final int thresholdValue) throws Exception {
       if (usageValue > thresholdValue) {
          throw new CheckException("The " + resourceName + " " + usageValue + " is less than " + thresholdValue);
       }

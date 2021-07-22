@@ -46,22 +46,21 @@ under the License.
 
       <acceptors>
          <!-- Acceptor for every supported protocol -->
-         <acceptor name="artemis">tcp://0.0.0.0:61617?redirect-to=evenly-balancer;tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true</acceptor>
+         <acceptor name="artemis">tcp://0.0.0.0:61617?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true</acceptor>
       </acceptors>
 
       <security-settings>
          <security-setting match="#">
-            <permission type="createNonDurableQueue" roles="amq"/>
-            <permission type="deleteNonDurableQueue" roles="amq"/>
-            <permission type="createDurableQueue" roles="amq"/>
-            <permission type="deleteDurableQueue" roles="amq"/>
-            <permission type="createAddress" roles="amq"/>
-            <permission type="deleteAddress" roles="amq"/>
-            <permission type="consume" roles="amq"/>
-            <permission type="browse" roles="amq"/>
-            <permission type="send" roles="amq"/>
-            <!-- we need this otherwise ./artemis data imp wouldn't work -->
-            <permission type="manage" roles="amq"/>
+            <permission type="createNonDurableQueue" roles="guest"/>
+            <permission type="deleteNonDurableQueue" roles="guest"/>
+            <permission type="createDurableQueue" roles="guest"/>
+            <permission type="deleteDurableQueue" roles="guest"/>
+            <permission type="createAddress" roles="guest"/>
+            <permission type="deleteAddress" roles="guest"/>
+            <permission type="consume" roles="guest"/>
+            <permission type="browse" roles="guest"/>
+            <permission type="send" roles="guest"/>
+            <permission type="manage" roles="guest"/>
          </security-setting>
       </security-settings>
 

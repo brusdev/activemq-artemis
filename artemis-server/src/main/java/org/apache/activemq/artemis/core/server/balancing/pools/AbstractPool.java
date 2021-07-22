@@ -22,6 +22,7 @@ import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetMonitor;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +34,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 public abstract class AbstractPool implements Pool {
+   private static final Logger logger = Logger.getLogger(AbstractPool.class);
+
    private final TargetFactory targetFactory;
 
    private final ScheduledExecutorService scheduledExecutor;
@@ -99,7 +102,11 @@ public abstract class AbstractPool implements Pool {
       List<Target> targets = targetMonitors.stream().filter(targetMonitor -> targetMonitor.isTargetReady())
          .map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
 
-      return targets.size() >= quorumSize ? targets : Collections.emptyList();
+      if (logger.isDebugEnabled()) {
+         logger.debugf("Ready targets are " + targets + " / " + targetMonitors + " and quorumSize is " + quorumSize);
+      }
+
+      return targets.size() < quorumSize ? Collections.emptyList() : targets;
    }
 
    @Override

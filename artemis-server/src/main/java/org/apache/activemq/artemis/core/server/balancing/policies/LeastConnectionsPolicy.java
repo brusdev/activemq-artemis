@@ -35,13 +35,13 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
 
    public static final String UPDATE_CONNECTION_COUNT_PROBE_NAME = "UPDATE_CONNECTION_COUNT_PROBE";
 
-   private final Map<Target, Long> connectionCountCache = new ConcurrentHashMap<>();
+   private final Map<Target, Integer> connectionCountCache = new ConcurrentHashMap<>();
 
    private final TargetProbe targetProbe = new TargetProbe(UPDATE_CONNECTION_COUNT_PROBE_NAME) {
       @Override
       public boolean check(Target target) {
          try {
-            Long connectionCount = (Long)target.getAttribute("broker", "ConnectionCount", 3000);
+            Integer connectionCount = target.getAttribute("broker", "ConnectionCount", Integer.class, 3000);
 
             connectionCountCache.put(target, connectionCount);
 
@@ -66,13 +66,13 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
    @Override
    public Target selectTarget(List<Target> targets, String key) {
       if (targets.size() > 1) {
-         NavigableMap<Long, List<Target>> sortedTargets = new TreeMap<>();
+         NavigableMap<Integer, List<Target>> sortedTargets = new TreeMap<>();
 
          for (Target target : targets) {
-            Long connectionCount = connectionCountCache.get(target);
+            Integer connectionCount = connectionCountCache.get(target);
 
             if (connectionCount == null) {
-               connectionCount = Long.MAX_VALUE;
+               connectionCount = Integer.MAX_VALUE;
             }
 
             List<Target> leastTargets = sortedTargets.get(connectionCount);

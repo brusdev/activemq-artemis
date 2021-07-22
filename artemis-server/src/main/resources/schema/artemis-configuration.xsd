@@ -2149,6 +2149,7 @@
 
    <xsd:simpleType name="brokerBalancerTargetKeyType">
       <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="CLIENT_ID"/>
          <xsd:enumeration value="SNI_HOST"/>
          <xsd:enumeration value="SOURCE_IP"/>
          <xsd:enumeration value="USER_NAME"/>
