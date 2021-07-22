@@ -82,6 +82,10 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
    }
 
    public void deployBrokerBalancer(BrokerBalancerConfiguration config) throws Exception {
+      if (logger.isDebugEnabled()) {
+         logger.debugf("Deploying BrokerBalancer " + config.getName());
+      }
+
       Target localTarget = new LocalTarget(null, server);
 
       Pool pool = deployPool(config.getPoolConfiguration(), localTarget);
@@ -99,6 +103,9 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
    private Pool deployPool(PoolConfiguration config, Target localTarget) throws Exception {
       Pool pool;
       TargetFactory targetFactory = new ActiveMQTargetFactory();
+
+      targetFactory.setUsername(config.getUsername());
+      targetFactory.setPassword(config.getPassword());
 
       if (config.getClusterConnection() != null) {
          ClusterConnection clusterConnection = server.getClusterManager()

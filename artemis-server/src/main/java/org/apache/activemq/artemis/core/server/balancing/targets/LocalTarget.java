@@ -58,12 +58,12 @@ public class LocalTarget extends AbstractTarget {
    }
 
    @Override
-   public Object getAttribute(String resourceName, String attributeName, int timeout) throws Exception {
-      return managementService.getAttribute(resourceName, attributeName);
+   public <T> T getAttribute(String resourceName, String attributeName, Class<T> attributeClass, int timeout) throws Exception {
+      return (T)managementService.getAttribute(resourceName, attributeName);
    }
 
    @Override
-   public Object invokeOperation(String resourceName, String operationName, Object[] operationParams, int timeout) throws Exception {
-      return managementService.invokeOperation(resourceName, operationName, operationParams);
+   public <T> T invokeOperation(String resourceName, String operationName, Object[] operationParams, Class<T> operationClass, int timeout) throws Exception {
+      return (T)managementService.invokeOperation(resourceName, operationName, operationParams);
    }
 }

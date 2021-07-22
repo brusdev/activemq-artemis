@@ -77,12 +77,24 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
    public void run() {
       try {
          if (!target.isConnected()) {
+            if (logger.isDebugEnabled()) {
+               logger.debug("Connecting to " + target);
+            }
+
             target.connect();
          }
 
          targetReady = target.checkReadiness() &&  checkTargetProbes();
+
+         if (logger.isDebugEnabled()) {
+            if (targetReady) {
+               logger.debug(target + " is ready");
+            } else {
+               logger.debug(target + " is not ready");
+            }
+         }
       } catch (Exception e) {
-         logger.warn("Error monitoring the target " + target, e);
+         logger.warn("Error monitoring " + target, e);
 
          targetReady = false;
       }
@@ -91,7 +103,7 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
    private boolean checkTargetProbes() {
       for (TargetProbe targetProbe : targetProbes) {
          if (!targetProbe.check(target)) {
-            logger.info(targetProbe.getName() + " has failed on target " + target);
+            logger.info(targetProbe.getName() + " has failed on " + target);
             return false;
          }
       }
@@ -107,5 +119,11 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
    @Override
    public void targetDisconnected() {
       targetReady = false;
+   }
+
+
+   @Override
+   public String toString() {
+      return this.getClass().getSimpleName() + " [target=" + target + ", targetReady=" + targetReady + "]";
    }
 }

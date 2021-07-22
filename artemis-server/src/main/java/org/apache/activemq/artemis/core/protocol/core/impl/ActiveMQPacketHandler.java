@@ -48,6 +48,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerProducer;
 import org.apache.activemq.artemis.core.server.ServerSession;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.impl.ServerProducerImpl;
 import org.apache.activemq.artemis.core.version.Version;
@@ -172,9 +173,15 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             }
 
             Connection transportConnection = connection.getTransportConnection();
-            Target target = server.getBalancerManager()
-               .getBalancer(transportConnection.getRedirectTo())
-               .getTarget(transportConnection, connection.getClientID(), request.getUsername());
+            BrokerBalancer brokerBalancer = server.getBalancerManager().getBalancer(transportConnection.getRedirectTo());
+
+            if (brokerBalancer == null) {
+               ActiveMQServerLogger.LOGGER.warnf("BrokerBalancer %s not found", transportConnection.getRedirectTo());
+
+               throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
+            }
+
+            Target target = brokerBalancer.getTarget(transportConnection, connection.getClientID(), request.getUsername());
 
             if (target != null) {
                ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);

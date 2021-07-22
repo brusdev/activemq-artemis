@@ -30,7 +30,7 @@ public class ActiveMQManagementProxy implements AutoCloseable {
       this.session = session;
    }
 
-   public Object getAttribute(final String resourceName, final String attributeName, final int timeout) throws Exception {
+   public <T> T getAttribute(final String resourceName, final String attributeName, final Class<T> attributeClass, final int timeout) throws Exception {
       try (ClientRequestor requestor = new ClientRequestor(session, ActiveMQDefaultConfiguration.getDefaultManagementAddress())) {
          ClientMessage request = session.createMessage(false);
 
@@ -39,14 +39,14 @@ public class ActiveMQManagementProxy implements AutoCloseable {
          ClientMessage reply = requestor.request(request, timeout);
 
          if (ManagementHelper.hasOperationSucceeded(reply)) {
-            return ManagementHelper.getResult(reply);
+            return (T)ManagementHelper.getResult(reply, attributeClass);
          } else {
             throw new Exception("Failed to get " + resourceName + "." + attributeName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
          }
       }
    }
 
-   public Object invokeOperation(final String resourceName, final String operationName, final Object[] operationParams, final int timeout) throws Exception {
+   public <T> T invokeOperation(final String resourceName, final String operationName, final Object[] operationParams, final Class<T> operationClass, final int timeout) throws Exception {
       try (ClientRequestor requestor = new ClientRequestor(session, ActiveMQDefaultConfiguration.getDefaultManagementAddress())) {
          ClientMessage request = session.createMessage(false);
 
@@ -55,7 +55,7 @@ public class ActiveMQManagementProxy implements AutoCloseable {
          ClientMessage reply = requestor.request(request, timeout);
 
          if (ManagementHelper.hasOperationSucceeded(reply)) {
-            return ManagementHelper.getResult(reply);
+            return (T)ManagementHelper.getResult(reply, operationClass);
          } else {
             throw new Exception("Failed to invoke " + resourceName + "." + operationName + ". Reason: " + ManagementHelper.getResult(reply, String.class));
          }

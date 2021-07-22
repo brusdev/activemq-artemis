@@ -90,10 +90,10 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    public boolean checkReadiness() {
       try {
          if (getNodeID() == null) {
-            setNodeID((String)getAttribute(ResourceNames.BROKER, "NodeID", 3000));
+            setNodeID(getAttribute(ResourceNames.BROKER, "NodeID", String.class, 3000));
          }
 
-         return (boolean)getAttribute(ResourceNames.BROKER, "Active", 3000);
+         return getAttribute(ResourceNames.BROKER, "Active", Boolean.class, 3000);
       } catch (Exception e) {
          logger.warn("Error on check readiness", e);
       }
@@ -102,13 +102,13 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    }
 
    @Override
-   public Object getAttribute(String resourceName, String attributeName, int timeout) throws Exception {
-      return managementProxy.getAttribute(resourceName, attributeName, timeout);
+   public <T> T getAttribute(String resourceName, String attributeName, Class<T> attributeClass, int timeout) throws Exception {
+      return managementProxy.getAttribute(resourceName, attributeName, attributeClass, timeout);
    }
 
    @Override
-   public Object invokeOperation(String resourceName, String operationName, Object[] operationParams, int timeout) throws Exception {
-      return managementProxy.invokeOperation(resourceName, operationName, operationParams, timeout);
+   public <T> T invokeOperation(String resourceName, String operationName, Object[] operationParams, Class<T> operationClass, int timeout) throws Exception {
+      return managementProxy.invokeOperation(resourceName, operationName, operationParams, operationClass, timeout);
    }
 
    @Override

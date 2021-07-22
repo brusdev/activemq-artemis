@@ -127,6 +127,10 @@ public class BrokerBalancer implements ActiveMQComponent {
    public Target getTarget(String key) {
 
       if (this.localTargetFilter != null && this.localTargetFilter.matcher(key).matches()) {
+         if (logger.isDebugEnabled()) {
+            logger.debug("The " + targetKey + "[" + key + "] matches the localTargetFilter " + localTargetFilter.pattern());
+         }
+
          return localTarget;
       }
 
@@ -134,7 +138,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
       if (target != null && !pool.isTargetReady(target)) {
          if (logger.isDebugEnabled()) {
-            logger.debug("The cache returns [" + target + "] not ready for " + key);
+            logger.debug("The cache returns [" + target + "] not ready for " + targetKey + "[" + key + "]");
          }
 
          target = null;
@@ -146,7 +150,7 @@ public class BrokerBalancer implements ActiveMQComponent {
          target = policy.selectTarget(targets, key);
 
          if (logger.isDebugEnabled()) {
-            logger.debug("The policy selects [" + target + "] from " + targets + " for " + key);
+            logger.debug("The policy selects [" + target + "] from " + targets + " for " + targetKey + "[" + key + "]");
          }
 
          if (target != null) {

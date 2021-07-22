@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MockTargetFactory implements TargetFactory {
+public class MockTargetFactory extends AbstractTargetFactory {
 
    private final List<MockTarget> createdTargets = new ArrayList<>();
 
@@ -78,6 +78,9 @@ public class MockTargetFactory implements TargetFactory {
    @Override
    public Target createTarget(TransportConfiguration connector, String nodeID) {
       MockTarget target = new MockTarget(connector, nodeID);
+
+      target.setUsername(getUsername());
+      target.setPassword(getPassword());
 
       createdTargets.add(target);
 
