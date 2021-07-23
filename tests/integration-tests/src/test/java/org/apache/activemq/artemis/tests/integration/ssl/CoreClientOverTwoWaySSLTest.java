@@ -153,6 +153,10 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
     * keytool -export -keystore verified-openssl-client-side-keystore.jks -file activemq-jks.cer -storepass secureexample
     * keytool -import -keystore verified-openssl-server-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
     *
+    * keytool -genkey -keystore verified-openssl-server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-openssl-server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
+    * keytool -import -keystore verified-openssl-client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    *
     * Commands to create the OpenSSL JCEKS artifacts:
     * keytool -genkey -keystore openssl-client-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
     * keytool -export -keystore openssl-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
@@ -166,6 +170,10 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
     * keytool -export -keystore verified-openssl-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
     * keytool -import -keystore verified-openssl-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
     *
+    * keytool -genkey -keystore verified-openssl-server-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-openssl-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
+    * keytool -import -keystore verified-openssl-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    *
     * Commands to create the OpenSSL PKCS12 artifacts:
     * keytool -genkey -keystore openssl-client-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
     * keytool -export -keystore openssl-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
@@ -178,6 +186,10 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
     * keytool -genkey -keystore verified-openssl-client-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
     * keytool -export -keystore verified-openssl-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
     * keytool -import -keystore verified-openssl-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    *
+    * keytool -genkey -keystore verified-openssl-server-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-openssl-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
+    * keytool -import -keystore verified-openssl-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
     */
 
    private String storeType;
@@ -220,6 +232,7 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.SSL_PROVIDER, clientSSLProvider);
 
       tc.getParams().put(TransportConstants.KEYSTORE_PROVIDER_PROP_NAME, storeProvider);
@@ -263,6 +276,7 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.SSL_PROVIDER, clientSSLProvider);
 
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);

@@ -78,6 +78,7 @@ public class SSLSecurityNotificationTest extends ActiveMQTestBase {
 
       TransportConfiguration tc = new TransportConfiguration(NETTY_CONNECTOR_FACTORY);
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "client-side-truststore.jks");
       tc.getParams().put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, "secureexample");
       tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "bad-client-side-keystore.jks");
@@ -116,6 +117,7 @@ public class SSLSecurityNotificationTest extends ActiveMQTestBase {
 
       TransportConfiguration tc = new TransportConfiguration(NETTY_CONNECTOR_FACTORY);
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "client-side-truststore.jks");
       tc.getParams().put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, "secureexample");
       tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "client-side-keystore.jks");
@@ -173,6 +175,7 @@ public class SSLSecurityNotificationTest extends ActiveMQTestBase {
 
       TransportConfiguration tc = new TransportConfiguration(NETTY_CONNECTOR_FACTORY);
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "client-side-truststore.jks");
       tc.getParams().put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, "secureexample");
       tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "client-side-keystore.jks");

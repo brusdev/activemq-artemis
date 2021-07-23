@@ -236,7 +236,7 @@ public class AMQPConnectSaslTest extends AmqpClientTestSupport {
       });
 
       String amqpServerConnectionURI = "tcp://localhost:" + mockServer.actualPort() +
-               "?sslEnabled=true;trustStorePath=" + TRUSTSTORE_NAME + ";trustStorePassword=" + TRUSTSTORE_PASSWORD;
+               "?sslEnabled=true;verifyHost=false;trustStorePath=" + TRUSTSTORE_NAME + ";trustStorePassword=" + TRUSTSTORE_PASSWORD;
       if (requireClientCert) {
          amqpServerConnectionURI +=
                   ";keyStorePath=" + CLIENT_KEYSTORE_NAME + ";keyStorePassword=" + CLIENT_KEYSTORE_PASSWORD;

@@ -127,6 +127,7 @@ public class NettyConnectorWithHTTPUpgradeTest extends ActiveMQTestBase {
       httpConnectorParams.put(TransportConstants.PORT_PROP_NAME, HTTP_PORT);
       if (useSSL) {
          httpConnectorParams.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+         httpConnectorParams.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
          httpConnectorParams.put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
          httpConnectorParams.put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, PASSWORD);
       }

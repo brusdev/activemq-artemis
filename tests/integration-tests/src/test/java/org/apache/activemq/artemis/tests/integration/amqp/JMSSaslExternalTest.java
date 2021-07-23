@@ -170,6 +170,7 @@ public class JMSSaslExternalTest extends ActiveMQTestBase {
       config.put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, "changeit");
       config.put(TransportConstants.NEED_CLIENT_AUTH_PROP_NAME, true);
       config.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      config.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
 
 
       final AtomicBoolean connectionOpened = new AtomicBoolean();

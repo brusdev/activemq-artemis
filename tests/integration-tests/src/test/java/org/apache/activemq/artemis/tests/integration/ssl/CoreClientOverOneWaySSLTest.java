@@ -162,6 +162,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -190,6 +191,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -259,6 +261,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -288,6 +291,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -316,6 +320,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -346,7 +351,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       createCustomSslServer();
       String text = RandomUtil.randomString();
 
-      String url = "tcp://127.0.0.1:61616?sslEnabled=true;trustStorePath=" + CLIENT_SIDE_TRUSTSTORE + ";trustStorePassword=" + PASSWORD;
+      String url = "tcp://127.0.0.1:61616?sslEnabled=true;verifyHost=false;trustStorePath=" + CLIENT_SIDE_TRUSTSTORE + ";trustStorePassword=" + PASSWORD;
       if (storeProvider != null && !storeProvider.equals(TransportConstants.DEFAULT_TRUSTSTORE_PROVIDER)) {
          url += ";trustStoreProvider=" + storeProvider;
       }
@@ -381,7 +386,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       codec.init(params);
 
       String masked = codec.encode(PASSWORD);
-      String url = "tcp://127.0.0.1:61616?sslEnabled=true;trustStorePath=" + CLIENT_SIDE_TRUSTSTORE + ";trustStorePassword=" + masked + ";activemq.usemaskedpassword=true";
+      String url = "tcp://127.0.0.1:61616?sslEnabled=true;verifyHost=false;trustStorePath=" + CLIENT_SIDE_TRUSTSTORE + ";trustStorePassword=" + masked + ";activemq.usemaskedpassword=true";
       if (storeProvider != null && !storeProvider.equals(TransportConstants.DEFAULT_TRUSTSTORE_PROVIDER)) {
          url += ";trustStoreProvider=" + storeProvider;
       }
@@ -416,7 +421,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
 
       String masked = codec.encode(PASSWORD);
 
-      String url = "tcp://127.0.0.1:61616?sslEnabled=true;trustStorePath=" + CLIENT_SIDE_TRUSTSTORE + ";trustStorePassword=ENC(" + masked + ")";
+      String url = "tcp://127.0.0.1:61616?sslEnabled=true;verifyHost=false;trustStorePath=" + CLIENT_SIDE_TRUSTSTORE + ";trustStorePassword=ENC(" + masked + ")";
       if (storeProvider != null && !storeProvider.equals(TransportConstants.DEFAULT_TRUSTSTORE_PROVIDER)) {
          url += ";trustStoreProvider=" + storeProvider;
       }
@@ -447,6 +452,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.USE_DEFAULT_SSL_CONTEXT_PROP_NAME, true);
 
       Pair<String, String> compat = SSLSupport.getValidProviderAndType(storeProvider, storeType);
@@ -533,6 +539,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
 
       // create a valid SSL connection and keep it for use later
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -726,6 +733,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -762,6 +770,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -797,6 +806,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
@@ -833,6 +843,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);

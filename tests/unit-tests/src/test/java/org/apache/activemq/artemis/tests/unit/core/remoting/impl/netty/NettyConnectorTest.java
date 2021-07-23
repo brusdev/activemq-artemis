@@ -155,6 +155,7 @@ public class NettyConnectorTest extends ActiveMQTestBase {
 
       Map<String, Object> params = new HashMap<>();
       params.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      params.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
 
       NettyConnector connector = new NettyConnector(params, handler, listener, executorService, Executors.newCachedThreadPool(ActiveMQThreadFactory.defaultThreadFactory()), Executors.newScheduledThreadPool(5, ActiveMQThreadFactory.defaultThreadFactory()));
 
@@ -184,6 +185,7 @@ public class NettyConnectorTest extends ActiveMQTestBase {
 
       Map<String, Object> params = new HashMap<>();
       params.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      params.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       params.put(TransportConstants.KEYSTORE_PATH_PROP_NAME,  "openssl-client-side-keystore.jks");
       params.put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "secureexample");
       params.put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME,"openssl-client-side-truststore.jks");
@@ -217,6 +219,7 @@ public class NettyConnectorTest extends ActiveMQTestBase {
 
       Map<String, Object> params = new HashMap<>();
       params.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      params.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       params.put(TransportConstants.KEYSTORE_PATH_PROP_NAME,  "bad path");
       params.put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "bad password");
       params.put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "bad path");
@@ -251,6 +254,7 @@ public class NettyConnectorTest extends ActiveMQTestBase {
 
       Map<String, Object> params = new HashMap<>();
       params.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      params.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
       params.put(TransportConstants.FORCE_SSL_PARAMETERS, true);
       params.put(TransportConstants.KEYSTORE_PATH_PROP_NAME,  "openssl-client-side-keystore.jks");
       params.put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "secureexample");
@@ -315,6 +319,7 @@ public class NettyConnectorTest extends ActiveMQTestBase {
       };
       Map<String, Object> params = new HashMap<>();
       params.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      params.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
 
       NettyConnector connector = new NettyConnector(params, handler, listener, executorService, Executors.newCachedThreadPool(ActiveMQThreadFactory.defaultThreadFactory()), Executors.newScheduledThreadPool(5, ActiveMQThreadFactory.defaultThreadFactory()));
 
@@ -340,6 +345,7 @@ public class NettyConnectorTest extends ActiveMQTestBase {
       };
       Map<String, Object> params = new HashMap<>();
       params.put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      params.put(TransportConstants.VERIFY_HOST_PROP_NAME, false);
 
       NettyConnector connector = new NettyConnector(params, handler, listener, executorService, Executors.newCachedThreadPool(ActiveMQThreadFactory.defaultThreadFactory()), Executors.newScheduledThreadPool(5, ActiveMQThreadFactory.defaultThreadFactory()));
 

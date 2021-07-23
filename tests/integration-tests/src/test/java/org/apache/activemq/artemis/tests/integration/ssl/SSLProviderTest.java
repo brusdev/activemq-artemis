@@ -58,6 +58,7 @@ public class SSLProviderTest extends SSLTestBase {
               + ":" + tc.getParams().get(TransportConstants.PORT_PROP_NAME).toString());
 
       uri.append("?").append(TransportConstants.SSL_ENABLED_PROP_NAME).append("=true");
+      uri.append("&").append(TransportConstants.VERIFY_HOST_PROP_NAME).append("=false");
       uri.append("&").append(TransportConstants.SSL_PROVIDER).append("=").append(clientSslProvider);
       uri.append("&").append(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME).append("=JKS");
       uri.append("&").append(TransportConstants.TRUSTSTORE_PATH_PROP_NAME).append("=").append(CLIENT_SIDE_TRUSTSTORE);
