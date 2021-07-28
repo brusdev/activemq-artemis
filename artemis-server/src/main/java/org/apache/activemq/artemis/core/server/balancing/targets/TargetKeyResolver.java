@@ -30,6 +30,7 @@ public class TargetKeyResolver {
    private static final Logger logger = Logger.getLogger(TargetKeyResolver.class);
 
    private static final char SOCKET_ADDRESS_DELIMITER = ':';
+   private static final String SOCKET_ADDRESS_PREFIX = "/";
 
 
    private final TargetKey key;
@@ -67,10 +68,12 @@ public class TargetKeyResolver {
             if (connection != null &&  connection.getRemoteAddress() != null) {
                keyValue = connection.getRemoteAddress();
 
+               boolean hasPrefix = keyValue.startsWith(SOCKET_ADDRESS_PREFIX);
                int delimiterIndex = keyValue.lastIndexOf(SOCKET_ADDRESS_DELIMITER);
 
-               if (delimiterIndex > 0) {
-                  keyValue = keyValue.substring(0, delimiterIndex);
+               if (hasPrefix || delimiterIndex > 0) {
+                  keyValue = keyValue.substring(hasPrefix ? SOCKET_ADDRESS_PREFIX.length() : 0,
+                     delimiterIndex > 0 ? delimiterIndex : keyValue.length());
                }
             }
             break;
