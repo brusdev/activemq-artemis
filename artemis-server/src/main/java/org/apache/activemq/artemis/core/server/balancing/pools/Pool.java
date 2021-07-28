@@ -36,6 +36,10 @@ public interface Pool extends ActiveMQComponent {
 
    void setQuorumSize(int quorumSize);
 
+   int getQuorumTimeout();
+
+   void setQuorumTimeout(int quorumTimeout);
+
    int getCheckPeriod();
 
 

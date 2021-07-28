@@ -168,6 +168,9 @@
             <cache-timeout>60000</cache-timeout>
             <policy name="LEAST_CONNECTIONS"/>
             <pool>
+               <check-period>3000</check-period>
+               <quorum-size>2</quorum-size>
+               <quorum-timeout>1000</quorum-timeout>
                <discovery-group-ref discovery-group-name="dg2"/>
             </pool>
          </broker-balancer>
