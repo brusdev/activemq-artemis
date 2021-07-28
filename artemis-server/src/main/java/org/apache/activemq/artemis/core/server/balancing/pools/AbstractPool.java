@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
 
 public abstract class AbstractPool implements Pool {
@@ -53,6 +55,12 @@ public abstract class AbstractPool implements Pool {
    private String password;
 
    private int quorumSize;
+
+   private int quorumTimeout;
+
+   private long quorumTimeoutNanos;
+
+   private final long quorumParkNanos = TimeUnit.MILLISECONDS.toNanos(100);
 
    private volatile boolean started = false;
 
@@ -88,6 +96,17 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
+   public int getQuorumTimeout() {
+      return quorumTimeout;
+   }
+
+   @Override
+   public void setQuorumTimeout(int quorumTimeout) {
+      this.quorumTimeout = quorumTimeout;
+      this.quorumTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(quorumTimeout);
+   }
+
+   @Override
    public void setQuorumSize(int quorumSize) {
       this.quorumSize = quorumSize;
    }
@@ -101,6 +120,16 @@ public abstract class AbstractPool implements Pool {
    public List<Target> getTargets() {
       List<Target> targets = targetMonitors.stream().filter(targetMonitor -> targetMonitor.isTargetReady())
          .map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
+
+      if (quorumTimeout > 0 && targets.size() < quorumSize) {
+         final long deadline = System.nanoTime() + quorumTimeoutNanos;
+         while (targets.size() < quorumSize && (System.nanoTime() - deadline) < 0) {
+            targets = targetMonitors.stream().filter(targetMonitor -> targetMonitor.isTargetReady())
+               .map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
+
+            LockSupport.parkNanos(quorumParkNanos);
+         }
+      }
 
       if (logger.isDebugEnabled()) {
          logger.debugf("Ready targets are " + targets + " / " + targetMonitors + " and quorumSize is " + quorumSize);
