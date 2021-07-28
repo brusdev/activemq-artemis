@@ -143,6 +143,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       pool.setUsername(config.getUsername());
       pool.setPassword(config.getPassword());
       pool.setQuorumSize(config.getQuorumSize());
+      pool.setQuorumTimeout(config.getQuorumTimeout());
 
       if (config.isLocalTargetEnabled()) {
          pool.addTarget(localTarget);

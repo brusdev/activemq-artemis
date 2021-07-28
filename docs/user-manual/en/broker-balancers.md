@@ -53,6 +53,7 @@ A pool is defined by the `pool` element that includes the following items:
 * the `password` element defines the password to connect to the target broker;
 * the `check-period` element defines the often to check the target broker;
 * the `quorum-size` element defines the minimum number of ready targets to activate the pool;
+* the `quorum-timeout` element defines the timeout to get the minimum number of ready targets;
 * the `local-target-enabled` element defines whether the pool has to include a local target;
 * the `static-connectors` element defines a list of static connectors used by the [static pool](#static-pool);
 * the `discovery-group` element defines the [discovery group](clusters.md#discovery-groups) used by the [discovery pool](#discovery-pool).

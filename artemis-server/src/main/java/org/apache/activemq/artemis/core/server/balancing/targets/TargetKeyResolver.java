@@ -18,6 +18,7 @@
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
+import org.jboss.logging.Logger;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +26,8 @@ import java.util.regex.Pattern;
 public class TargetKeyResolver {
    public static final String DEFAULT_KEY_VALUE = "DEFAULT";
 
+
+   private static final Logger logger = Logger.getLogger(TargetKeyResolver.class);
 
    private static final char SOCKET_ADDRESS_DELIMITER = ':';
 
@@ -78,17 +81,24 @@ public class TargetKeyResolver {
             throw new IllegalStateException("Unexpected value: " + key);
       }
 
-      if (keyFilter != null && keyValue != null) {
-         Matcher keyMatcher = keyFilter.matcher(keyValue);
-
-         if (keyMatcher.find()) {
-            keyValue = keyMatcher.group();
-         }
+      if (logger.isDebugEnabled()) {
+         logger.debugf("keyValue for %s: %s", key, keyValue);
       }
 
       if (keyValue == null) {
          keyValue = DEFAULT_KEY_VALUE;
+      } else if (keyFilter != null) {
+         Matcher keyMatcher = keyFilter.matcher(keyValue);
+
+         if (keyMatcher.find()) {
+            keyValue = keyMatcher.group();
+
+            if (logger.isDebugEnabled()) {
+               logger.debugf("keyValue with filter %s: %s", keyFilter, keyValue);
+            }
+         }
       }
+
 
       return keyValue;
    }

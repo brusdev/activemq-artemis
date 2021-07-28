@@ -82,7 +82,7 @@ public class BalancingTestBase extends ClusterTestBase {
       setupDefaultServerConnector(node);
 
       brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
-         .setPoolConfiguration(new PoolConfiguration().setQuorumSize(quorumSize)
+         .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setDiscoveryGroupName("dg1"))
          .setPolicyConfiguration(new PolicyConfiguration().setName(policyName));
 
@@ -106,7 +106,7 @@ public class BalancingTestBase extends ClusterTestBase {
       }
 
       brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
-         .setPoolConfiguration(new PoolConfiguration().setQuorumSize(quorumSize)
+         .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setStaticConnectors(staticConnectors))
          .setPolicyConfiguration(new PolicyConfiguration().setName(policyName));
 

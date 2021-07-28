@@ -2618,10 +2618,13 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          config.isMaskPassword(), password, config.getPasswordCodec()) : null);
 
       poolConfiguration.setCheckPeriod(getInteger(e, "check-period",
-         poolConfiguration.getCheckPeriod(), Validators.MINUS_ONE_OR_GE_ZERO));
+         poolConfiguration.getCheckPeriod(), Validators.GT_ZERO));
 
       poolConfiguration.setQuorumSize(getInteger(e, "quorum-size",
-         poolConfiguration.getQuorumSize(), Validators.MINUS_ONE_OR_GE_ZERO));
+         poolConfiguration.getQuorumSize(), Validators.GT_ZERO));
+
+      poolConfiguration.setQuorumTimeout(getInteger(e, "quorum-timeout",
+         poolConfiguration.getQuorumTimeout(), Validators.GE_ZERO));
 
       poolConfiguration.setLocalTargetEnabled(getBoolean(e, "local-target-enabled", poolConfiguration.isLocalTargetEnabled()));
 

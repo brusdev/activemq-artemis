@@ -38,6 +38,7 @@ public class PoolConfiguration implements Serializable {
 
    private int quorumSize = 1;
 
+   private int quorumTimeout = 3000;
 
    public String getUsername() {
       return username;
@@ -72,6 +73,15 @@ public class PoolConfiguration implements Serializable {
 
    public PoolConfiguration setQuorumSize(int quorumSize) {
       this.quorumSize = quorumSize;
+      return this;
+   }
+
+   public int getQuorumTimeout() {
+      return quorumTimeout;
+   }
+
+   public PoolConfiguration setQuorumTimeout(int quorumTimeout) {
+      this.quorumTimeout = quorumTimeout;
       return this;
    }
 

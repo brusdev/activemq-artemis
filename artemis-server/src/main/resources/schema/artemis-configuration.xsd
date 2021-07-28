@@ -2197,6 +2197,13 @@
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
+         <xsd:element name="quorum-timeout" type="xsd:long" default="3000" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  the timeout (in milliseconds) used to get the minimum number of ready targets
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:element>
          <xsd:element name="local-target-enabled" type="xsd:boolean" default="false" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>

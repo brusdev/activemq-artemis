@@ -288,6 +288,9 @@ public class FileConfigurationTest extends ConfigurationImplTest {
             Assert.assertEquals("least-connections-balancer", bc.getName());
             Assert.assertEquals(60000, bc.getCacheTimeout());
             Assert.assertEquals(bc.getPolicyConfiguration().getName(), LeastConnectionsPolicy.NAME);
+            Assert.assertEquals(3000, bc.getPoolConfiguration().getCheckPeriod());
+            Assert.assertEquals(2, bc.getPoolConfiguration().getQuorumSize());
+            Assert.assertEquals(1000, bc.getPoolConfiguration().getQuorumTimeout());
             Assert.assertEquals(false, bc.getPoolConfiguration().isLocalTargetEnabled());
             Assert.assertEquals(Collections.emptyList(), bc.getPoolConfiguration().getStaticConnectors());
             Assert.assertEquals("dg2", bc.getPoolConfiguration().getDiscoveryGroupName());
