@@ -41,6 +41,8 @@ public class BalancingTestBase extends ClusterTestBase {
 
    protected static final String CORE_PROTOCOL = "CORE";
 
+   protected static final String OPENWIRE_PROTOCOL = "OPENWIRE";
+
    protected static final String BROKER_BALANCER_NAME = "bb1";
 
    protected static final String DEFAULT_CONNECTOR_NAME = "DEFAULT";
@@ -176,6 +178,32 @@ public class BalancingTestBase extends ClusterTestBase {
             }
 
             return new JmsConnectionFactory(user, password, urlBuilder.toString());
+         }
+         case OPENWIRE_PROTOCOL: {
+            StringBuilder urlBuilder = new StringBuilder();
+
+            urlBuilder.append("failover:(");
+
+            if (sslEnabled) {
+               urlBuilder.append("ssl://");
+               urlBuilder.append(host);
+               urlBuilder.append(":");
+               urlBuilder.append(port);
+               urlBuilder.append(")");
+            } else {
+               urlBuilder.append("tcp://");
+               urlBuilder.append(host);
+               urlBuilder.append(":");
+               urlBuilder.append(port);
+               urlBuilder.append(")");
+            }
+
+            if (clientID != null) {
+               urlBuilder.append("?jms.clientID=");
+               urlBuilder.append(clientID);
+            }
+
+            return new org.apache.activemq.ActiveMQConnectionFactory(user, password, urlBuilder.toString());
          }
          default:
             throw new IllegalStateException("Unexpected value: " + protocol);

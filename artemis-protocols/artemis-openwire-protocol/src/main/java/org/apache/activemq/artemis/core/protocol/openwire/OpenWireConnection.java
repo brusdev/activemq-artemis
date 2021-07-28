@@ -63,6 +63,7 @@ import org.apache.activemq.artemis.core.protocol.openwire.amq.AMQSession;
 import org.apache.activemq.artemis.core.protocol.openwire.amq.AMQSingleConsumerBrokerExchange;
 import org.apache.activemq.artemis.core.protocol.openwire.util.OpenWireUtil;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
+import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
@@ -74,6 +75,8 @@ import org.apache.activemq.artemis.core.server.ServerConsumer;
 import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.SlowConsumerDetectionListener;
 import org.apache.activemq.artemis.core.server.TempQueueObserver;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.impl.AddressInfo;
 import org.apache.activemq.artemis.core.server.impl.RefsOperation;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
@@ -85,6 +88,7 @@ import org.apache.activemq.artemis.logs.AuditLogger;
 import org.apache.activemq.artemis.spi.core.protocol.AbstractRemotingConnection;
 import org.apache.activemq.artemis.spi.core.protocol.ConnectionEntry;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
+import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.apache.activemq.artemis.utils.actors.Actor;
 import org.apache.activemq.artemis.utils.collections.ConcurrentHashSet;
@@ -1145,6 +1149,47 @@ public class OpenWireConnection extends AbstractRemotingConnection implements Se
 
       @Override
       public Response processAddConnection(ConnectionInfo info) throws Exception {
+         if (transportConnection.getRedirectTo() != null) {
+            if (!info.isFaultTolerant()) {
+               Response resp = new ExceptionResponse(new java.lang.IllegalStateException("Client not fault tolerant"));
+               return resp;
+            }
+
+            BrokerBalancer brokerBalancer = server.getBalancerManager().getBalancer(transportConnection.getRedirectTo());
+
+            if (brokerBalancer == null) {
+               ActiveMQServerLogger.LOGGER.warnf("BrokerBalancer %s not found", transportConnection.getRedirectTo());
+
+               throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
+            }
+
+            Target target = brokerBalancer.getTarget(transportConnection, info.getClientId(), info.getUserName());
+
+            if (target != null) {
+               ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);
+
+               if (!target.isLocal()) {
+                  String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
+                  int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
+
+                  ConnectionControl command = protocolManager.newConnectionControl();
+                  command.setConnectedBrokers(String.format("tcp://%s:%d", host, port));
+                  command.setRebalanceConnection(true);
+                  dispatchSync(command);
+
+                  shutdown(true);
+
+                  return null;
+               }
+            } else {
+               ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
+
+               shutdown(true);
+
+               return null;
+            }
+         }
+
          try {
             protocolManager.addConnection(OpenWireConnection.this, info);
          } catch (Exception e) {

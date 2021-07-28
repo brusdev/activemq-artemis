@@ -149,7 +149,7 @@ Let's take a look at flowchart of the broker balancer workflow:
 
 ## Redirection
 Apache ActiveMQ Artemis provides a native redirection for supported clients and a new management API for other clients.
-The native redirection can be enabled per acceptor and is supported only for CORE and AMQP clients.
+The native redirection can be enabled per acceptor and is supported only for AMQP, CORE and OPENWIRE clients.
 The acceptor with the `redirect-to` url parameter will redirect the incoming connections.
 The `redirect-to` url parameter specifies the name of the broker balancer to use,
 ie the following acceptor will redirect the incoming CORE client connections using the broker balancer with the name `simple-balancer`:
