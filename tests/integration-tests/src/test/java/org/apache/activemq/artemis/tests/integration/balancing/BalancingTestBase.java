@@ -118,7 +118,7 @@ public class BalancingTestBase extends ClusterTestBase {
       acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
    }
 
-   protected ConnectionFactory createFactory(String protocol, boolean sslEnabled, String host, int port, String clientID, String user, String password) {
+   protected ConnectionFactory createFactory(String protocol, boolean sslEnabled, String host, int port, String clientID, String user, String password) throws Exception {
       switch (protocol) {
          case CORE_PROTOCOL: {
             StringBuilder urlBuilder = new StringBuilder();
@@ -141,14 +141,14 @@ public class BalancingTestBase extends ClusterTestBase {
                urlBuilder.append(true);
 
                urlBuilder.append("&");
-               urlBuilder.append(TransportConstants.TRUST_ALL_PROP_NAME);
+               urlBuilder.append(TransportConstants.TRUSTSTORE_PATH_PROP_NAME);
                urlBuilder.append("=");
-               urlBuilder.append("true");
+               urlBuilder.append("verified-localdomain-client-side-truststore.jks");
 
                urlBuilder.append("&");
-               urlBuilder.append(TransportConstants.SNIHOST_PROP_NAME);
+               urlBuilder.append(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME);
                urlBuilder.append("=");
-               urlBuilder.append(host);
+               urlBuilder.append("secureexample");
             }
 
             return new ActiveMQConnectionFactory(urlBuilder.toString(), user, password);
@@ -163,7 +163,11 @@ public class BalancingTestBase extends ClusterTestBase {
                urlBuilder.append(host);
                urlBuilder.append(":");
                urlBuilder.append(port);
-               urlBuilder.append("?transport.trustAll=true)");
+
+               urlBuilder.append("?transport.trustStoreLocation=");
+               urlBuilder.append(getClass().getClassLoader().getResource("verified-localdomain-client-side-truststore.jks").getFile());
+
+               urlBuilder.append("&transport.trustStorePassword=secureexample)");
             } else {
                urlBuilder.append("amqp://");
                urlBuilder.append(host);
@@ -203,7 +207,16 @@ public class BalancingTestBase extends ClusterTestBase {
                urlBuilder.append(clientID);
             }
 
-            return new org.apache.activemq.ActiveMQConnectionFactory(user, password, urlBuilder.toString());
+            if (sslEnabled) {
+               org.apache.activemq.ActiveMQSslConnectionFactory sslConnectionFactory = new org.apache.activemq.ActiveMQSslConnectionFactory(urlBuilder.toString());
+               sslConnectionFactory.setUserName(user);
+               sslConnectionFactory.setPassword(password);
+               sslConnectionFactory.setTrustStore("verified-localdomain-client-side-truststore.jks");
+               sslConnectionFactory.setTrustStorePassword("secureexample");
+               return sslConnectionFactory;
+            } else {
+               return new org.apache.activemq.ActiveMQConnectionFactory(user, password, urlBuilder.toString());
+            }
          }
          default:
             throw new IllegalStateException("Unexpected value: " + protocol);
