@@ -39,15 +39,9 @@ import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubAckMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
 import io.netty.util.ReferenceCountUtil;
-import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.logs.AuditLogger;
 import org.apache.activemq.artemis.spi.core.protocol.ConnectionEntry;
-import org.apache.activemq.artemis.spi.core.remoting.Connection;
-import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.actors.Actor;
 
 /**
@@ -183,46 +177,9 @@ public class MQTTProtocolHandler extends ChannelInboundHandlerAdapter {
     * @param connect
     */
    void handleConnect(MqttConnectMessage connect) throws Exception {
-      boolean redirected = false;
-      if (connection.getTransportConnection().getRedirectTo() != null) {
-         Connection transportConnection = connection.getTransportConnection();
-         BrokerBalancer brokerBalancer = server.getBalancerManager().getBalancer(transportConnection.getRedirectTo());
+      MQTTRedirectHandler redirectHandler = new MQTTRedirectHandler(server, connection, session, connect);
 
-         if (brokerBalancer == null) {
-            ActiveMQServerLogger.LOGGER.warnf("BrokerBalancer %s not found", transportConnection.getRedirectTo());
-
-            redirected = true;
-         } else {
-            Target target = brokerBalancer.getTarget(transportConnection,
-               connect.payload().clientIdentifier(), connect.payload().userName());
-
-            if (target != null) {
-               ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);
-
-               if (!target.isLocal()) {
-                  String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
-                  int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
-
-                  MqttProperties mqttProperties = new MqttProperties();
-                  mqttProperties.add(new MqttProperties.StringProperty(MqttProperties.MqttPropertyType.SERVER_REFERENCE.value(), String.format("{0}:{1}", host, port)));
-
-                  session.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER, mqttProperties);
-                  session.getProtocolHandler().disconnect(true);
-
-                  redirected = true;
-               }
-            } else {
-               ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
-
-               session.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
-               session.getProtocolHandler().disconnect(true);
-
-               redirected = true;
-            }
-         }
-      }
-
-      if (!redirected) {
+      if (!redirectHandler.redirect()) {
          connectionEntry.ttl = connect.variableHeader().keepAliveTimeSeconds() * 1500L;
 
          String clientId = connect.payload().clientIdentifier();
