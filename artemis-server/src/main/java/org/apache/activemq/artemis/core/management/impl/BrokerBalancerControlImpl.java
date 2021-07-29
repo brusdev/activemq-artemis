@@ -27,9 +27,29 @@ import org.apache.activemq.artemis.utils.JsonLoader;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.NotCompliantMBeanException;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.OpenType;
+import javax.management.openmbean.SimpleType;
+import javax.management.openmbean.TabularData;
+import javax.management.openmbean.TabularDataSupport;
+import javax.management.openmbean.TabularType;
+import java.util.Map;
 
 public class BrokerBalancerControlImpl extends AbstractControl implements BrokerBalancerControl {
    private final BrokerBalancer balancer;
+
+
+   private static CompositeType parameterType;
+
+   private static TabularType parametersType;
+
+   private static CompositeType transportConfigurationType;
+
+   private static CompositeType targetType;
+
 
    public BrokerBalancerControlImpl(final BrokerBalancer balancer, final StorageManager storageManager) throws NotCompliantMBeanException {
       super(BrokerBalancerControl.class, storageManager);
@@ -37,21 +57,30 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
    }
 
    @Override
-   public Object getTarget(String key) {
+   public CompositeData getTarget(String key) throws Exception {
       Target target = balancer.getTarget(key);
 
       if (target != null) {
+         CompositeData connectorData = null;
          TransportConfiguration connector = target.getConnector();
 
-         return new Object[] {
-            target.getNodeID(),
-            target.isLocal(),
-            connector == null ? null : new Object[] {
-               connector.getName(),
-               connector.getFactoryClassName(),
-               connector.getParams()
+         if (connector != null) {
+            TabularData paramsData = new TabularDataSupport(getParametersType());
+            for (Map.Entry<String, Object> param : connector.getParams().entrySet()) {
+               paramsData.put(new CompositeDataSupport(getParameterType(), new String[]{"key", "value"},
+                  new Object[]{param.getKey(), param == null ? param : param.getValue().toString()}));
             }
-         };
+
+            connectorData = new CompositeDataSupport(getTransportConfigurationType(),
+               new String[]{"name", "factoryClassName", "params"},
+               new Object[]{connector.getName(), connector.getFactoryClassName(), paramsData});
+         }
+
+         CompositeData targetData = new CompositeDataSupport(getTargetCompositeType(),
+            new String[]{"nodeID", "local", "connector"},
+            new Object[]{target.getNodeID(), target.isLocal(), connectorData});
+
+         return targetData;
       }
 
       return null;
@@ -81,5 +110,43 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
    @Override
    protected MBeanAttributeInfo[] fillMBeanAttributeInfo() {
       return MBeanInfoHelper.getMBeanAttributesInfo(BrokerBalancerControl.class);
+   }
+
+
+   private CompositeType getParameterType() throws OpenDataException {
+      if (parameterType == null) {
+         parameterType = new CompositeType("java.util.Map.Entry<java.lang.String, java.lang.String>",
+            "Parameter", new String[]{"key", "value"}, new String[]{"Parameter key", "Parameter value"},
+            new OpenType[]{SimpleType.STRING, SimpleType.STRING});
+      }
+      return parameterType;
+   }
+
+   private TabularType getParametersType() throws OpenDataException {
+      if (parametersType == null) {
+         parametersType = new TabularType("java.util.Map<java.lang.String, java.lang.String>",
+            "Parameters", getParameterType(), new String[]{"key"});
+      }
+      return parametersType;
+   }
+
+   private CompositeType getTransportConfigurationType() throws OpenDataException {
+      if (transportConfigurationType == null) {
+         transportConfigurationType = new CompositeType(TransportConfiguration.class.getName(),
+            "TransportConfiguration", new String[]{"name", "factoryClassName", "params"},
+            new String[]{"TransportConfiguration name", "TransportConfiguration factoryClassName", "TransportConfiguration params"},
+            new OpenType[]{SimpleType.STRING, SimpleType.STRING, getParametersType()});
+      }
+      return transportConfigurationType;
+   }
+
+   private CompositeType getTargetCompositeType() throws OpenDataException {
+      if (targetType == null) {
+         targetType = new CompositeType(Target.class.getName(),
+            "Target", new String[]{"nodeID", "local", "connector"},
+            new String[]{"Target nodeID", "Target local", "Target connector"},
+            new OpenType[]{SimpleType.STRING, SimpleType.BOOLEAN, getTransportConfigurationType()});
+      }
+      return targetType;
    }
 }

@@ -17,13 +17,14 @@
 package org.apache.activemq.artemis.api.core.management;
 
 import javax.management.MBeanOperationInfo;
+import javax.management.openmbean.CompositeData;
 
 /**
  * A BrokerBalancerControl is used to manage a BrokerBalancer.
  */
 public interface BrokerBalancerControl {
    @Operation(desc = "Get the target associated with key", impact = MBeanOperationInfo.INFO)
-   Object getTarget(@Parameter(desc = "a key", name = "key") String key);
+   CompositeData getTarget(@Parameter(desc = "a key", name = "key") String key) throws Exception;
 
    @Operation(desc = "Get the target associated with key", impact = MBeanOperationInfo.INFO)
    String getTargetAsJSON(@Parameter(desc = "a key", name = "key") String key);
