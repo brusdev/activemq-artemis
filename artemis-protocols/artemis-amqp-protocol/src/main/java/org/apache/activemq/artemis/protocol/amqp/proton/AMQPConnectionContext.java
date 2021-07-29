@@ -38,6 +38,7 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.SecurityAuth;
+import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
@@ -480,36 +481,43 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          org.apache.activemq.artemis.spi.core.remoting.Connection transportConnection = connectionCallback.getTransportConnection();
          BrokerBalancer brokerBalancer = protocolManager.getServer().getBalancerManager()
             .getBalancer(transportConnection.getRedirectTo());
-         Target target = brokerBalancer.getTarget(transportConnection,
-            connection.getRemoteContainer(), handler.getSASLResult().getUser());
 
-         if (target != null) {
-            ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);
+         if (brokerBalancer == null) {
+            ActiveMQServerLogger.LOGGER.warnf("BrokerBalancer %s not found", transportConnection.getRedirectTo());
 
-            if (!target.isLocal()) {
-               String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
-               int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
+            redirected = true;
+         } else {
+            Target target = brokerBalancer.getTarget(transportConnection,
+               connection.getRemoteContainer(), handler.getSASLResult().getUser());
+
+            if (target != null) {
+               ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, target);
+
+               if (!target.isLocal()) {
+                  String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
+                  int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
+
+                  ErrorCondition error = new ErrorCondition();
+                  error.setCondition(ConnectionError.REDIRECT);
+                  error.setDescription(String.format("Connection redirected to %s:%d by broker balancer %s", host, port, brokerBalancer.getName()));
+                  Map info = new HashMap();
+                  info.put(AmqpSupport.NETWORK_HOST, host);
+                  info.put(AmqpSupport.PORT, port);
+                  error.setInfo(info);
+                  connection.setCondition(error);
+
+                  redirected = true;
+               }
+            } else {
+               ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
 
                ErrorCondition error = new ErrorCondition();
-               error.setCondition(ConnectionError.REDIRECT);
-               error.setDescription(String.format("Connection redirected to %s:%d by broker balancer %s", host, port, brokerBalancer.getName()));
-               Map info = new HashMap();
-               info.put(AmqpSupport.NETWORK_HOST, host);
-               info.put(AmqpSupport.PORT, port);
-               error.setInfo(info);
+               error.setCondition(ConnectionError.CONNECTION_FORCED);
+               error.setDescription(String.format("Broker balancer %s is not ready to redirect", brokerBalancer.getName()));
                connection.setCondition(error);
 
                redirected = true;
             }
-         } else {
-            ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
-
-            ErrorCondition error = new ErrorCondition();
-            error.setCondition(ConnectionError.CONNECTION_FORCED);
-            error.setDescription(String.format("Broker balancer %s is not ready to redirect", brokerBalancer.getName()));
-            connection.setCondition(error);
-
-            redirected = true;
          }
       }
 
