@@ -32,15 +32,7 @@ import org.junit.runners.Parameterized;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509ExtendedTrustManager;
 import java.net.InetAddress;
-import java.net.Socket;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -117,29 +109,21 @@ public class TargetKeyTest extends BalancingTestBase {
    public void testSNIHostKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
-      getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "server-side-keystore.jks");
+      getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "verified-localdomain-server-side-keystore.jks");
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "secureexample");
 
       setupBalancerServerWithDiscovery(0, TargetKey.SNI_HOST, MOCK_POLICY_NAME, true, null, 1);
       startServers(0);
 
-      SSLContext defaultSSLContext = SSLContext.getDefault();
-      SSLContext tempSSLContext = SSLContext.getInstance("TLS");
-      tempSSLContext.init(new KeyManager[0], new TrustManager[]{new MockTrustManager()}, null);
-      SSLContext.setDefault(tempSSLContext);
-      try {
-         ConnectionFactory connectionFactory = createFactory(protocol, true, "test.localtest.me",
-            TransportConstants.DEFAULT_PORT + 0, null, null, null);
+      ConnectionFactory connectionFactory = createFactory(protocol, true, "localhost.localdomain",
+         TransportConstants.DEFAULT_PORT + 0, null, null, null);
 
-         try (Connection connection = connectionFactory.createConnection()) {
-            connection.start();
-         }
-      } finally {
-         SSLContext.setDefault(defaultSSLContext);
+      try (Connection connection = connectionFactory.createConnection()) {
+         connection.start();
       }
 
       Assert.assertEquals(1, keys.size());
-      Assert.assertEquals("test.localtest.me", keys.get(0));
+      Assert.assertEquals("localhost.localdomain", keys.get(0));
    }
 
    @Test
@@ -174,42 +158,5 @@ public class TargetKeyTest extends BalancingTestBase {
 
       Assert.assertEquals(1, keys.size());
       Assert.assertEquals("admin", keys.get(0));
-   }
-
-   class MockTrustManager extends X509ExtendedTrustManager {
-      @Override
-      public void checkClientTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
-
-      }
-
-      @Override
-      public void checkServerTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
-
-      }
-
-      @Override
-      public void checkClientTrusted(X509Certificate[] x509Certificates, String s, SSLEngine sslEngine) throws CertificateException {
-
-      }
-
-      @Override
-      public void checkServerTrusted(X509Certificate[] x509Certificates, String s, SSLEngine sslEngine) throws CertificateException {
-
-      }
-
-      @Override
-      public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
-      }
-
-      @Override
-      public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
-      }
-
-      @Override
-      public X509Certificate[] getAcceptedIssuers() {
-         return new X509Certificate[0];
-      }
    }
 }
