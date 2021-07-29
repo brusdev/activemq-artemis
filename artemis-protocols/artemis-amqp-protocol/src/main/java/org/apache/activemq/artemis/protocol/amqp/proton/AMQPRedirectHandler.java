@@ -17,7 +17,6 @@
 
 package org.apache.activemq.artemis.protocol.amqp.proton;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
@@ -46,12 +45,12 @@ public class AMQPRedirectHandler extends RedirectHandler {
 
 
    @Override
-   protected void checkClientCanRedirect() throws ActiveMQException {
+   protected void checkClientCanRedirect() throws Exception {
 
    }
 
    @Override
-   protected void cannotRedirect() throws ActiveMQException {
+   protected void cannotRedirect() throws Exception {
       ErrorCondition error = new ErrorCondition();
       error.setCondition(ConnectionError.CONNECTION_FORCED);
       error.setDescription(String.format("Broker balancer %s is not ready to redirect", getTransportConnection().getRedirectTo()));
@@ -59,7 +58,7 @@ public class AMQPRedirectHandler extends RedirectHandler {
    }
 
    @Override
-   protected void redirectTo(Target target) throws ActiveMQException {
+   protected void redirectTo(Target target) throws Exception {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
 
