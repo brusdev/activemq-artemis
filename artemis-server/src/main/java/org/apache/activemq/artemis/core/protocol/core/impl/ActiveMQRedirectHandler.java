@@ -17,7 +17,6 @@
 
 package org.apache.activemq.artemis.core.protocol.core.impl;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.DisconnectReason;
 import org.apache.activemq.artemis.core.protocol.core.CoreRemotingConnection;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
@@ -37,19 +36,19 @@ public class ActiveMQRedirectHandler extends RedirectHandler {
 
 
    @Override
-   public void checkClientCanRedirect() throws ActiveMQException {
+   public void checkClientCanRedirect() throws Exception {
       if (!connection.isVersionSupportRedirect()) {
          throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
       }
    }
 
    @Override
-   public void cannotRedirect() throws ActiveMQException {
+   public void cannotRedirect() throws Exception {
       throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
    }
 
    @Override
-   public void redirectTo(Target target) throws ActiveMQException {
+   public void redirectTo(Target target) throws Exception {
       connection.disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
 
       throw ActiveMQMessageBundle.BUNDLE.redirectConnection(target.getConnector());
