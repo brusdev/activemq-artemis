@@ -73,7 +73,7 @@ public abstract class RedirectHandler {
       BrokerBalancer brokerBalancer = getServer().getBalancerManager().getBalancer(getTransportConnection().getRedirectTo());
 
       if (brokerBalancer == null) {
-         ActiveMQServerLogger.LOGGER.warnf("BrokerBalancer %s not found", getTransportConnection().getRedirectTo());
+         ActiveMQServerLogger.LOGGER.brokerBalancerNotFound(getTransportConnection().getRedirectTo());
 
          cannotRedirect();
 
@@ -82,15 +82,7 @@ public abstract class RedirectHandler {
 
       Target target = brokerBalancer.getTarget(getTransportConnection(), getClientID(), getUserame());
 
-      if (target != null) {
-         ActiveMQServerLogger.LOGGER.redirectClientConnection(getTransportConnection(), target);
-
-         if (!target.isLocal()) {
-            redirectTo(target);
-
-            return true;
-         }
-      } else {
+      if (target == null) {
          ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(getTransportConnection());
 
          cannotRedirect();
@@ -98,7 +90,14 @@ public abstract class RedirectHandler {
          return true;
       }
 
+      ActiveMQServerLogger.LOGGER.redirectClientConnection(getTransportConnection(), target);
+
+      if (!target.isLocal()) {
+         redirectTo(target);
+
+         return true;
+      }
+
       return false;
    }
-
 }
