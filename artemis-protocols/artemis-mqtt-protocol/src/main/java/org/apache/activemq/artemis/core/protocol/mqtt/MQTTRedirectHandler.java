@@ -20,7 +20,6 @@ package org.apache.activemq.artemis.core.protocol.mqtt;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttProperties;
-import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
@@ -41,18 +40,18 @@ public class MQTTRedirectHandler extends RedirectHandler {
 
 
    @Override
-   protected void checkClientCanRedirect() throws ActiveMQException {
+   protected void checkClientCanRedirect() throws Exception {
 
    }
 
    @Override
-   protected void cannotRedirect() throws ActiveMQException {
+   protected void cannotRedirect() throws Exception {
       mqttSession.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
       mqttSession.getProtocolHandler().disconnect(true);
    }
 
    @Override
-   protected void redirectTo(Target target) throws ActiveMQException {
+   protected void redirectTo(Target target) throws Exception {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
 
