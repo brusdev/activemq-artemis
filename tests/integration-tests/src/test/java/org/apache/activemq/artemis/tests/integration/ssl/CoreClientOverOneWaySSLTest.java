@@ -104,10 +104,6 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
     * keytool -export -keystore verified-server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
     * keytool -import -keystore verified-client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
     *
-    * keytool -genkey -keystore verified-localdomain-server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=*.localdomain, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore verified-localdomain-server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore verified-localdomain-client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
-    *
     * Commands to create the JCEKS artifacts:
     * keytool -genkey -keystore server-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
     * keytool -export -keystore server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample

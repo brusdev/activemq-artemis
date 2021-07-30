@@ -109,7 +109,7 @@ public class TargetKeyTest extends BalancingTestBase {
    public void testSNIHostKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
-      getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "verified-localdomain-server-side-keystore.jks");
+      getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "verified-localdomain-keystore.jks");
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "secureexample");
 
       setupBalancerServerWithDiscovery(0, TargetKey.SNI_HOST, MOCK_POLICY_NAME, true, null, 1);

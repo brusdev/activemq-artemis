@@ -143,7 +143,7 @@ public class BalancingTestBase extends ClusterTestBase {
                urlBuilder.append("&");
                urlBuilder.append(TransportConstants.TRUSTSTORE_PATH_PROP_NAME);
                urlBuilder.append("=");
-               urlBuilder.append("verified-localdomain-client-side-truststore.jks");
+               urlBuilder.append("verified-localdomain-truststore.jks");
 
                urlBuilder.append("&");
                urlBuilder.append(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME);
@@ -165,8 +165,7 @@ public class BalancingTestBase extends ClusterTestBase {
                urlBuilder.append(port);
 
                urlBuilder.append("?transport.trustStoreLocation=");
-               urlBuilder.append(getClass().getClassLoader().getResource("verified-localdomain-client-side-truststore.jks").getFile());
-
+               urlBuilder.append(getClass().getClassLoader().getResource("verified-localdomain-truststore.jks").getFile());
                urlBuilder.append("&transport.trustStorePassword=secureexample)");
             } else {
                urlBuilder.append("amqp://");
@@ -211,7 +210,7 @@ public class BalancingTestBase extends ClusterTestBase {
                org.apache.activemq.ActiveMQSslConnectionFactory sslConnectionFactory = new org.apache.activemq.ActiveMQSslConnectionFactory(urlBuilder.toString());
                sslConnectionFactory.setUserName(user);
                sslConnectionFactory.setPassword(password);
-               sslConnectionFactory.setTrustStore("verified-localdomain-client-side-truststore.jks");
+               sslConnectionFactory.setTrustStore("verified-localdomain-truststore.jks");
                sslConnectionFactory.setTrustStorePassword("secureexample");
                return sslConnectionFactory;
             } else {
