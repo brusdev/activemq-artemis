@@ -471,7 +471,7 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
       }
 
       AMQPRedirectHandler redirectHandler = new AMQPRedirectHandler(protocolManager.getServer(),
-         connectionCallback, connection, handler.getSASLResult().getUser());
+         connectionCallback, connection, handler.getSASLResult() != null ? handler.getSASLResult().getUser() : null);
 
       if (redirectHandler.redirect() || !validateConnection(connection)) {
          connection.close();
