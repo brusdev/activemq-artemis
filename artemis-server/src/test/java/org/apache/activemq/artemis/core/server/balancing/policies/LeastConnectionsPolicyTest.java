@@ -55,7 +55,7 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
 
 
       targets.forEach(target -> {
-         ((MockTarget)target).setAttributeValue("broker", "ConnectionCount", Long.valueOf(3));
+         ((MockTarget)target).setAttributeValue("broker", "ConnectionCount", 3);
          policy.getTargetProbe().check(target);
       });
 
@@ -67,7 +67,7 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
       Assert.assertEquals(MULTIPLE_TARGETS, selectedTargets.size());
 
 
-      ((MockTarget)targets.get(0)).setAttributeValue("broker", "ConnectionCount", Long.valueOf(2));
+      ((MockTarget)targets.get(0)).setAttributeValue("broker", "ConnectionCount", 2);
       targets.forEach(target -> policy.getTargetProbe().check(target));
 
       selectedTargets = new HashSet<>();
@@ -79,8 +79,8 @@ public class LeastConnectionsPolicyTest extends PolicyTestBase {
       Assert.assertTrue(selectedTargets.contains(targets.get(0)));
 
 
-      ((MockTarget)targets.get(1)).setAttributeValue("broker", "ConnectionCount", Long.valueOf(1));
-      ((MockTarget)targets.get(2)).setAttributeValue("broker", "ConnectionCount", Long.valueOf(1));
+      ((MockTarget)targets.get(1)).setAttributeValue("broker", "ConnectionCount", 1);
+      ((MockTarget)targets.get(2)).setAttributeValue("broker", "ConnectionCount", 1);
       targets.forEach(target -> policy.getTargetProbe().check(target));
 
       selectedTargets = new HashSet<>();
