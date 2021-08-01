@@ -157,6 +157,8 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       Policy policy = policyFactory.createPolicy(policyConfig.getName());
 
+      policy.init(policyConfig.getProperties());
+
       if (policy.getTargetProbe() != null) {
          pool.addTargetProbe(policy.getTargetProbe());
       }

@@ -38,10 +38,12 @@ import org.apache.qpid.jms.JmsConnectionFactory;
 
 public class BalancingTestBase extends ClusterTestBase {
    protected static final String AMQP_PROTOCOL = "AMQP";
-
    protected static final String CORE_PROTOCOL = "CORE";
-
    protected static final String OPENWIRE_PROTOCOL = "OPENWIRE";
+
+   protected static final String CLUSTER_POOL = "CLUSTER";
+   protected static final String DISCOVERY_POOL = "DISCOVERY";
+   protected static final String STATIC_POOL = "STATIC";
 
    protected static final String BROKER_BALANCER_NAME = "bb1";
 
@@ -77,7 +79,24 @@ public class BalancingTestBase extends ClusterTestBase {
       return defaultServerConnector;
    }
 
-   protected void setupBalancerServerWithDiscovery(final int node, final TargetKey targetKey, final String policyName, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
+   protected void setupBalancerServerWithCluster(final int node, final TargetKey targetKey, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, String clusterConnection) {
+      Configuration configuration = getServer(node).getConfiguration();
+      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
+
+      setupDefaultServerConnector(node);
+
+      brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
+         .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
+            .setLocalTargetEnabled(localTargetEnabled).setClusterConnection(clusterConnection))
+         .setPolicyConfiguration(new PolicyConfiguration().setName(policyName).setProperties(properties));
+
+      configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
+
+      TransportConfiguration acceptor = getDefaultServerAcceptor(node);
+      acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
+   }
+
+   protected void setupBalancerServerWithDiscovery(final int node, final TargetKey targetKey, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
       Configuration configuration = getServer(node).getConfiguration();
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
 
@@ -86,7 +105,7 @@ public class BalancingTestBase extends ClusterTestBase {
       brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setDiscoveryGroupName("dg1"))
-         .setPolicyConfiguration(new PolicyConfiguration().setName(policyName));
+         .setPolicyConfiguration(new PolicyConfiguration().setName(policyName).setProperties(properties));
 
       configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
 
@@ -94,7 +113,7 @@ public class BalancingTestBase extends ClusterTestBase {
       acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
    }
 
-   protected void setupBalancerServerWithStaticConnectors(final int node, final TargetKey targetKey, final String policyName, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
+   protected void setupBalancerServerWithStaticConnectors(final int node, final TargetKey targetKey, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
       Configuration configuration = getServer(node).getConfiguration();
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
 
@@ -110,7 +129,7 @@ public class BalancingTestBase extends ClusterTestBase {
       brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setStaticConnectors(staticConnectors))
-         .setPolicyConfiguration(new PolicyConfiguration().setName(policyName));
+         .setPolicyConfiguration(new PolicyConfiguration().setName(policyName).setProperties(properties));
 
       configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
 

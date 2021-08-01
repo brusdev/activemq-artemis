@@ -22,10 +22,14 @@ import org.apache.activemq.artemis.api.core.client.TopologyMember;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class ClusterPool extends AbstractPool implements ClusterTopologyListener {
    private final ClusterConnection clusterConnection;
+
+   private final Map<String, TopologyMember> clusterMembers = new ConcurrentHashMap<>();
 
    public ClusterPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
                       int checkPeriod, ClusterConnection clusterConnection) {
@@ -50,11 +54,16 @@ public class ClusterPool extends AbstractPool implements ClusterTopologyListener
 
    @Override
    public void nodeUP(TopologyMember member, boolean last) {
-      addTarget(member.getLive(), member.getNodeId());
+      if (!clusterConnection.getNodeID().equals(member.getNodeId()) &&
+         clusterMembers.putIfAbsent(member.getNodeId(), member) == null) {
+         addTarget(member.getLive(), member.getNodeId());
+      }
    }
 
    @Override
    public void nodeDown(long eventUID, String nodeID) {
-      removeTarget(getTarget(nodeID));
+      if (clusterMembers.remove(nodeID) != null) {
+         removeTarget(getTarget(nodeID));
+      }
    }
 }

@@ -21,11 +21,16 @@ import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
 import java.util.List;
+import java.util.Map;
 
 public interface Policy {
    String getName();
 
    TargetProbe getTargetProbe();
+
+   Map<String, String> getProperties();
+
+   void init(Map<String, String> properties);
 
    Target selectTarget(List<Target> targets, String key);
 }

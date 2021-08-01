@@ -27,6 +27,8 @@ import javax.jms.TextMessage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
@@ -38,6 +40,7 @@ import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPo
 import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.RoundRobinPolicy;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,11 +51,13 @@ public class RedirectTest extends BalancingTestBase {
 
    @Parameterized.Parameters(name = "protocol: {0}, discovery: {1}")
    public static Collection<Object[]> data() {
+      final String[] protocols = new String[] {AMQP_PROTOCOL, CORE_PROTOCOL, OPENWIRE_PROTOCOL};
+      final String[] pools = new String[] {CLUSTER_POOL, DISCOVERY_POOL, STATIC_POOL};
       Collection<Object[]> data = new ArrayList<>();
 
-      for (String protocol : Arrays.asList(new String[] {AMQP_PROTOCOL, CORE_PROTOCOL, OPENWIRE_PROTOCOL})) {
-         for (boolean discovery : Arrays.asList(new Boolean[] {false, true})) {
-            data.add(new Object[] {protocol, discovery});
+      for (String protocol : Arrays.asList(protocols)) {
+         for (String pool : Arrays.asList(pools)) {
+            data.add(new Object[] {protocol, pool});
          }
       }
 
@@ -62,13 +67,13 @@ public class RedirectTest extends BalancingTestBase {
 
    private final String protocol;
 
-   private final boolean discovery;
+   private final String pool;
 
 
-   public RedirectTest(String protocol, boolean discovery) {
+   public RedirectTest(String protocol, String pool) {
       this.protocol = protocol;
 
-      this.discovery = discovery;
+      this.pool = pool;
    }
 
    @Test
@@ -77,10 +82,14 @@ public class RedirectTest extends BalancingTestBase {
 
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      if (discovery) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, false, null, 1);
+      if (CLUSTER_POOL.equals(pool)) {
+         setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
+      } else if (DISCOVERY_POOL.equals(pool)) {
+         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, false, null, 1, 1);
+         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
       }
 
       startServers(0, 1);
@@ -126,19 +135,21 @@ public class RedirectTest extends BalancingTestBase {
 
       Assert.assertEquals(0, queueControl0.countMessages());
       Assert.assertEquals(0, queueControl1.countMessages());
+
+      stopServers(0, 1);
    }
 
    @Test
    public void testRoundRobinRedirect() throws Exception {
-      testEvenlyRedirect(RoundRobinPolicy.NAME);
+      testEvenlyRedirect(RoundRobinPolicy.NAME, null);
    }
 
    @Test
    public void testLeastConnectionsRedirect() throws Exception {
-      testEvenlyRedirect(LeastConnectionsPolicy.NAME);
+      testEvenlyRedirect(LeastConnectionsPolicy.NAME, Collections.singletonMap(LeastConnectionsPolicy.CONNECTION_COUNT_THRESHOLD, String.valueOf(30)));
    }
 
-   private void testEvenlyRedirect(final String policyName) throws Exception {
+   private void testEvenlyRedirect(final String policyName, final Map<String, String> properties) throws Exception {
       final String queueName = "RedirectTestQueue";
       final int targets = MULTIPLE_TARGETS;
       int[] nodes = new int[targets + 1];
@@ -153,10 +164,15 @@ public class RedirectTest extends BalancingTestBase {
          setupLiveServerWithDiscovery(i + 1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       }
 
-      if (discovery) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, policyName, false, null, targets);
+      if (CLUSTER_POOL.equals(pool)) {
+         for (int node : nodes) {
+            setupDiscoveryClusterConnection("cluster" + node, node, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         }
+         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, policyName, properties, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", targets, "cluster0");
+      } else if (DISCOVERY_POOL.equals(pool)) {
+         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, policyName, properties, false, null, targets);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, policyName, false, null, targets, 1, 2, 3);
+         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, policyName, properties, false, null, targets, 1, 2, 3);
       }
 
       startServers(nodes);
@@ -215,6 +231,8 @@ public class RedirectTest extends BalancingTestBase {
       for (int node : nodes) {
          Assert.assertEquals(0, queueControls[node].countMessages());
       }
+
+      stopServers(nodes);
    }
 
    @Test
@@ -223,12 +241,17 @@ public class RedirectTest extends BalancingTestBase {
 
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      if (discovery) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, true, "DEFAULT", 2);
-         setupBalancerServerWithDiscovery(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, true, "DEFAULT", 2);
+      if (CLUSTER_POOL.equals(pool)) {
+         setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER|DEFAULT", 2, "cluster0");
+         setupBalancerServerWithCluster(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER|DEFAULT", 2, "cluster1");
+      } else if (DISCOVERY_POOL.equals(pool)) {
+         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "DEFAULT", 2);
+         setupBalancerServerWithDiscovery(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "DEFAULT", 2);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, true, "DEFAULT", 2, 1);
-         setupBalancerServerWithStaticConnectors(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, true, "DEFAULT", 2, 0);
+         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "DEFAULT", 2, 1);
+         setupBalancerServerWithStaticConnectors(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "DEFAULT", 2, 0);
       }
 
       startServers(0, 1);
@@ -281,6 +304,8 @@ public class RedirectTest extends BalancingTestBase {
 
       Assert.assertEquals(0, queueControl0.countMessages());
       Assert.assertEquals(0, queueControl1.countMessages());
+
+      stopServers(0, 1);
    }
 
    @Test
@@ -290,10 +315,15 @@ public class RedirectTest extends BalancingTestBase {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(2, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      if (discovery) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, false, null, 1);
+      if (CLUSTER_POOL.equals(pool)) {
+         setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupDiscoveryClusterConnection("cluster2", 2, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
+         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
+      } else if (DISCOVERY_POOL.equals(pool)) {
+         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, false, null, 1, 1, 2);
+         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1, 2);
       }
 
       startServers(0, 1, 2);
@@ -363,5 +393,7 @@ public class RedirectTest extends BalancingTestBase {
          Assert.assertEquals(0, queueControl1.countMessages());
          Assert.assertEquals(1, queueControl2.countMessages());
       }
+
+      stopServers(0, 1, 2);
    }
 }

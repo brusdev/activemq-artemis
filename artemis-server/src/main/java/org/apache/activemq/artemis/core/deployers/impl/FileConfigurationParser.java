@@ -2608,6 +2608,8 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       PolicyFactoryResolver.getInstance().resolve(name);
 
       policyConfiguration.setName(name);
+
+      policyConfiguration.setProperties(getMapOfChildPropertyElements(e));
    }
 
    private void parsePoolConfiguration(final Element e, final Configuration config, final PoolConfiguration poolConfiguration) throws Exception {

@@ -211,13 +211,11 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public boolean addTarget(Target target) {
-      if (targets.containsKey(target)) {
-         return false;
-      }
-
       TargetMonitor targetMonitor = new TargetMonitor(scheduledExecutor, checkPeriod, target, targetProbes);
 
-      targets.put(target, targetMonitor);
+      if (targets.putIfAbsent(target, targetMonitor) != null) {
+         return false;
+      }
 
       targetMonitors.add(targetMonitor);
 

@@ -19,8 +19,12 @@ package org.apache.activemq.artemis.core.server.balancing.policies;
 
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
+import java.util.Map;
+
 public abstract class AbstractPolicy implements Policy {
    private final String name;
+
+   private Map<String, String> properties;
 
    @Override
    public String getName() {
@@ -28,8 +32,18 @@ public abstract class AbstractPolicy implements Policy {
    }
 
    @Override
+   public Map<String, String> getProperties() {
+      return properties;
+   }
+
+   @Override
    public TargetProbe getTargetProbe() {
       return null;
+   }
+
+   @Override
+   public void init(Map<String, String> properties) {
+      this.properties = properties;
    }
 
    public AbstractPolicy(final String name) {

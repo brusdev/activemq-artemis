@@ -35,13 +35,30 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
 
    public static final String UPDATE_CONNECTION_COUNT_PROBE_NAME = "UPDATE_CONNECTION_COUNT_PROBE";
 
+   public static final String CONNECTION_COUNT_THRESHOLD = "CONNECTION_COUNT_THRESHOLD";
+
+
    private final Map<Target, Integer> connectionCountCache = new ConcurrentHashMap<>();
+
+
+   private int connectionCountThreshold = 0;
+
 
    private final TargetProbe targetProbe = new TargetProbe(UPDATE_CONNECTION_COUNT_PROBE_NAME) {
       @Override
       public boolean check(Target target) {
          try {
             Integer connectionCount = target.getAttribute("broker", "ConnectionCount", Integer.class, 3000);
+
+            if (connectionCount < connectionCountThreshold) {
+               if (logger.isDebugEnabled()) {
+                  logger.debug("Updating the connection count to 0/" + connectionCount + " for the target " + target);
+               }
+
+               connectionCount = 0;
+            } else if (logger.isDebugEnabled()) {
+               logger.debug("Updating the connection count to 0/" + connectionCount + " for the target " + target);
+            }
 
             connectionCountCache.put(target, connectionCount);
 
@@ -61,6 +78,17 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
 
    public LeastConnectionsPolicy() {
       super(NAME);
+   }
+
+   @Override
+   public void init(Map<String, String> properties) {
+      super.init(properties);
+
+      if (properties != null) {
+         if (properties.containsKey(CONNECTION_COUNT_THRESHOLD)) {
+            connectionCountThreshold = Integer.valueOf(properties.get(CONNECTION_COUNT_THRESHOLD));
+         }
+      }
    }
 
    @Override

@@ -89,7 +89,7 @@ public class TargetKeyTest extends BalancingTestBase {
    @Test
    public void testClientIDKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.CLIENT_ID, MOCK_POLICY_NAME, true, null, 1);
+      setupBalancerServerWithDiscovery(0, TargetKey.CLIENT_ID, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -112,7 +112,7 @@ public class TargetKeyTest extends BalancingTestBase {
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "verified-localdomain-keystore.jks");
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "secureexample");
 
-      setupBalancerServerWithDiscovery(0, TargetKey.SNI_HOST, MOCK_POLICY_NAME, true, null, 1);
+      setupBalancerServerWithDiscovery(0, TargetKey.SNI_HOST, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, true, "localhost.localdomain",
@@ -129,7 +129,7 @@ public class TargetKeyTest extends BalancingTestBase {
    @Test
    public void testSourceIPKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.SOURCE_IP, MOCK_POLICY_NAME, true, null, 1);
+      setupBalancerServerWithDiscovery(0, TargetKey.SOURCE_IP, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -146,7 +146,7 @@ public class TargetKeyTest extends BalancingTestBase {
    @Test
    public void testUserNameKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, MOCK_POLICY_NAME, true, null, 1);
+      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,

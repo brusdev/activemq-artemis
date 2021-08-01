@@ -2157,6 +2157,15 @@
    </xsd:simpleType>
 
    <xsd:complexType name="brokerBalancerPolicyType">
+      <xsd:sequence>
+         <xsd:element ref="property" maxOccurs="unbounded" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  properties to configure a policy
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:element>
+      </xsd:sequence>
       <xsd:attribute name="name" type="xsd:ID" use="required">
          <xsd:annotation>
             <xsd:documentation>
