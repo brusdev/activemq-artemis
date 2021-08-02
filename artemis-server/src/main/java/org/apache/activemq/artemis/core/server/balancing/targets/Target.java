@@ -21,6 +21,9 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
 public interface Target {
 
+   public static final String CLIENT_ID_PREFIX = "$TARGET_CLIENT_";
+
+
    boolean isLocal();
 
    String getNodeID();

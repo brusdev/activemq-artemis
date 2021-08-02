@@ -29,19 +29,24 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
 
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
 import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.RoundRobinPolicy;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
+import org.apache.activemq.artemis.tests.util.Wait;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -308,8 +313,23 @@ public class RedirectTest extends BalancingTestBase {
       stopServers(0, 1);
    }
 
+   @Before
+   public void setUpLoggers() {
+      org.jboss.logmanager.Logger.getLogger(BrokerBalancer.class.getPackage().getName()).setLevel(Level.ALL);
+      org.jboss.logmanager.Logger.getLogger(BrokerBalancer.class.getPackage().getName()).addHandler(new ConsoleHandler());
+   }
+
    @Test
-   public void testRedirectAfterFailure() throws Exception {
+   public void testRedirectAfterTargetFailure() throws Exception {
+      testRedirectAfterFailure(false);
+   }
+
+   @Test
+   public void testRedirectAfterBalancerAndTargetFailure() throws Exception {
+      testRedirectAfterFailure(true);
+   }
+
+   private void testRedirectAfterFailure(boolean balancerFails) throws Exception {
       final String queueName = "RedirectTestQueue";
 
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
@@ -364,6 +384,14 @@ public class RedirectTest extends BalancingTestBase {
                stopServers(failedNode);
 
                producer.send(session.createTextMessage("TEST_AFTER_FAILURE"));
+
+               if (balancerFails) {
+                  stopServers(0);
+                  startServers(0);
+               }
+
+               Wait.assertTrue(() -> getServer(0).getBalancerManager()
+                  .getBalancer(BROKER_BALANCER_NAME).getPool().getTargets().size() == 1);
             }
          }
       }
@@ -373,6 +401,9 @@ public class RedirectTest extends BalancingTestBase {
       Assert.assertEquals(0, queueControl0.countMessages());
       Assert.assertEquals(1, queueControl1.countMessages());
       Assert.assertEquals(1, queueControl2.countMessages());
+
+      Wait.assertTrue(() -> getServer(0).getBalancerManager()
+         .getBalancer(BROKER_BALANCER_NAME).getPool().getTargets().size() == 2);
 
       try (Connection connection = connectionFactory.createConnection()) {
          connection.start();

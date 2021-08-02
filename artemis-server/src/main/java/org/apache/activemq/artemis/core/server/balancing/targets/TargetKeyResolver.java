@@ -53,6 +53,11 @@ public class TargetKeyResolver {
    }
 
    public String resolve(Connection connection, String clientID, String username) {
+      return resolve(connection == null ? null : connection.getRemoteAddress(),
+         connection == null ? null : connection.getSNIHostName(), clientID, username);
+   }
+
+   public String resolve(String remoteAddress, String sniHost, String clientID, String username) {
       String keyValue = null;
 
       switch (key) {
@@ -60,13 +65,11 @@ public class TargetKeyResolver {
             keyValue = clientID;
             break;
          case SNI_HOST:
-            if (connection != null) {
-               keyValue = connection.getSNIHostName();
-            }
+            keyValue = sniHost;
             break;
          case SOURCE_IP:
-            if (connection != null &&  connection.getRemoteAddress() != null) {
-               keyValue = connection.getRemoteAddress();
+            if (remoteAddress != null) {
+               keyValue = remoteAddress;
 
                boolean hasPrefix = keyValue.startsWith(SOCKET_ADDRESS_PREFIX);
                int delimiterIndex = keyValue.lastIndexOf(SOCKET_ADDRESS_DELIMITER);

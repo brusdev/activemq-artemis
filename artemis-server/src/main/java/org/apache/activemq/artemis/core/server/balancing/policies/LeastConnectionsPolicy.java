@@ -17,6 +17,7 @@
 
 package org.apache.activemq.artemis.core.server.balancing.policies;
 
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 import org.jboss.logging.Logger;
@@ -48,7 +49,7 @@ public class LeastConnectionsPolicy extends RoundRobinPolicy {
       @Override
       public boolean check(Target target) {
          try {
-            Integer connectionCount = target.getAttribute("broker", "ConnectionCount", Integer.class, 3000);
+            Integer connectionCount = target.getAttribute(ResourceNames.BROKER, "ConnectionCount", Integer.class, 3000);
 
             if (connectionCount < connectionCountThreshold) {
                if (logger.isDebugEnabled()) {

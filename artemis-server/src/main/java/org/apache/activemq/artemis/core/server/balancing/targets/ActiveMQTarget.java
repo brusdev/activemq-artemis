@@ -26,6 +26,7 @@ import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
+import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.jboss.logging.Logger;
 
 public class ActiveMQTarget extends AbstractTarget implements FailureListener {
@@ -64,7 +65,8 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
       remotingConnection.addFailureListener(this);
 
       managementProxy = new ActiveMQManagementProxy(sessionFactory.createSession(getUsername(), getPassword(),
-         false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE).start());
+         false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE,
+         Target.CLIENT_ID_PREFIX + UUIDGenerator.getInstance().generateStringUUID()).start());
 
       connected = true;
 

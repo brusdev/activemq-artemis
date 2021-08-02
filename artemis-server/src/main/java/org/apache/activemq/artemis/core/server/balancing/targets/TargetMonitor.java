@@ -30,6 +30,8 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
 
    private final Target target;
 
+   private final List<TargetProbe> targetConnectProbes;
+
    private final List<TargetProbe> targetProbes;
 
    private volatile boolean targetReady = false;
@@ -44,10 +46,11 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
    }
 
 
-   public TargetMonitor(ScheduledExecutorService scheduledExecutorService, int checkPeriod, Target target, List<TargetProbe> targetProbes) {
+   public TargetMonitor(ScheduledExecutorService scheduledExecutorService, int checkPeriod, Target target, List<TargetProbe> targetConnectProbes, List<TargetProbe> targetProbes) {
       super(scheduledExecutorService, 0, checkPeriod, TimeUnit.MILLISECONDS, false);
 
       this.target = target;
+      this.targetConnectProbes = targetConnectProbes;
       this.targetProbes = targetProbes;
    }
 
@@ -82,9 +85,11 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
             }
 
             target.connect();
+
+            targetReady = checkTargetProbes(targetConnectProbes);
          }
 
-         targetReady = target.checkReadiness() &&  checkTargetProbes();
+         targetReady = target.checkReadiness() &&  checkTargetProbes(targetProbes);
 
          if (logger.isDebugEnabled()) {
             if (targetReady) {
@@ -100,7 +105,7 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
       }
    }
 
-   private boolean checkTargetProbes() {
+   private boolean checkTargetProbes(List<TargetProbe> targetProbes) {
       for (TargetProbe targetProbe : targetProbes) {
          if (!targetProbe.check(target)) {
             logger.info(targetProbe.getName() + " has failed on " + target);

@@ -267,6 +267,14 @@ public interface RemotingConnection extends BufferHandler {
     */
    String getTransportLocalAddress();
 
+   /**
+    * Returns the SNI host of transport connection
+    * @return
+    */
+   default String getTransportSNIHost() {
+      return getTransportConnection() == null ? null : getTransportConnection().getSNIHostName();
+   }
+
    default boolean isSameTarget(TransportConfiguration... configs) {
       return getTransportConnection().isSameTarget(configs);
    }

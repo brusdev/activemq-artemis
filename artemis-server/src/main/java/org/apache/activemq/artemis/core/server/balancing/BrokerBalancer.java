@@ -19,21 +19,28 @@ package org.apache.activemq.artemis.core.server.balancing;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.activemq.artemis.api.core.JsonUtil;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class BrokerBalancer implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BrokerBalancer.class);
+
+   public static final String INIT_CACHE_PROBE_NAME = "INIT_CACHE_PROBE";
 
 
    private final String name;
@@ -53,6 +60,52 @@ public class BrokerBalancer implements ActiveMQComponent {
    private final Cache<String, Target> cache;
 
    private volatile boolean started = false;
+
+   private final TargetProbe targetProbe = new TargetProbe(INIT_CACHE_PROBE_NAME) {
+      @Override
+      public boolean check(Target target) {
+         try {
+            String sessionsAsJSON = target.invokeOperation(ResourceNames.BROKER, "listAllSessionsAsJSON", null, String.class, 3000);
+
+            JsonArray sessions = JsonUtil.readJsonArray(sessionsAsJSON);
+
+            for (JsonObject session : sessions.getValuesAs(JsonObject.class)) {
+               String sessionID = session.getString("sessionID");
+               String remoteAddress = session.getString("remoteAddress", null);
+               String sniHost = session.getString("sniHost", null);
+               String clientID = session.getString("clientID", null);
+               String username = session.getString("username", null);
+
+               if (clientID != null && clientID.startsWith(Target.CLIENT_ID_PREFIX)) {
+                  if (logger.isDebugEnabled()) {
+                     logger.debug("Skip the session [" + session + "] because the clientID starts with " + Target.CLIENT_ID_PREFIX);
+                  }
+               } else {
+                  String key = targetKeyResolver.resolve(remoteAddress, sniHost, clientID, username);
+
+                  if (localTargetFilter != null && localTargetFilter.matcher(key).matches()) {
+                     if (logger.isDebugEnabled()) {
+                        logger.debug("Skip the " + targetKey + "[" + key + "] of session [" + sessionID + "] because it matches the localTargetFilter " + localTargetFilter.pattern());
+                     }
+                  } else {
+                     if (logger.isDebugEnabled()) {
+                        logger.debug("Add the " + targetKey + "[" + key + "] of session [" + sessionID + "] to the cache for the target " + target);
+                     }
+
+                     cache.put(key, target);
+                  }
+               }
+            }
+
+            return true;
+         } catch (Exception e) {
+            logger.warn("Error on init the cache for the target " + target, e);
+
+            return false;
+         }
+      }
+   };
+
 
    public String getName() {
       return name;
@@ -108,6 +161,8 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    @Override
    public void start() throws Exception {
+      pool.addTargetConnectProbe(targetProbe);
+
       pool.start();
 
       started = true;
@@ -115,6 +170,8 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    @Override
    public void stop() throws Exception {
+      pool.removeTargetConnectProbe(targetProbe);
+
       started = false;
 
       pool.stop();

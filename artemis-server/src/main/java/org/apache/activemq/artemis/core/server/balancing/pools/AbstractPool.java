@@ -44,6 +44,8 @@ public abstract class AbstractPool implements Pool {
 
    private final int checkPeriod;
 
+   private final List<TargetProbe> targetConnectProbes = new ArrayList<>();
+
    private final List<TargetProbe> targetProbes = new ArrayList<>();
 
    private final Map<Target, TargetMonitor> targets = new ConcurrentHashMap<>();
@@ -139,6 +141,11 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
+   public List<TargetProbe> getTargetConnectProbes() {
+      return targetConnectProbes;
+   }
+
+   @Override
    public List<TargetProbe> getTargetProbes() {
       return targetProbes;
    }
@@ -173,6 +180,16 @@ public abstract class AbstractPool implements Pool {
       TargetMonitor targetMonitor = targets.get(target);
 
       return targetMonitor != null ? targetMonitor.isTargetReady() : false;
+   }
+
+   @Override
+   public void addTargetConnectProbe(TargetProbe probe) {
+      targetConnectProbes.add(probe);
+   }
+
+   @Override
+   public void removeTargetConnectProbe(TargetProbe probe) {
+      targetConnectProbes.remove(probe);
    }
 
    @Override
@@ -211,7 +228,7 @@ public abstract class AbstractPool implements Pool {
 
    @Override
    public boolean addTarget(Target target) {
-      TargetMonitor targetMonitor = new TargetMonitor(scheduledExecutor, checkPeriod, target, targetProbes);
+      TargetMonitor targetMonitor = new TargetMonitor(scheduledExecutor, checkPeriod, target, targetConnectProbes, targetProbes);
 
       if (targets.putIfAbsent(target, targetMonitor) != null) {
          return false;

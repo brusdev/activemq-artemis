@@ -57,6 +57,12 @@ public interface Pool extends ActiveMQComponent {
    boolean removeTarget(Target target);
 
 
+   List<TargetProbe> getTargetConnectProbes();
+
+   void addTargetConnectProbe(TargetProbe probe);
+
+   void removeTargetConnectProbe(TargetProbe probe);
+
    List<TargetProbe> getTargetProbes();
 
    void addTargetProbe(TargetProbe probe);

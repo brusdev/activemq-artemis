@@ -2645,7 +2645,23 @@ public class ActiveMQServerControlImpl extends AbstractControl implements Active
    }
 
    public void buildSessionJSON(JsonArrayBuilder array, ServerSession sess) {
-      JsonObjectBuilder obj = JsonLoader.createObjectBuilder().add("sessionID", sess.getName()).add("creationTime", sess.getCreationTime()).add("consumerCount", sess.getServerConsumers().size());
+      JsonObjectBuilder obj = JsonLoader.createObjectBuilder()
+         .add("sessionID", sess.getName())
+         .add("creationTime", sess.getCreationTime())
+         .add("consumerCount", sess.getServerConsumers().size());
+
+      if (sess.getRemotingConnection().getRemoteAddress() != null) {
+         obj.add("remoteAddress", sess.getRemotingConnection().getRemoteAddress());
+      }
+      if (sess.getRemotingConnection().getTransportSNIHost() != null) {
+         obj.add("sniHost", sess.getRemotingConnection().getTransportSNIHost());
+      }
+      if (sess.getRemotingConnection().getClientID() != null) {
+         obj.add("clientID", sess.getRemotingConnection().getClientID());
+      }
+      if (sess.getUsername() != null) {
+         obj.add("username", sess.getUsername());
+      }
 
       if (sess.getValidatedUser() != null) {
          obj.add("principal", sess.getValidatedUser());
