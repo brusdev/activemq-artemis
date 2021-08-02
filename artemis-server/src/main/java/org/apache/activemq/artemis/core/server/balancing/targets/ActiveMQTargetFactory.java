@@ -21,8 +21,8 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
 public class ActiveMQTargetFactory extends AbstractTargetFactory {
    @Override
-   public Target createTarget(TransportConfiguration connector, String nodeID) {
-      Target target = new ActiveMQTarget(connector, nodeID);
+   public Target createTarget(String serverID, TransportConfiguration connector, String nodeID) {
+      Target target = new ActiveMQTarget(serverID, connector, nodeID);
 
       target.setUsername(getUsername());
       target.setPassword(getPassword());

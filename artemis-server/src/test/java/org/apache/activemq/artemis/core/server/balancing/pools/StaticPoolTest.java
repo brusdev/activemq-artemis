@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
+import org.apache.activemq.artemis.utils.UUIDGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ public class StaticPoolTest extends PoolTestBase {
          staticConnectors.add(new TransportConfiguration());
       }
 
-      return new StaticPool(targetFactory, new ScheduledThreadPoolExecutor(0), CHECK_PERIOD, staticConnectors);
+      return new StaticPool(UUIDGenerator.getInstance().generateStringUUID(), targetFactory,
+         new ScheduledThreadPoolExecutor(0), CHECK_PERIOD, staticConnectors);
    }
 }

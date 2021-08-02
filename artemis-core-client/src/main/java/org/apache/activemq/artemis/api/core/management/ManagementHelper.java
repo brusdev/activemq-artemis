@@ -88,6 +88,8 @@ public final class ManagementHelper {
 
    public static final SimpleString HDR_CLIENT_ID = new SimpleString("_AMQ_Client_ID");
 
+   public static final SimpleString HDR_SNI_HOST = new SimpleString("_AMQ_SNI_Host");
+
    // Attributes ----------------------------------------------------
 
    // Static --------------------------------------------------------

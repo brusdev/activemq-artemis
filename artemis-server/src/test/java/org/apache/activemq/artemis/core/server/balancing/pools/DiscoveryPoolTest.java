@@ -20,6 +20,7 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetFactory;
 import org.apache.activemq.artemis.core.server.balancing.targets.MockTargetProbe;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
+import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.apache.activemq.artemis.utils.Wait;
 import org.junit.Assert;
 import org.junit.Test;
@@ -169,6 +170,7 @@ public class DiscoveryPoolTest extends PoolTestBase {
    }
 
    private DiscoveryPool createDiscoveryPool(TargetFactory targetFactory, DiscoveryService discoveryService) {
-      return new DiscoveryPool(targetFactory, new ScheduledThreadPoolExecutor(0), CHECK_PERIOD, discoveryService);
+      return new DiscoveryPool(UUIDGenerator.getInstance().generateStringUUID(), targetFactory,
+         new ScheduledThreadPoolExecutor(0), CHECK_PERIOD, discoveryService);
    }
 }

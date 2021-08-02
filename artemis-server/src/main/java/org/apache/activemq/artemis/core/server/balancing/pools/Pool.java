@@ -19,11 +19,14 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetListener;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 
 import java.util.List;
 
 public interface Pool extends ActiveMQComponent {
+   String getServerID();
+
    String getUsername();
 
    void setUsername(String username);
@@ -42,6 +45,9 @@ public interface Pool extends ActiveMQComponent {
 
    int getCheckPeriod();
 
+   TargetListener getTargetListener();
+
+   void setTargetListener(TargetListener targetListener);
 
 
    Target getTarget(String nodeId);

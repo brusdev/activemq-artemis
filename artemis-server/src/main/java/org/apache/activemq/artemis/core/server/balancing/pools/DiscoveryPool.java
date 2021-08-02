@@ -24,9 +24,9 @@ import java.util.concurrent.ScheduledExecutorService;
 public class DiscoveryPool extends AbstractPool implements DiscoveryService.Listener {
    private final DiscoveryService discoveryService;
 
-   public DiscoveryPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
+   public DiscoveryPool(String serverID, TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
                         int checkPeriod, DiscoveryService discoveryService) {
-      super(targetFactory, scheduledExecutor, checkPeriod);
+      super(serverID, targetFactory, scheduledExecutor, checkPeriod);
 
       this.discoveryService = discoveryService;
    }

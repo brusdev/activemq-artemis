@@ -20,6 +20,7 @@ package org.apache.activemq.artemis.core.server.balancing.pools;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetListener;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetMonitor;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
 import org.jboss.logging.Logger;
@@ -35,14 +36,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
 
-public abstract class AbstractPool implements Pool {
+public abstract class AbstractPool implements Pool, TargetListener {
    private static final Logger logger = Logger.getLogger(AbstractPool.class);
+
+   private final String serverID;
 
    private final TargetFactory targetFactory;
 
    private final ScheduledExecutorService scheduledExecutor;
 
    private final int checkPeriod;
+
+   private TargetListener targetListener;
 
    private final List<TargetProbe> targetProbes = new ArrayList<>();
 
@@ -64,6 +69,11 @@ public abstract class AbstractPool implements Pool {
 
    private volatile boolean started = false;
 
+
+   @Override
+   public String getServerID() {
+      return serverID;
+   }
 
    @Override
    public String getUsername() {
@@ -112,6 +122,16 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
+   public TargetListener getTargetListener() {
+      return targetListener;
+   }
+
+   @Override
+   public void setTargetListener(TargetListener targetListener) {
+      this.targetListener = targetListener;
+   }
+
+   @Override
    public List<Target> getAllTargets() {
       return targetMonitors.stream().map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
    }
@@ -149,7 +169,9 @@ public abstract class AbstractPool implements Pool {
    }
 
 
-   public AbstractPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod) {
+   public AbstractPool(String serverID, TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor, int checkPeriod) {
+      this.serverID = serverID;
+
       this.targetFactory = targetFactory;
 
       this.scheduledExecutor = scheduledExecutor;
@@ -206,7 +228,7 @@ public abstract class AbstractPool implements Pool {
    }
 
    protected void addTarget(TransportConfiguration connector, String nodeID) {
-      addTarget(targetFactory.createTarget(connector, nodeID));
+      addTarget(targetFactory.createTarget(serverID, connector, nodeID));
    }
 
    @Override
@@ -216,6 +238,8 @@ public abstract class AbstractPool implements Pool {
       if (targets.putIfAbsent(target, targetMonitor) != null) {
          return false;
       }
+
+      target.addListener(this);
 
       targetMonitors.add(targetMonitor);
 
@@ -234,10 +258,33 @@ public abstract class AbstractPool implements Pool {
          return false;
       }
 
+      target.removeListener(this);
+
       targetMonitors.remove(targetMonitor);
 
       targetMonitor.stop();
 
       return true;
+   }
+
+   @Override
+   public void targetConnected(Target target) {
+      if (targetListener != null) {
+         targetListener.targetConnected(target);
+      }
+   }
+
+   @Override
+   public void targetSessionCreated(Target target, String id, String remoteAddress, String sniHost, String clientID, String username) {
+      if (targetListener != null) {
+         targetListener.targetSessionCreated(target, id, remoteAddress, sniHost, clientID, username);
+      }
+   }
+
+   @Override
+   public void targetDisconnected(Target target) {
+      if (targetListener != null) {
+         targetListener.targetDisconnected(target);
+      }
    }
 }

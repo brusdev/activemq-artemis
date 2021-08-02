@@ -76,8 +76,8 @@ public class MockTargetFactory extends AbstractTargetFactory {
    }
 
    @Override
-   public Target createTarget(TransportConfiguration connector, String nodeID) {
-      MockTarget target = new MockTarget(connector, nodeID);
+   public Target createTarget(String serverID, TransportConfiguration connector, String nodeID) {
+      MockTarget target = new MockTarget(serverID, connector, nodeID);
 
       target.setUsername(getUsername());
       target.setPassword(getPassword());

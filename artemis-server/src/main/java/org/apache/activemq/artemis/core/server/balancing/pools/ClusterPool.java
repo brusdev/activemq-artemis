@@ -31,9 +31,9 @@ public class ClusterPool extends AbstractPool implements ClusterTopologyListener
 
    private final Map<String, TopologyMember> clusterMembers = new ConcurrentHashMap<>();
 
-   public ClusterPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
+   public ClusterPool(String serverID, TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
                       int checkPeriod, ClusterConnection clusterConnection) {
-      super(targetFactory, scheduledExecutor, checkPeriod);
+      super(serverID, targetFactory, scheduledExecutor, checkPeriod);
 
       this.clusterConnection = clusterConnection;
    }

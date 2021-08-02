@@ -475,6 +475,8 @@ public class ServerSessionImpl implements ServerSession, FailureListener {
       final TypedProperties props = new TypedProperties();
       if (this.getConnectionID() != null) {
          props.putSimpleStringProperty(ManagementHelper.HDR_CONNECTION_NAME, SimpleString.toSimpleString(this.getConnectionID().toString()));
+         props.putSimpleStringProperty(ManagementHelper.HDR_REMOTE_ADDRESS, SimpleString.toSimpleString(this.remotingConnection.getRemoteAddress()));
+         props.putSimpleStringProperty(ManagementHelper.HDR_SNI_HOST, SimpleString.toSimpleString(this.remotingConnection.getTransportConnection().getSNIHostName()));
       }
       props.putSimpleStringProperty(ManagementHelper.HDR_USER, SimpleString.toSimpleString(this.getUsername()));
       props.putSimpleStringProperty(ManagementHelper.HDR_SESSION_NAME, SimpleString.toSimpleString(this.getName()));

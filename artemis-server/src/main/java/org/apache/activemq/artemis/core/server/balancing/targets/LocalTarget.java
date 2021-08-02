@@ -26,7 +26,7 @@ public class LocalTarget extends AbstractTarget {
    private final ManagementService managementService;
 
    public LocalTarget(TransportConfiguration connector, ActiveMQServer server) {
-      super(connector, server.getNodeID().toString());
+      super(server.getNodeID().toString(), connector, server.getNodeID().toString());
 
       this.server = server;
       this.managementService = server.getManagementService();

@@ -111,7 +111,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          ClusterConnection clusterConnection = server.getClusterManager()
             .getClusterConnection(config.getClusterConnection());
 
-         pool = new ClusterPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), clusterConnection);
+         pool = new ClusterPool(server.getNodeID().toString(), targetFactory, scheduledExecutor, config.getCheckPeriod(), clusterConnection);
       } else if (config.getDiscoveryGroupName() != null) {
          DiscoveryGroupConfiguration discoveryGroupConfiguration = server.getConfiguration().
             getDiscoveryGroupConfigurations().get(config.getDiscoveryGroupName());
@@ -119,7 +119,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          DiscoveryService discoveryService = new DiscoveryGroupService(new DiscoveryGroup(server.getNodeID().toString(), config.getDiscoveryGroupName(),
             discoveryGroupConfiguration.getRefreshTimeout(), discoveryGroupConfiguration.getBroadcastEndpointFactory(), null));
 
-         pool = new DiscoveryPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryService);
+         pool = new DiscoveryPool(server.getNodeID().toString(), targetFactory, scheduledExecutor, config.getCheckPeriod(), discoveryService);
       } else if (config.getStaticConnectors() != null) {
          Map<String, TransportConfiguration> connectorConfigurations =
             server.getConfiguration().getConnectorConfigurations();
@@ -135,7 +135,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
             }
          }
 
-         pool = new StaticPool(targetFactory, scheduledExecutor, config.getCheckPeriod(), staticConnectors);
+         pool = new StaticPool(server.getNodeID().toString(), targetFactory, scheduledExecutor, config.getCheckPeriod(), staticConnectors);
       } else {
          throw new IllegalStateException("Pool configuration not valid");
       }

@@ -26,9 +26,9 @@ import java.util.concurrent.ScheduledExecutorService;
 public class StaticPool extends AbstractPool {
    private final List<TransportConfiguration> staticConnectors;
 
-   public StaticPool(TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
+   public StaticPool(String serverID, TargetFactory targetFactory, ScheduledExecutorService scheduledExecutor,
                      int checkPeriod, List<TransportConfiguration> staticConnectors) {
-      super(targetFactory, scheduledExecutor, checkPeriod);
+      super(serverID, targetFactory, scheduledExecutor, checkPeriod);
 
       this.staticConnectors = staticConnectors;
    }

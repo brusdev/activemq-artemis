@@ -25,6 +25,9 @@ public interface Target {
 
    String getNodeID();
 
+   String getServerID();
+
+
    TransportConfiguration getConnector();
 
    String getUsername();
@@ -39,19 +42,18 @@ public interface Target {
 
    void setCheckPeriod(int checkPeriod);
 
-   TargetListener getListener();
-
-   void setListener(TargetListener listener);
-
    boolean isConnected();
+
+
+   void addListener(TargetListener listener);
+
+   void removeListener(TargetListener listener);
 
    void connect() throws Exception;
 
    void disconnect() throws Exception;
 
-
    boolean checkReadiness();
-
 
    <T> T getAttribute(String resourceName, String attributeName, Class<T> attributeClass, int timeout) throws Exception;
 

@@ -17,18 +17,28 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
+import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientConsumer;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ActiveMQManagementProxy;
+import org.apache.activemq.artemis.api.core.management.CoreNotificationType;
+import org.apache.activemq.artemis.api.core.management.ManagementHelper;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.remoting.FailureListener;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
+import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.jboss.logging.Logger;
 
-public class ActiveMQTarget extends AbstractTarget implements FailureListener {
+public class ActiveMQTarget extends AbstractTarget implements FailureListener, MessageHandler {
    private static final Logger logger = Logger.getLogger(ActiveMQTarget.class);
 
    private boolean connected = false;
@@ -38,6 +48,9 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
    private ClientSessionFactory sessionFactory;
    private RemotingConnection remotingConnection;
    private ActiveMQManagementProxy managementProxy;
+
+   private ClientSession notificationSession;
+   private ClientConsumer notificationConsumer;
 
    @Override
    public boolean isLocal() {
@@ -49,8 +62,9 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
       return connected;
    }
 
-   public ActiveMQTarget(TransportConfiguration connector, String nodeID) {
-      super(connector, nodeID);
+
+   public ActiveMQTarget(String serverID, TransportConfiguration connector, String nodeID) {
+      super(serverID, connector, nodeID);
 
       serverLocator = ActiveMQClient.createServerLocatorWithoutHA(connector);
    }
@@ -62,19 +76,50 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
 
       remotingConnection = sessionFactory.getConnection();
       remotingConnection.addFailureListener(this);
+      managementProxy = new ActiveMQManagementProxy(createSession().start());
 
-      managementProxy = new ActiveMQManagementProxy(sessionFactory.createSession(getUsername(), getPassword(),
-         false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE).start());
+      setupNotificationConsumer();
 
       connected = true;
 
       fireConnectedEvent();
    }
 
+   private ClientSession createSession() throws ActiveMQException {
+      return sessionFactory.createSession(getUsername(), getPassword(),
+         false, true, true, false, ActiveMQClient.DEFAULT_ACK_BATCH_SIZE);
+   }
+
+   private void setupNotificationConsumer() throws Exception {
+      SimpleString queueName = new SimpleString("notif." + UUIDGenerator.getInstance().generateStringUUID() + "." + getServerID());
+
+      SimpleString filter = new SimpleString(ManagementHelper.HDR_NOTIFICATION_TYPE + "=" + "'" +
+         CoreNotificationType.SESSION_CREATED +
+         "' AND " +
+         ManagementHelper.HDR_DISTANCE +
+         "<1");
+
+      notificationSession = createSession();
+
+      notificationSession.createQueue(new QueueConfiguration(queueName).setAddress(ActiveMQDefaultConfiguration.getDefaultManagementNotificationAddress()).setFilterString(filter).setDurable(false).setTemporary(true));
+
+      notificationConsumer = notificationSession.createConsumer(queueName);
+
+      notificationConsumer.setMessageHandler(this);
+
+      notificationSession.start();
+
+      //invokeOperation(ResourceNames.BROKER, "sendSessionInfoToQueue", new Object[] { notificationQueueName.toString() }, null, 5000);
+   }
+
    @Override
    public void disconnect() throws Exception {
       if (connected) {
          connected = false;
+
+         notificationConsumer.close();
+
+         notificationSession.close();
 
          managementProxy.close();
 
@@ -124,6 +169,27 @@ public class ActiveMQTarget extends AbstractTarget implements FailureListener {
          }
       } catch (Exception e) {
          logger.debug("Exception on disconnecting: ", e);
+      }
+   }
+
+   @Override
+   public void onMessage(ClientMessage message) {
+      SimpleString type = message.getSimpleStringProperty(ManagementHelper.HDR_NOTIFICATION_TYPE);
+
+      CoreNotificationType notificationType = CoreNotificationType.valueOf(type.toString());
+
+      if (notificationType == CoreNotificationType.SESSION_CREATED) {
+         SimpleString id = message.getSimpleStringProperty(ManagementHelper.HDR_SESSION_NAME);
+         SimpleString remoteAddress = message.getSimpleStringProperty(ManagementHelper.HDR_REMOTE_ADDRESS);
+         SimpleString sniHost = message.getSimpleStringProperty(ManagementHelper.HDR_SNI_HOST);
+         SimpleString clientID = message.getSimpleStringProperty(ManagementHelper.HDR_CLIENT_ID);
+         SimpleString username = message.getSimpleStringProperty(ManagementHelper.HDR_USER);
+
+         fireSessionCreatedEvent(id.toString(),
+            remoteAddress != null ? remoteAddress.toString() : null,
+            sniHost != null ? sniHost.toString() : null,
+            clientID != null ? clientID.toString() : null,
+            username != null ? username.toString() : null);
       }
    }
 }

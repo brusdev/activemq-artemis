@@ -19,7 +19,12 @@ package org.apache.activemq.artemis.core.server.balancing.targets;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AbstractTarget implements Target {
+   private final String serverID;
+
    private final TransportConfiguration connector;
 
    private String nodeID;
@@ -30,7 +35,18 @@ public abstract class AbstractTarget implements Target {
 
    private int checkPeriod;
 
-   private TargetListener listener;
+   private final List<TargetListener> listeners = new ArrayList<>();
+
+
+   @Override
+   public String getServerID() {
+      return serverID;
+   }
+
+   @Override
+   public TransportConfiguration getConnector() {
+      return connector;
+   }
 
    @Override
    public String getNodeID() {
@@ -71,37 +87,39 @@ public abstract class AbstractTarget implements Target {
       this.checkPeriod = checkPeriod;
    }
 
-   @Override
-   public TargetListener getListener() {
-      return listener;
-   }
 
-   @Override
-   public void setListener(TargetListener listener) {
-      this.listener = listener;
-   }
-
-   @Override
-   public TransportConfiguration getConnector() {
-      return connector;
-   }
-
-
-   public AbstractTarget(TransportConfiguration connector, String nodeID) {
+   public AbstractTarget(String serverID, TransportConfiguration connector, String nodeID) {
+      this.serverID = serverID;
       this.connector = connector;
       this.nodeID = nodeID;
    }
 
 
+   @Override
+   public void addListener(TargetListener listener) {
+      listeners.add(listener);
+   }
+
+   @Override
+   public void removeListener(TargetListener listener) {
+      listeners.remove(listener);
+   }
+
    protected void fireConnectedEvent() {
-      if (listener != null) {
-         listener.targetConnected();
+      for (TargetListener listener : listeners) {
+         listener.targetConnected(this);
+      }
+   }
+
+   protected void fireSessionCreatedEvent(String id, String remoteAddress, String sniHost, String clientID, String username) {
+      for (TargetListener listener : listeners) {
+         listener.targetSessionCreated(this, id, remoteAddress, sniHost, clientID, username);
       }
    }
 
    protected void fireDisconnectedEvent() {
-      if (listener != null) {
-         listener.targetDisconnected();
+      for (TargetListener listener : listeners) {
+         listener.targetDisconnected(this);
       }
    }
 

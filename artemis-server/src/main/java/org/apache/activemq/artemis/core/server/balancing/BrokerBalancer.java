@@ -25,6 +25,7 @@ import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.balancing.targets.TargetListener;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
@@ -32,7 +33,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-public class BrokerBalancer implements ActiveMQComponent {
+public class BrokerBalancer implements ActiveMQComponent, TargetListener {
    private static final Logger logger = Logger.getLogger(BrokerBalancer.class);
 
 
@@ -108,6 +109,8 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    @Override
    public void start() throws Exception {
+      pool.setTargetListener(this);
+
       pool.start();
 
       started = true;
@@ -116,6 +119,8 @@ public class BrokerBalancer implements ActiveMQComponent {
    @Override
    public void stop() throws Exception {
       started = false;
+
+      pool.setTargetListener(null);
 
       pool.stop();
    }
@@ -159,5 +164,32 @@ public class BrokerBalancer implements ActiveMQComponent {
       }
 
       return target;
+   }
+
+   @Override
+   public void targetConnected(Target target) {
+
+   }
+
+   @Override
+   public void targetSessionCreated(Target target, String id, String remoteAddress, String sniHost, String clientID, String username) {
+      String key = targetKeyResolver.resolve(remoteAddress, sniHost, clientID, username);
+
+      if (this.localTargetFilter != null && this.localTargetFilter.matcher(key).matches()) {
+         if (logger.isDebugEnabled()) {
+            logger.debug("Skip the " + targetKey + "[" + key + "] of session [" + id + "] because it matches the localTargetFilter " + localTargetFilter.pattern());
+         }
+      } else {
+         if (logger.isDebugEnabled()) {
+            logger.debug("Add the " + targetKey + "[" + key + "] of session [" + id + "] to the cache for the target " + target);
+         }
+
+         cache.put(key, target);
+      }
+   }
+
+   @Override
+   public void targetDisconnected(Target target) {
+
    }
 }

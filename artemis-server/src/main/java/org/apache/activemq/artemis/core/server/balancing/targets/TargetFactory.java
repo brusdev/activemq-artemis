@@ -28,5 +28,5 @@ public interface TargetFactory {
 
    void setPassword(String password);
 
-   Target createTarget(TransportConfiguration connector, String nodeID);
+   Target createTarget(String serverID, TransportConfiguration connector, String nodeID);
 }

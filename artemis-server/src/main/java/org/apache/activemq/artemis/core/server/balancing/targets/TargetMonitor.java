@@ -53,7 +53,7 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
 
    @Override
    public synchronized void start() {
-      target.setListener(this);
+      target.addListener(this);
 
       super.start();
    }
@@ -64,7 +64,7 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
 
       targetReady = false;
 
-      target.setListener(null);
+      target.removeListener(this);
 
       try {
          target.disconnect();
@@ -112,12 +112,17 @@ public class TargetMonitor extends ActiveMQScheduledComponent implements TargetL
    }
 
    @Override
-   public void targetConnected() {
+   public void targetConnected(Target target) {
 
    }
 
    @Override
-   public void targetDisconnected() {
+   public void targetSessionCreated(Target target, String id, String remoteAddress, String sniHost, String clientID, String username) {
+
+   }
+
+   @Override
+   public void targetDisconnected(Target target) {
       targetReady = false;
    }
 

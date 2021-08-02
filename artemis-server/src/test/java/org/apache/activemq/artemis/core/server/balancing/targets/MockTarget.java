@@ -92,11 +92,11 @@ public class MockTarget extends AbstractTarget {
    }
 
    public MockTarget() {
-      this(new TransportConfiguration(), UUID.randomUUID().toString());
+      this(UUID.randomUUID().toString(), new TransportConfiguration(), UUID.randomUUID().toString());
    }
 
-   public MockTarget(TransportConfiguration connector, String nodeID) {
-      super(connector, nodeID);
+   public MockTarget(String serverID, TransportConfiguration connector, String nodeID) {
+      super(serverID, connector, nodeID);
    }
 
    @Override
