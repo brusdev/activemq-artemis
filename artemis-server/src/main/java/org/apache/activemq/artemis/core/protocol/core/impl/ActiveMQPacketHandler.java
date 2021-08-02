@@ -163,6 +163,9 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             connection.setClientID(((CreateSessionMessage_V2) request).getClientID());
          }
 
+         ActiveMQRedirectHandler redirectHandler = new ActiveMQRedirectHandler(server, connection, request.getUsername());
+         redirectHandler.redirect();
+
          Channel channel = connection.getChannel(request.getSessionChannelID(), request.getWindowSize());
 
          ActiveMQPrincipal activeMQPrincipal = null;
@@ -193,6 +196,8 @@ public class ActiveMQPacketHandler implements ChannelHandler {
          if (e.getType() == ActiveMQExceptionType.INCOMPATIBLE_CLIENT_SERVER_VERSIONS) {
             incompatibleVersion = true;
             logger.debug("Sending ActiveMQException after Incompatible client", e);
+         } else if (e.getType() == ActiveMQExceptionType.REDIRECTED) {
+            logger.debug("Sending ActiveMQException after redirected client", e);
          } else {
             ActiveMQServerLogger.LOGGER.failedToCreateSession(e);
          }
