@@ -96,14 +96,10 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
          suffix = "p12";
       }
 
-      String prefix = "";
-      if (TransportConstants.OPENSSL_PROVIDER.equals(clientSSLProvider) || TransportConstants.OPENSSL_PROVIDER.equals(serverSSLProvider)) {
-         prefix = "openssl-";
-      }
-      SERVER_SIDE_KEYSTORE = prefix + "server-side-keystore." + suffix;
-      SERVER_SIDE_TRUSTSTORE = prefix + "server-side-truststore." + suffix;
-      CLIENT_SIDE_TRUSTSTORE = prefix + "client-side-truststore." + suffix;
-      CLIENT_SIDE_KEYSTORE = prefix + "client-side-keystore." + suffix;
+      SERVER_SIDE_KEYSTORE = "server-keystore." + suffix;
+      SERVER_SIDE_TRUSTSTORE = "client-ca-truststore." + suffix;
+      CLIENT_SIDE_TRUSTSTORE = "server-ca-truststore." + suffix;
+      CLIENT_SIDE_KEYSTORE = "client-keystore." + suffix;
    }
 
    public static final SimpleString QUEUE = new SimpleString("QueueOverSSL");
@@ -112,72 +108,72 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
     * These artifacts are required for testing 2-way SSL in addition to the artifacts for 1-way SSL from {@link CoreClientOverOneWaySSLTest}
     *
     * Commands to create the JKS artifacts:
-    * keytool -genkey -keystore client-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore client-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore server-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore client-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore client-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore client-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-client-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA -ext san=ip:127.0.0.1
-    * keytool -export -keystore verified-client-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore verified-server-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-client-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-client-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore verified-client-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
     * Commands to create the JCEKS artifacts:
-    * keytool -genkey -keystore client-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore client-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-client-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA -ext san=ip:127.0.0.1
-    * keytool -export -keystore verified-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore verified-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-client-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore verified-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
     * Commands to create the PKCS12 artifacts:
-    * keytool -genkey -keystore client-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore client-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-client-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA -ext san=ip:127.0.0.1
-    * keytool -export -keystore verified-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore verified-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-client-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore verified-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     *
     * These artifacts are required for testing 2-way SSL with Open SSL - note the EC key and ECDSA signature to comply with what OpenSSL offers
     *
     * Commands to create the OpenSSL JKS artifacts:
-    * keytool -genkey -keystore openssl-client-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA
-    * keytool -export -keystore openssl-client-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore openssl-server-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore client-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA
+    * keytool -export -keystore client-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore client-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore openssl-server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA
-    * keytool -export -keystore openssl-server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore openssl-client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore server-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA
+    * keytool -export -keystore server-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore server-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-openssl-client-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
-    * keytool -export -keystore verified-openssl-client-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore verified-openssl-server-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-client-keystore.jks -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-client-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore verified-client-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
     * Commands to create the OpenSSL JCEKS artifacts:
-    * keytool -genkey -keystore openssl-client-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
-    * keytool -export -keystore openssl-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore openssl-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore openssl-client-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
+    * keytool -export -keystore openssl-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore openssl-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore openssl-server-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
-    * keytool -export -keystore openssl-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore openssl-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore openssl-server-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
+    * keytool -export -keystore openssl-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore openssl-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-openssl-client-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
-    * keytool -export -keystore verified-openssl-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore verified-openssl-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-openssl-client-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-openssl-client-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore verified-openssl-server-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
     * Commands to create the OpenSSL PKCS12 artifacts:
-    * keytool -genkey -keystore openssl-client-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
-    * keytool -export -keystore openssl-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore openssl-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore openssl-client-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
+    * keytool -export -keystore openssl-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore openssl-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore openssl-server-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
-    * keytool -export -keystore openssl-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore openssl-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore openssl-server-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC  -sigalg SHA256withECDSA
+    * keytool -export -keystore openssl-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore openssl-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-openssl-client-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
-    * keytool -export -keystore verified-openssl-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore verified-openssl-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-openssl-client-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg EC -sigalg SHA256withECDSA -ext san=ip:127.0.0.1
+    * keytool -export -keystore verified-openssl-client-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore verified-openssl-server-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     */
 
    private String storeType;
@@ -188,7 +184,7 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
    private String SERVER_SIDE_TRUSTSTORE;
    private String CLIENT_SIDE_TRUSTSTORE;
    private String CLIENT_SIDE_KEYSTORE;
-   private final String PASSWORD = "secureexample";
+   private final String PASSWORD = "securepass";
 
    private ActiveMQServer server;
 
@@ -255,7 +251,7 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
    public void testTwoWaySSLVerifyClientHost() throws Exception {
       NettyAcceptor acceptor = (NettyAcceptor) server.getRemotingService().getAcceptor("nettySSL");
       acceptor.getConfiguration().put(TransportConstants.VERIFY_HOST_PROP_NAME, true);
-      acceptor.getConfiguration().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "verified-" + SERVER_SIDE_TRUSTSTORE);
+      acceptor.getConfiguration().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, SERVER_SIDE_TRUSTSTORE);
       server.getRemotingService().stop(false);
       server.getRemotingService().start();
       server.getRemotingService().startAcceptors();
@@ -272,7 +268,7 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
 
       tc.getParams().put(TransportConstants.KEYSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.KEYSTORE_TYPE_PROP_NAME, storeType);
-      tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "verified-" + CLIENT_SIDE_KEYSTORE);
+      tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, CLIENT_SIDE_KEYSTORE);
       tc.getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, PASSWORD);
 
       server.getRemotingService().addIncomingInterceptor(new MyInterceptor());
@@ -310,7 +306,7 @@ public class CoreClientOverTwoWaySSLTest extends ActiveMQTestBase {
       tc.getParams().put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, PASSWORD);
 
       tc.getParams().put(TransportConstants.KEYSTORE_PROVIDER_PROP_NAME, storeType);
-      tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, CLIENT_SIDE_KEYSTORE);
+      tc.getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "unknown" + CLIENT_SIDE_KEYSTORE);
       tc.getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, PASSWORD);
 
       server.getRemotingService().addIncomingInterceptor(new MyInterceptor());

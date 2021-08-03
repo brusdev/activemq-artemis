@@ -67,11 +67,11 @@ public class DualAuthenticationTest extends ActiveMQTestBase {
       }
    }
 
-   private String SERVER_SIDE_KEYSTORE = "server-side-keystore.jks";
-   private String SERVER_SIDE_TRUSTSTORE = "server-side-truststore.jks";
-   private String CLIENT_SIDE_TRUSTSTORE = "client-side-truststore.jks";
-   private String CLIENT_SIDE_KEYSTORE = "client-side-keystore.jks";
-   private final String PASSWORD = "secureexample";
+   private String SERVER_SIDE_KEYSTORE = "server-keystore.jks";
+   private String SERVER_SIDE_TRUSTSTORE = "client-ca-truststore.jks";
+   private String CLIENT_SIDE_TRUSTSTORE = "server-ca-truststore.jks";
+   private String CLIENT_SIDE_KEYSTORE = "client-keystore.jks";
+   private final String PASSWORD = "securepass";
 
    private ActiveMQServer server;
 

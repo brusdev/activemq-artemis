@@ -57,8 +57,8 @@ public class SSLSupportTest extends ActiveMQTestBase {
       if (storeType.equals("PKCS12")) {
          suffix = "p12";
       }
-      keyStorePath = "server-side-keystore." + suffix;
-      trustStorePath = "server-side-truststore." + suffix;
+      keyStorePath = "server-keystore." + suffix;
+      trustStorePath = "client-ca-truststore." + suffix;
    }
 
    private String storeProvider;
@@ -87,7 +87,7 @@ public class SSLSupportTest extends ActiveMQTestBase {
    @Before
    public void setUp() throws Exception {
       super.setUp();
-      keyStorePassword = "secureexample";
+      keyStorePassword = "securepass";
       trustStorePassword = keyStorePassword;
    }
 
