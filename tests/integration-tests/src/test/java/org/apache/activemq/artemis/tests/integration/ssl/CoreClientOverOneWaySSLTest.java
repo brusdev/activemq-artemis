@@ -82,8 +82,8 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       if (suffix.equalsIgnoreCase("PKCS12")) {
          suffix = "p12";
       }
-      SERVER_SIDE_KEYSTORE = "server-side-keystore." + suffix;
-      CLIENT_SIDE_TRUSTSTORE = "client-side-truststore." + suffix;
+      SERVER_SIDE_KEYSTORE = "server-keystore." + suffix;
+      CLIENT_SIDE_TRUSTSTORE = "server-ca-truststore." + suffix;
    }
 
    public static final SimpleString QUEUE = new SimpleString("QueueOverSSL");
@@ -92,50 +92,50 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
     * These artifacts are required for testing 1-way SSL
     *
     * Commands to create the JKS artifacts:
-    * keytool -genkey -keystore server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore server-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore server-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore server-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore other-server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=Other ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore other-server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore other-client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore other-server-keystore.jks -storepass securepass -keypass securepass -dname "CN=Other ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore other-server-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore other-server-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore verified-server-side-keystore.jks -file activemq-jks.cer -storepass secureexample
-    * keytool -import -keystore verified-client-side-truststore.jks -file activemq-jks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-server-keystore.jks -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore verified-server-keystore.jks -file activemq-jks.cer -storepass securepass
+    * keytool -import -keystore verified-server-ca-truststore.jks -file activemq-jks.cer -storepass securepass -keypass securepass -noprompt
     *
     * Commands to create the JCEKS artifacts:
-    * keytool -genkey -keystore server-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore server-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore other-server-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=Other ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore other-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore other-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore other-server-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=Other ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore other-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore other-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-server-side-keystore.jceks -storetype JCEKS -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore verified-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass secureexample
-    * keytool -import -keystore verified-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-server-side-keystore.jceks -storetype JCEKS -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore verified-server-side-keystore.jceks -file activemq-jceks.cer -storetype jceks -storepass securepass
+    * keytool -import -keystore verified-client-side-truststore.jceks -storetype JCEKS -file activemq-jceks.cer -storepass securepass -keypass securepass -noprompt
     *
     * Commands to create the PKCS12 artifacts:
-    * keytool -genkey -keystore server-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore server-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore other-server-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=Other ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore other-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore other-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore other-server-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=Other ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore other-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore other-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     *
-    * keytool -genkey -keystore verified-server-side-keystore.p12 -storetype PKCS12 -storepass secureexample -keypass secureexample -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
-    * keytool -export -keystore verified-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass secureexample
-    * keytool -import -keystore verified-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass secureexample -keypass secureexample -noprompt
+    * keytool -genkey -keystore verified-server-side-keystore.p12 -storetype PKCS12 -storepass securepass -keypass securepass -dname "CN=localhost, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+    * keytool -export -keystore verified-server-side-keystore.p12 -file activemq-p12.cer -storetype PKCS12 -storepass securepass
+    * keytool -import -keystore verified-client-side-truststore.p12 -storetype PKCS12 -file activemq-p12.cer -storepass securepass -keypass securepass -noprompt
     */
    private boolean generateWarning;
    private String storeProvider;
    private String storeType;
    private String SERVER_SIDE_KEYSTORE;
    private String CLIENT_SIDE_TRUSTSTORE;
-   private final String PASSWORD = "secureexample";
+   private final String PASSWORD = "securepass";
 
    private ActiveMQServer server;
 
@@ -476,13 +476,13 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
 
    @Test
    public void testOneWaySSLVerifyHost() throws Exception {
-      createCustomSslServer(true);
+      createCustomSslServer();
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
-      tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "verified-" + CLIENT_SIDE_TRUSTSTORE);
+      tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, CLIENT_SIDE_TRUSTSTORE);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, PASSWORD);
       tc.getParams().put(TransportConstants.VERIFY_HOST_PROP_NAME, true);
 
@@ -505,7 +505,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
 
    @Test
    public void testOneWaySSLVerifyHostNegative() throws Exception {
-      createCustomSslServer();
+      createCustomSslServer(true);
       String text = RandomUtil.randomString();
 
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
@@ -548,7 +548,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       tc.getParams().put(TransportConstants.SSL_ENABLED_PROP_NAME, true);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, storeProvider);
       tc.getParams().put(TransportConstants.TRUSTSTORE_TYPE_PROP_NAME, storeType);
-      tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "other-client-side-truststore." + suffix);
+      tc.getParams().put(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, "other-server-truststore." + suffix);
       tc.getParams().put(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, PASSWORD);
 
       ServerLocator locator = addServerLocator(ActiveMQClient.createServerLocatorWithoutHA(tc)).setCallTimeout(3000);
@@ -561,7 +561,7 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
 
       // reload the acceptor to reload the SSL stores
       NettyAcceptor acceptor = (NettyAcceptor) server.getRemotingService().getAcceptor("nettySSL");
-      acceptor.setKeyStorePath("other-server-side-keystore." + suffix);
+      acceptor.setKeyStorePath("other-" + SERVER_SIDE_KEYSTORE);
       acceptor.reload();
 
       // create a session with the locator which failed previously proving that the SSL stores have been reloaded
@@ -1000,20 +1000,20 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
       createCustomSslServer(null, null, false, sniHost);
    }
 
-   private void createCustomSslServer(boolean useVerifiedKeystore) throws Exception {
-      createCustomSslServer(null, null, useVerifiedKeystore, null);
+   private void createCustomSslServer(boolean useUnknownKeystore) throws Exception {
+      createCustomSslServer(null, null, useUnknownKeystore, null);
    }
 
    private void createCustomSslServer(String cipherSuites,
                                       String protocols,
-                                      boolean useVerifiedKeystore,
+                                      boolean useUnknownKeystore,
                                       String sniHost) throws Exception {
-      createCustomSslServer(cipherSuites, protocols, useVerifiedKeystore, sniHost, null);
+      createCustomSslServer(cipherSuites, protocols, useUnknownKeystore, sniHost, null);
    }
 
    private void createCustomSslServer(String cipherSuites,
                                       String protocols,
-                                      boolean useVerifiedKeystore,
+                                      boolean useUnknownKeystore,
                                       String sniHost,
                                       String trustManagerFactoryPlugin) throws Exception {
       Map<String, Object> params = new HashMap<>();
@@ -1025,8 +1025,8 @@ public class CoreClientOverOneWaySSLTest extends ActiveMQTestBase {
          params.put(TransportConstants.SNIHOST_PROP_NAME, sniHost);
       }
 
-      if (useVerifiedKeystore) {
-         params.put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "verified-" + SERVER_SIDE_KEYSTORE);
+      if (useUnknownKeystore) {
+         params.put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "unknown-" + SERVER_SIDE_KEYSTORE);
       } else {
          params.put(TransportConstants.KEYSTORE_PATH_PROP_NAME, SERVER_SIDE_KEYSTORE);
       }

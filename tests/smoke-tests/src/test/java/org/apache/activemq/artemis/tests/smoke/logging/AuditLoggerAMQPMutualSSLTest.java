@@ -31,12 +31,12 @@ import org.junit.Test;
 /**
  * The various keystore files used for this test were generated using the following commands:
  *
- * keytool -genkey -keystore server-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
- * keytool -export -keystore server-side-keystore.jks -file server-side-cert.cer -storepass secureexample
- * keytool -import -keystore client-side-truststore.jks -file server-side-cert.cer -storepass secureexample -keypass secureexample -noprompt
- * keytool -genkey -keystore client-side-keystore.jks -storepass secureexample -keypass secureexample -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
- * keytool -export -keystore client-side-keystore.jks -file client-side-cert.cer -storepass secureexample
- * keytool -import -keystore server-side-truststore.jks -file client-side-cert.cer -storepass secureexample -keypass secureexample -noprompt
+ * keytool -genkey -keystore server-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Server, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+ * keytool -export -keystore server-keystore.jks -file server-side-cert.cer -storepass securepass
+ * keytool -import -keystore server-ca-truststore.jks -file server-side-cert.cer -storepass securepass -keypass securepass -noprompt
+ * keytool -genkey -keystore client-keystore.jks -storepass securepass -keypass securepass -dname "CN=ActiveMQ Artemis Client, OU=Artemis, O=ActiveMQ, L=AMQ, S=AMQ, C=AMQ" -keyalg RSA
+ * keytool -export -keystore client-keystore.jks -file client-side-cert.cer -storepass securepass
+ * keytool -import -keystore client-ca-truststore.jks -file client-side-cert.cer -storepass securepass -keypass securepass -noprompt
  */
 public class AuditLoggerAMQPMutualSSLTest extends AuditLoggerTestBase {
 
@@ -52,10 +52,10 @@ public class AuditLoggerAMQPMutualSSLTest extends AuditLoggerTestBase {
       int maxInactivityDurationInitialDelay = 30000;
       int idleTimeout = 120000;
       boolean verifyHost = false;
-      String keyStoreLocation = "target/" + getServerName() + "/etc/client-side-keystore.jks";
-      String keyStorePassword = "secureexample";
-      String trustStoreLocation = "target/" + getServerName() + "/etc/client-side-truststore.jks";
-      String trustStorePassword = "secureexample";
+      String keyStoreLocation = "target/" + getServerName() + "/etc/client-keystore.jks";
+      String keyStorePassword = "securepass";
+      String trustStoreLocation = "target/" + getServerName() + "/etc/server-ca-truststore.jks";
+      String trustStorePassword = "securepass";
 
       String remoteUri = sslhost +
          "?maxInactivityDurationInitialDelay=" + maxInactivityDurationInitialDelay +
