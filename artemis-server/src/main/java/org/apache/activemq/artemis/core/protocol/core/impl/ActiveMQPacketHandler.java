@@ -67,6 +67,14 @@ public class ActiveMQPacketHandler implements ChannelHandler {
 
    private final CoreProtocolManager protocolManager;
 
+   public ActiveMQServer getServer() {
+      return server;
+   }
+
+   public CoreRemotingConnection getConnection() {
+      return connection;
+   }
+
    public ActiveMQPacketHandler(final CoreProtocolManager protocolManager,
                                 final ActiveMQServer server,
                                 final Channel channel1,
@@ -163,8 +171,13 @@ public class ActiveMQPacketHandler implements ChannelHandler {
             connection.setClientID(((CreateSessionMessage_V2) request).getClientID());
          }
 
-         ActiveMQRedirectHandler redirectHandler = new ActiveMQRedirectHandler(server, connection, request.getUsername());
-         redirectHandler.redirect();
+         if (connection.getTransportConnection().getRedirectTo() != null) {
+            if (!connection.isVersionSupportRedirect()) {
+               throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
+            }
+
+            new ActiveMQRedirectHandler(this, request).redirect();
+         }
 
          Channel channel = connection.getChannel(request.getSessionChannelID(), request.getWindowSize());
 

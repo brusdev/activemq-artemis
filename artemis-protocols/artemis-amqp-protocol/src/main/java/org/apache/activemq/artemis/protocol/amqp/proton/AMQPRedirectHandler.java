@@ -18,10 +18,8 @@
 package org.apache.activemq.artemis.protocol.amqp.proton;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.protocol.amqp.broker.AMQPConnectionCallback;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.qpid.proton.amqp.transport.ConnectionError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
@@ -32,22 +30,16 @@ import java.util.Map;
 
 public class AMQPRedirectHandler extends RedirectHandler {
 
-   private final AMQPConnectionCallback connectionCallback;
-
    private final org.apache.qpid.proton.engine.Connection protonConnection;
 
 
-   protected AMQPRedirectHandler(ActiveMQServer server, AMQPConnectionCallback connectionCallback, Connection protonConnection, String username) {
-      super(server, protonConnection.getRemoteContainer(), username, connectionCallback.getTransportConnection());
-      this.connectionCallback = connectionCallback;
+   protected AMQPRedirectHandler(AMQPConnectionContext connectionContext, Connection protonConnection) {
+      super(connectionContext.getProtocolManager().getServer(), protonConnection.getRemoteContainer(),
+         connectionContext.getSASLResult() != null ? connectionContext.getSASLResult().getUser() : null,
+         connectionContext.getConnectionCallback().getTransportConnection());
       this.protonConnection = protonConnection;
    }
 
-
-   @Override
-   protected void checkClientCanRedirect() throws Exception {
-
-   }
 
    @Override
    protected void cannotRedirect() throws Exception {

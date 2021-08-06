@@ -200,6 +200,14 @@ public class OpenWireConnection extends AbstractRemotingConnection implements Se
 
    private final AtomicBoolean disableTtl = new AtomicBoolean(false);
 
+   public ActiveMQServer getServer() {
+      return server;
+   }
+
+   public OpenWireProtocolManager getProtocolManager() {
+      return protocolManager;
+   }
+
    public OpenWireConnection(Connection connection,
                              ActiveMQServer server,
                              OpenWireProtocolManager openWireProtocolManager,
@@ -1145,13 +1153,16 @@ public class OpenWireConnection extends AbstractRemotingConnection implements Se
 
       @Override
       public Response processAddConnection(ConnectionInfo info) throws Exception {
-         OpenWireRedirectHandler redirectHandler = new OpenWireRedirectHandler(server, transportConnection,
-            info, OpenWireConnection.this, protocolManager);
-
          try {
-            if (redirectHandler.redirect()) {
-               shutdown(true);
-               return null;
+            if (transportConnection.getRedirectTo() != null) {
+               if (!info.isFaultTolerant()) {
+                  throw new java.lang.IllegalStateException("Client not fault tolerant");
+               }
+
+               if (new OpenWireRedirectHandler(OpenWireConnection.this, info).redirect()) {
+                  shutdown(true);
+                  return null;
+               }
             }
 
             protocolManager.addConnection(OpenWireConnection.this, info);

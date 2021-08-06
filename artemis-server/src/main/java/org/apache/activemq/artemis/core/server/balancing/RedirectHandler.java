@@ -56,20 +56,12 @@ public abstract class RedirectHandler {
       this.transportConnection = transportConnection;
    }
 
-   protected abstract void checkClientCanRedirect() throws Exception;
-
    protected abstract void cannotRedirect() throws Exception;
 
    protected abstract void redirectTo(Target target) throws Exception;
 
 
    public boolean redirect() throws Exception {
-      if (getTransportConnection().getRedirectTo() == null) {
-         return false;
-      }
-
-      checkClientCanRedirect();
-
       BrokerBalancer brokerBalancer = getServer().getBalancerManager().getBalancer(getTransportConnection().getRedirectTo());
 
       if (brokerBalancer == null) {

@@ -69,6 +69,10 @@ public class MQTTProtocolHandler extends ChannelInboundHandlerAdapter {
 
    private final Actor<MqttMessage> mqttMessageActor;
 
+   public MQTTConnection getConnection() {
+      return connection;
+   }
+
    public MQTTProtocolHandler(ActiveMQServer server, MQTTProtocolManager protocolManager) {
       this.server = server;
       this.protocolManager = protocolManager;
@@ -177,9 +181,12 @@ public class MQTTProtocolHandler extends ChannelInboundHandlerAdapter {
     * @param connect
     */
    void handleConnect(MqttConnectMessage connect) throws Exception {
-      MQTTRedirectHandler redirectHandler = new MQTTRedirectHandler(server, connection, session, connect);
+      boolean connectionRedirected = false;
+      if (connection.getTransportConnection().getRedirectTo() == null) {
+         connectionRedirected = new MQTTRedirectHandler(this, connect).redirect();
+      }
 
-      if (!redirectHandler.redirect()) {
+      if (!connectionRedirected) {
          connectionEntry.ttl = connect.variableHeader().keepAliveTimeSeconds() * 1500L;
 
          String clientId = connect.payload().clientIdentifier();

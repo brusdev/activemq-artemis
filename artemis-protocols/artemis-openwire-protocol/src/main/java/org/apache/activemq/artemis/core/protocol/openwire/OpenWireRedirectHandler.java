@@ -18,35 +18,20 @@
 package org.apache.activemq.artemis.core.protocol.openwire;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionInfo;
 
 public class OpenWireRedirectHandler extends RedirectHandler {
 
-   private final ConnectionInfo connectionInfo;
-
    private final OpenWireConnection connection;
 
-   private final OpenWireProtocolManager protocolManager;
 
-
-   protected OpenWireRedirectHandler(ActiveMQServer server, Connection connection, ConnectionInfo connectionInfo, OpenWireConnection openWireConnection, OpenWireProtocolManager protocolManager) {
-      super(server, connectionInfo.getClientId(), connectionInfo.getUserName(), connection);
-      this.connectionInfo = connectionInfo;
-      this.connection = openWireConnection;
-      this.protocolManager = protocolManager;
-   }
-
-   @Override
-   protected void checkClientCanRedirect() throws Exception {
-      if (!connectionInfo.isFaultTolerant()) {
-         throw new java.lang.IllegalStateException("Client not fault tolerant");
-      }
+   protected OpenWireRedirectHandler(OpenWireConnection connection, ConnectionInfo connectionInfo) {
+      super(connection.getServer(), connectionInfo.getClientId(), connectionInfo.getUserName(), connection.getTransportConnection());
+      this.connection = connection;
    }
 
    @Override
@@ -58,7 +43,7 @@ public class OpenWireRedirectHandler extends RedirectHandler {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, target.getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, target.getConnector().getParams());
 
-      ConnectionControl command = protocolManager.newConnectionControl();
+      ConnectionControl command = connection.getProtocolManager().newConnectionControl();
       command.setConnectedBrokers(String.format("tcp://%s:%d", host, port));
       command.setRebalanceConnection(true);
       connection.dispatchSync(command);

@@ -526,10 +526,12 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          log.error("Error init connection", e);
       }
 
-      AMQPRedirectHandler redirectHandler = new AMQPRedirectHandler(protocolManager.getServer(),
-         connectionCallback, connection, handler.getSASLResult() != null ? handler.getSASLResult().getUser() : null);
+      boolean connectionRedirected = false;
+      if (connectionCallback.getTransportConnection().getRedirectTo() != null) {
+         connectionRedirected = new AMQPRedirectHandler(this, connection).redirect();
+      }
 
-      if (redirectHandler.redirect() || !validateConnection(connection)) {
+      if (connectionRedirected || !validateConnection(connection)) {
          connection.close();
       } else {
          connection.setContext(AMQPConnectionContext.this);

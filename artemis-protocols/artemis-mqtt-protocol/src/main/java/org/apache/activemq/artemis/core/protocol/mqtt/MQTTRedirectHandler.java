@@ -21,33 +21,25 @@ import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttProperties;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 
 public class MQTTRedirectHandler extends RedirectHandler {
-   private final MQTTConnection mqttConnection;
-
-   private final MQTTSession mqttSession;
+   private final MQTTProtocolHandler mqttProtocolHandler;
 
 
-   protected MQTTRedirectHandler(ActiveMQServer server, MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) {
-      super(server, connect.payload().clientIdentifier(), connect.payload().userName(), mqttConnection.getTransportConnection());
-      this.mqttConnection = mqttConnection;
-      this.mqttSession = mqttSession;
+   protected MQTTRedirectHandler(MQTTProtocolHandler mqttProtocolHandler, MqttConnectMessage connect) {
+      super(mqttProtocolHandler.getServer(), connect.payload() != null ? connect.payload().clientIdentifier() : null,
+         connect.payload() != null ? connect.payload().userName() : null, mqttProtocolHandler.getConnection().getTransportConnection());
+      this.mqttProtocolHandler = mqttProtocolHandler;
    }
 
-
-   @Override
-   protected void checkClientCanRedirect() throws Exception {
-
-   }
 
    @Override
    protected void cannotRedirect() throws Exception {
-      mqttSession.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
-      mqttSession.getProtocolHandler().disconnect(true);
+      mqttProtocolHandler.sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+      mqttProtocolHandler.disconnect(true);
    }
 
    @Override
@@ -58,7 +50,7 @@ public class MQTTRedirectHandler extends RedirectHandler {
       MqttProperties mqttProperties = new MqttProperties();
       mqttProperties.add(new MqttProperties.StringProperty(MqttProperties.MqttPropertyType.SERVER_REFERENCE.value(), String.format("%s:%d", host, port)));
 
-      mqttSession.getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER, mqttProperties);
-      mqttSession.getProtocolHandler().disconnect(true);
+      mqttProtocolHandler.sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER, mqttProperties);
+      mqttProtocolHandler.disconnect(true);
    }
 }

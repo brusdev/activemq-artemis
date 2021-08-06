@@ -18,28 +18,17 @@
 package org.apache.activemq.artemis.core.protocol.core.impl;
 
 import org.apache.activemq.artemis.api.core.DisconnectReason;
-import org.apache.activemq.artemis.core.protocol.core.CoreRemotingConnection;
+import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 
 public class ActiveMQRedirectHandler extends RedirectHandler {
+   private final ActiveMQPacketHandler packetHandler;
 
-   private final CoreRemotingConnection connection;
-
-
-   public ActiveMQRedirectHandler(ActiveMQServer server, CoreRemotingConnection connection, String username) {
-      super(server, connection.getClientID(), username, connection.getTransportConnection());
-      this.connection = connection;
-   }
-
-
-   @Override
-   public void checkClientCanRedirect() throws Exception {
-      if (!connection.isVersionSupportRedirect()) {
-         throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
-      }
+   public ActiveMQRedirectHandler(ActiveMQPacketHandler packetHandler, CreateSessionMessage request) {
+      super(packetHandler.getServer(), packetHandler.getConnection().getClientID(), request.getUsername(), packetHandler.getConnection().getTransportConnection());
+      this.packetHandler = packetHandler;
    }
 
    @Override
@@ -49,7 +38,7 @@ public class ActiveMQRedirectHandler extends RedirectHandler {
 
    @Override
    public void redirectTo(Target target) throws Exception {
-      connection.disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
+      packetHandler.getConnection().disconnect(DisconnectReason.REDIRECT, target.getNodeID(), target.getConnector());
 
       throw ActiveMQMessageBundle.BUNDLE.redirectConnection(target.getConnector());
    }
