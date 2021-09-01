@@ -181,6 +181,12 @@
       <testResources>
          <testResource>
             <directory>../security-resources</directory>
+            <includes>
+               <include>**/*.jceks</include>
+               <include>**/*.jks</include>
+               <include>**/*.p12</include>
+               <include>**/*.pem</include>
+            </includes>
          </testResource>
       </testResources>
       <plugins>
