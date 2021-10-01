@@ -17,10 +17,15 @@
 
 package org.apache.activemq.artemis.utils;
 
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import org.apache.activemq.artemis.json.JsonArray;
+import org.apache.activemq.artemis.json.JsonArrayBuilder;
+import org.apache.activemq.artemis.json.JsonObject;
+import org.apache.activemq.artemis.json.JsonObjectBuilder;
+import org.apache.activemq.artemis.json.impl.JsonArrayBuilderImpl;
+import org.apache.activemq.artemis.json.impl.JsonArrayImpl;
+import org.apache.activemq.artemis.json.impl.JsonObjectBuilderImpl;
+import org.apache.activemq.artemis.json.impl.JsonObjectImpl;
+
 import javax.json.JsonReader;
 import javax.json.spi.JsonProvider;
 import java.io.Reader;
@@ -57,22 +62,21 @@ public class JsonLoader {
 
    public static JsonObject readObject(Reader reader) {
       try (JsonReader jsonReader = provider.createReader(reader)) {
-         return jsonReader.readObject();
+         return new JsonObjectImpl(jsonReader.readObject());
       }
    }
 
    public static JsonArray readArray(Reader reader) {
       try (JsonReader jsonReader = provider.createReader(reader)) {
-         return jsonReader.readArray();
+         return new JsonArrayImpl(jsonReader.readArray());
       }
    }
 
    public static JsonArrayBuilder createArrayBuilder() {
-      return provider.createArrayBuilder();
+      return new JsonArrayBuilderImpl(provider.createArrayBuilder());
    }
 
    public static JsonObjectBuilder createObjectBuilder() {
-      return provider.createObjectBuilder();
+      return new JsonObjectBuilderImpl(provider.createObjectBuilder());
    }
-
 }
