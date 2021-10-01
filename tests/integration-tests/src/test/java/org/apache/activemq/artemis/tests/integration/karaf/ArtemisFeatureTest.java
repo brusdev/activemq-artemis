@@ -26,9 +26,8 @@ import javax.jms.QueueBrowser;
 import javax.jms.QueueRequestor;
 import javax.jms.QueueSession;
 import javax.jms.TextMessage;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonString;
+import org.apache.activemq.artemis.json.JsonArray;
+import org.apache.activemq.artemis.json.JsonString;
 import javax.security.auth.Subject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -45,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.artemis.utils.JsonLoader;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.apache.karaf.jaas.boot.principal.UserPrincipal;
 import org.apache.karaf.shell.api.console.Session;
@@ -181,8 +181,8 @@ public class ArtemisFeatureTest extends Assert {
          m.setText("[\"ANYCAST\"]");
          Message reply = requestor.request(m);
          String json = ((TextMessage) reply).getText();
-         JsonArray array = Json.createReader(new StringReader(json)).readArray();
-         List<JsonString> queues = (List<JsonString>) array.get(0);
+         JsonArray array = JsonLoader.readArray(new StringReader(json));
+         JsonArray queues = array.getJsonArray(0);
          assertNotNull(queues);
          assertFalse(queues.isEmpty());
 

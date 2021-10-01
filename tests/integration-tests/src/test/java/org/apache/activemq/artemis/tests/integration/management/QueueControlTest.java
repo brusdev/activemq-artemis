@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.artemis.tests.integration.management;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
+import org.apache.activemq.artemis.json.JsonArray;
+import org.apache.activemq.artemis.json.JsonObject;
 import javax.management.Notification;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;

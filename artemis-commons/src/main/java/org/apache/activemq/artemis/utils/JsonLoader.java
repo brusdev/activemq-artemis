@@ -17,13 +17,18 @@
 
 package org.apache.activemq.artemis.utils;
 
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import org.apache.activemq.artemis.json.JsonArray;
+import org.apache.activemq.artemis.json.JsonArrayBuilder;
+import org.apache.activemq.artemis.json.JsonNumber;
+import org.apache.activemq.artemis.json.JsonObject;
+import org.apache.activemq.artemis.json.JsonObjectBuilder;
+import org.apache.activemq.artemis.json.JsonString;
+
 import javax.json.JsonReader;
 import javax.json.spi.JsonProvider;
 import java.io.Reader;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
@@ -57,22 +62,45 @@ public class JsonLoader {
 
    public static JsonObject readObject(Reader reader) {
       try (JsonReader jsonReader = provider.createReader(reader)) {
-         return jsonReader.readObject();
+         return new JsonObject(jsonReader.readObject());
       }
    }
 
    public static JsonArray readArray(Reader reader) {
       try (JsonReader jsonReader = provider.createReader(reader)) {
-         return jsonReader.readArray();
+         return new JsonArray(jsonReader.readArray());
       }
    }
 
    public static JsonArrayBuilder createArrayBuilder() {
-      return provider.createArrayBuilder();
+      return new JsonArrayBuilder(provider.createArrayBuilder());
    }
 
    public static JsonObjectBuilder createObjectBuilder() {
-      return provider.createObjectBuilder();
+      return new JsonObjectBuilder(provider.createObjectBuilder());
    }
 
+   public static JsonString createValue(String value) {
+      return new JsonString(provider.createValue(value));
+   }
+
+   public static JsonNumber createValue(int value) {
+      return new JsonNumber(provider.createValue(value));
+   }
+
+   public static JsonNumber createValue(long value) {
+      return new JsonNumber(provider.createValue(value));
+   }
+
+   public static JsonNumber createValue(double value) {
+      return new JsonNumber(provider.createValue(value));
+   }
+
+   public static JsonNumber createValue(BigDecimal value) {
+      return new JsonNumber(provider.createValue(value));
+   }
+
+   public static JsonNumber createValue(BigInteger value) {
+      return new JsonNumber(provider.createValue(value));
+   }
 }
