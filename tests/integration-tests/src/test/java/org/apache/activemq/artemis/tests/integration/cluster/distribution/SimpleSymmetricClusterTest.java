@@ -17,10 +17,14 @@
 package org.apache.activemq.artemis.tests.integration.cluster.distribution;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.postoffice.Binding;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
+import org.apache.activemq.artemis.core.server.cluster.MessageFlowRecord;
 import org.apache.activemq.artemis.core.server.cluster.RemoteQueueBinding;
 import org.apache.activemq.artemis.core.server.cluster.impl.ClusterConnectionImpl;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
@@ -149,9 +153,14 @@ public class SimpleSymmetricClusterTest extends ClusterTestBase {
       ClusterConnection clusterConnection1 = getServer(1).getClusterManager().getClusterConnection("cluster1");
       ClusterConnection clusterConnection2 = getServer(2).getClusterManager().getClusterConnection("cluster2");
 
+
       Wait.assertEquals(2, () -> ((ClusterConnectionImpl)clusterConnection0).getRecords().size());
       Wait.assertEquals(2, () -> ((ClusterConnectionImpl)clusterConnection1).getRecords().size());
       Wait.assertEquals(2, () -> ((ClusterConnectionImpl)clusterConnection2).getRecords().size());
+
+      List<MessageFlowRecord> clusterConnectionRecords0 = ((ClusterConnectionImpl)clusterConnection0).getRecords().values().stream().collect(Collectors.toList());
+      List<MessageFlowRecord> clusterConnectionRecords1 = ((ClusterConnectionImpl)clusterConnection1).getRecords().values().stream().collect(Collectors.toList());
+      List<MessageFlowRecord> clusterConnectionRecords2 = ((ClusterConnectionImpl)clusterConnection2).getRecords().values().stream().collect(Collectors.toList());
 
       clusterConnection0.stop();
       clusterConnection1.stop();
@@ -160,6 +169,10 @@ public class SimpleSymmetricClusterTest extends ClusterTestBase {
       Assert.assertEquals(0, ((ClusterConnectionImpl)clusterConnection0).getRecords().size());
       Assert.assertEquals(0, ((ClusterConnectionImpl)clusterConnection1).getRecords().size());
       Assert.assertEquals(0, ((ClusterConnectionImpl)clusterConnection2).getRecords().size());
+
+      Wait.assertEquals(0, () -> clusterConnectionRecords0.stream().filter(messageFlowRecord -> messageFlowRecord.getBridge().isConnected()).count());
+      Wait.assertEquals(0, () -> clusterConnectionRecords1.stream().filter(messageFlowRecord -> messageFlowRecord.getBridge().isConnected()).count());
+      Wait.assertEquals(0, () -> clusterConnectionRecords2.stream().filter(messageFlowRecord -> messageFlowRecord.getBridge().isConnected()).count());
 
       clusterConnection0.start();
       clusterConnection1.start();
