@@ -24,7 +24,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.activemq.artemis.core.server.Queue;
-import org.apache.activemq.artemis.json.JsonValue;
+//import org.apache.activemq.artemis.json.JsonValue;
 import org.apache.activemq.artemis.utils.JsonLoader;
 
 /**
@@ -335,8 +335,8 @@ public class MessageCounter {
       String updateTimestamp = dateFormat.format(new Date(this.getLastUpdate()));
       return JsonLoader
          .createObjectBuilder()
-         .add("destinationName", this.getDestinationName(), JsonValue.NULL)
-         .add("destinationSubscription", this.getDestinationSubscription(), JsonValue.NULL)
+         //.add("destinationName", this.getDestinationName(), JsonValue.NULL)
+         //.add("destinationSubscription", this.getDestinationSubscription(), JsonValue.NULL)
          .add("destinationDurable", this.isDestinationDurable())
          .add("count", this.getCount())
          .add("countDelta", this.getCountDelta())
