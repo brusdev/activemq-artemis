@@ -172,8 +172,8 @@ public class ActiveMQPacketHandler implements ChannelHandler {
          }
 
          final String validatedUser = server.validateUser(activeMQPrincipal == null ? request.getUsername() : activeMQPrincipal.getUserName(), activeMQPrincipal == null ? request.getPassword() : activeMQPrincipal.getPassword(), connection, protocolManager.getSecurityDomain());
-         if (connection.getTransportConnection().getRedirectTo() != null) {
-            protocolManager.getRedirectHandler().redirect(connection, request);
+         if (connection.getTransportConnection().getBrokerBalancer() != null) {
+            protocolManager.getBrokerBalancerHandler().handle(connection, request);
          }
 
          OperationContext sessionOperationContext = server.newOperationContext();

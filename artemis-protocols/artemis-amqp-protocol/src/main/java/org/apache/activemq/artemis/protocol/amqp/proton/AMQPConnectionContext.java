@@ -548,8 +548,8 @@ public class AMQPConnectionContext extends ProtonInitializable implements EventH
          log.error("Error init connection", e);
       }
 
-      if (!validateUser(connection) || (connectionCallback.getTransportConnection().getRedirectTo() != null
-         && protocolManager.getRedirectHandler().redirect(this, connection)) || !validateConnection(connection)) {
+      if (!validateUser(connection) || (connectionCallback.getTransportConnection().getBrokerBalancer() != null
+         && protocolManager.getBrokerBalancerHandler().handle(this, connection)) || !validateConnection(connection)) {
          connection.close();
       } else {
          connection.setContext(AMQPConnectionContext.this);

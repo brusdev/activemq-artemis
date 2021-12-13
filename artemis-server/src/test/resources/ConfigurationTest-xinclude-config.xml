@@ -145,20 +145,20 @@
       </diverts>
       <broker-balancers>
          <broker-balancer name="simple-local">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^[^.]+</target-key-filter>
+            <connection-key>CLIENT_ID</connection-key>
+            <connection-key-filter>^[^.]+</connection-key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
          </broker-balancer>
          <broker-balancer name="simple-local-with-transformer">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^[^.]+</target-key-filter>
+            <connection-key>CLIENT_ID</connection-key>
+            <connection-key-filter>^[^.]+</connection-key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
-            <local-target-key-transformer name="CONSISTENT_HASH_MODULO">
+            <connection-key-transformer name="CONSISTENT_HASH_MODULO">
                <property key="modulo" value="2"></property>
-            </local-target-key-transformer>
+            </connection-key-transformer>
          </broker-balancer>
          <broker-balancer name="simple-balancer">
-            <target-key>USER_NAME</target-key>
+            <connection-key>USER_NAME</connection-key>
             <policy name="FIRST_ELEMENT"/>
             <pool>
                <static-connectors>
@@ -167,8 +167,8 @@
             </pool>
          </broker-balancer>
          <broker-balancer name="consistent-hash-balancer">
-            <target-key>SNI_HOST</target-key>
-            <target-key-filter>^[^.]+</target-key-filter>
+            <connection-key>SNI_HOST</connection-key>
+            <connection-key-filter>^[^.]+</connection-key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
             <policy name="CONSISTENT_HASH"/>
             <pool>
@@ -178,7 +178,10 @@
             </pool>
          </broker-balancer>
          <broker-balancer name="least-connections-balancer">
-            <cache-timeout>60000</cache-timeout>
+            <cache name="LOCAL_CACHE">
+               <property key="CACHE_TIMEOUT" value="60000"/>
+               <property key="CACHE_PERSISTED" value="true"/>
+            </cache>
             <policy name="LEAST_CONNECTIONS"/>
             <pool>
                <check-period>3000</check-period>

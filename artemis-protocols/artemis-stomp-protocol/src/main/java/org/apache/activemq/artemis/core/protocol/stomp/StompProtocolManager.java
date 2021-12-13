@@ -38,7 +38,7 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ServerSession;
-import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandler;
 import org.apache.activemq.artemis.logs.AuditLogger;
 import org.apache.activemq.artemis.spi.core.protocol.AbstractProtocolManager;
 import org.apache.activemq.artemis.spi.core.protocol.ConnectionEntry;
@@ -53,7 +53,7 @@ import static org.apache.activemq.artemis.core.protocol.stomp.ActiveMQStompProto
 /**
  * StompProtocolManager
  */
-public class StompProtocolManager extends AbstractProtocolManager<StompFrame, StompFrameInterceptor, StompConnection, RedirectHandler> {
+public class StompProtocolManager extends AbstractProtocolManager<StompFrame, StompFrameInterceptor, StompConnection, BrokerBalancerHandler> {
 
    private static final List<String> websocketRegistryNames = Arrays.asList("v10.stomp", "v11.stomp", "v12.stomp");
 
@@ -190,7 +190,7 @@ public class StompProtocolManager extends AbstractProtocolManager<StompFrame, St
    }
 
    @Override
-   public RedirectHandler getRedirectHandler() {
+   public BrokerBalancerHandler getBrokerBalancerHandler() {
       return null;
    }
 

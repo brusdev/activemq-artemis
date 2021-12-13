@@ -46,13 +46,13 @@ under the License.
 
       <acceptors>
          <!-- Acceptor for every supported protocol -->
-         <acceptor name="artemis">tcp://0.0.0.0:61616?redirect-to=symmetric-simple;tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true</acceptor>
+         <acceptor name="artemis">tcp://0.0.0.0:61616?broker-balancer=symmetric-simple;tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true</acceptor>
       </acceptors>
 
       <broker-balancers>
          <broker-balancer name="symmetric-simple">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^.{3}</target-key-filter>
+            <connection-key>CLIENT_ID</connection-key>
+            <connection-key-filter>^.{3}</connection-key-filter>
             <local-target-filter>^FOO.*</local-target-filter>
          </broker-balancer>
       </broker-balancers>

@@ -21,11 +21,10 @@ import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.Role;
 import org.apache.activemq.artemis.core.server.ActiveMQServers;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
-import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
-import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
+import org.apache.activemq.artemis.core.server.service.ActiveMQService;
+import org.apache.activemq.artemis.core.server.service.ActiveMQServiceResolver;
 import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.apache.activemq.artemis.tests.integration.security.SecurityTest;
@@ -48,9 +47,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @RunWith(Parameterized.class)
-public class TargetKeyTest extends BalancingTestBase {
+public class ConnectionKeyTest extends BalancingTestBase {
 
    private static final String MOCK_POLICY_NAME = "MOCK_POLICY";
 
@@ -82,31 +82,30 @@ public class TargetKeyTest extends BalancingTestBase {
    private final List<String> keys = new ArrayList<>();
 
 
-   public TargetKeyTest(String protocol) {
+   public ConnectionKeyTest(String protocol) {
       this.protocol = protocol;
    }
 
    @Before
    public void setup() throws Exception {
-      PolicyFactoryResolver.getInstance().registerPolicyFactory(MOCK_POLICY_NAME,
-         new PolicyFactory() {
-            @Override
-            public Policy create() {
-               return new FirstElementPolicy(MOCK_POLICY_NAME) {
-                  @Override
-                  public Target selectTarget(List<Target> targets, String key) {
-                     keys.add(key);
-                     return super.selectTarget(targets, key);
-                  }
-               };
-            }
-         });
+      ActiveMQServiceResolver.getInstance().registerService(MOCK_POLICY_NAME, new Supplier<>() {
+         @Override
+         public ActiveMQService get() {
+            return new FirstElementPolicy(MOCK_POLICY_NAME) {
+               @Override
+               public Target selectTarget(List<Target> targets, String key) {
+                  keys.add(key);
+                  return super.selectTarget(targets, key);
+               }
+            };
+         }
+      });
    }
 
    @Test
    public void testClientIDKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.CLIENT_ID, MOCK_POLICY_NAME, null, true, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.CLIENT_ID, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -141,7 +140,7 @@ public class TargetKeyTest extends BalancingTestBase {
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "server-keystore.jks");
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "securepass");
 
-      setupBalancerServerWithDiscovery(0, TargetKey.SNI_HOST, MOCK_POLICY_NAME, null, true, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.SNI_HOST, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, true, localHostname,
@@ -158,7 +157,7 @@ public class TargetKeyTest extends BalancingTestBase {
    @Test
    public void testSourceIPKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.SOURCE_IP, MOCK_POLICY_NAME, null, true, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.SOURCE_IP, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -175,7 +174,7 @@ public class TargetKeyTest extends BalancingTestBase {
    @Test
    public void testUserNameKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, MOCK_POLICY_NAME, null, true, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.USER_NAME, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -194,7 +193,7 @@ public class TargetKeyTest extends BalancingTestBase {
 
       ActiveMQJAASSecurityManager securityManager = new ActiveMQJAASSecurityManager("PropertiesLogin");
       servers[0] = addServer(ActiveMQServers.newActiveMQServer(createDefaultConfig(true).setSecurityEnabled(true), ManagementFactory.getPlatformMBeanServer(), securityManager, false));
-      setupBalancerServerWithLocalTarget(0, TargetKey.ROLE_NAME, "b", "b");
+      setupBalancerServerWithLocalTarget(0, ConnectionKey.ROLE_NAME, "b", "b");
 
       // ensure advisory permission is present for openwire connection creation by 'b'
       HierarchicalRepository<Set<Role>> securityRepository = servers[0].getSecurityRepository();

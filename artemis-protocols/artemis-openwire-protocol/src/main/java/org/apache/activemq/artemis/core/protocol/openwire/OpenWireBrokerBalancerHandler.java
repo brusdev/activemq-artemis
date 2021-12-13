@@ -19,34 +19,34 @@ package org.apache.activemq.artemis.core.protocol.openwire;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandler;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionInfo;
 
-public class OpenWireRedirectHandler extends RedirectHandler<OpenWireRedirectContext> {
+public class OpenWireBrokerBalancerHandler extends BrokerBalancerHandler<OpenWireBrokerBalancerHandlerContext> {
 
    private final OpenWireProtocolManager protocolManager;
 
-   protected OpenWireRedirectHandler(ActiveMQServer server, OpenWireProtocolManager protocolManager) {
+   protected OpenWireBrokerBalancerHandler(ActiveMQServer server, OpenWireProtocolManager protocolManager) {
       super(server);
       this.protocolManager = protocolManager;
    }
 
-   public boolean redirect(OpenWireConnection openWireConnection, ConnectionInfo connectionInfo) throws Exception {
+   public boolean handle(OpenWireConnection openWireConnection, ConnectionInfo connectionInfo) throws Exception {
       if (!connectionInfo.isFaultTolerant()) {
          throw new java.lang.IllegalStateException("Client not fault tolerant");
       }
 
-      return redirect(new OpenWireRedirectContext(openWireConnection, connectionInfo));
+      return handle(new OpenWireBrokerBalancerHandlerContext(openWireConnection, connectionInfo));
    }
 
    @Override
-   protected void cannotRedirect(OpenWireRedirectContext context) throws Exception {
+   protected void refuse(OpenWireBrokerBalancerHandlerContext context) throws Exception {
    }
 
    @Override
-   protected void redirectTo(OpenWireRedirectContext context) throws Exception {
+   protected void redirect(OpenWireBrokerBalancerHandlerContext context) throws Exception {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, context.getTarget().getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, context.getTarget().getConnector().getParams());
 

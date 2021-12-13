@@ -15,23 +15,23 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.protocol.openwire;
+package org.apache.activemq.artemis.protocol.amqp.proton;
 
-import org.apache.activemq.artemis.core.server.balancing.RedirectContext;
-import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandlerContext;
+import org.apache.qpid.proton.engine.Connection;
 
-public class OpenWireRedirectContext extends RedirectContext {
+public class AMQPBrokerBalancerHandlerContext extends BrokerBalancerHandlerContext {
+   private final Connection protonConnection;
 
-   private final OpenWireConnection openWireConnection;
 
-
-   public OpenWireConnection getOpenWireConnection() {
-      return openWireConnection;
+   public Connection getProtonConnection() {
+      return protonConnection;
    }
 
 
-   public OpenWireRedirectContext(OpenWireConnection openWireConnection, ConnectionInfo connectionInfo) {
-      super(openWireConnection.getRemotingConnection(), connectionInfo.getClientId(), connectionInfo.getUserName());
-      this.openWireConnection = openWireConnection;
+   public AMQPBrokerBalancerHandlerContext(AMQPConnectionContext connectionContext, Connection protonConnection) {
+      super(connectionContext.getConnectionCallback().getProtonConnectionDelegate(), connectionContext.getRemoteContainer(),
+         connectionContext.getSASLResult() != null ? connectionContext.getSASLResult().getUser() : null);
+      this.protonConnection = protonConnection;
    }
 }

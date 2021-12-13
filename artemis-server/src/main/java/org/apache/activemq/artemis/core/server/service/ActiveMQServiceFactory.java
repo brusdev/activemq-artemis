@@ -15,23 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.protocol.mqtt;
+package org.apache.activemq.artemis.core.server.service;
 
-import io.netty.handler.codec.mqtt.MqttConnectMessage;
-import org.apache.activemq.artemis.core.server.balancing.RedirectContext;
+public interface ActiveMQServiceFactory {
+   String getServiceName();
 
-public class MQTTRedirectContext extends RedirectContext {
-
-   private final MQTTSession mqttSession;
-
-
-   public MQTTSession getMQTTSession() {
-      return mqttSession;
-   }
-
-
-   public MQTTRedirectContext(MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) {
-      super(mqttConnection, connect.payload().clientIdentifier(), connect.payload().userName());
-      this.mqttSession = mqttSession;
-   }
+   ActiveMQService createService();
 }

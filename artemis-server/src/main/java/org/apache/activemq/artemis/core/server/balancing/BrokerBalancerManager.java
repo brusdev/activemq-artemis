@@ -21,14 +21,18 @@ import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.cluster.DiscoveryGroup;
 import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.BrokerServiceConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.core.server.balancing.caches.Cache;
+import org.apache.activemq.artemis.core.server.balancing.caches.LocalCache;
+import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
+import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
-import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactory;
-import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
+import org.apache.activemq.artemis.core.server.balancing.policies.RoundRobinPolicy;
 import org.apache.activemq.artemis.core.server.balancing.pools.ClusterPool;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryGroupService;
 import org.apache.activemq.artemis.core.server.balancing.pools.DiscoveryPool;
@@ -39,10 +43,10 @@ import org.apache.activemq.artemis.core.server.balancing.targets.ActiveMQTargetF
 import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetFactory;
-import org.apache.activemq.artemis.core.server.balancing.transformer.KeyTransformer;
-import org.apache.activemq.artemis.core.server.balancing.transformer.TransformerFactory;
-import org.apache.activemq.artemis.core.server.balancing.transformer.TransformerFactoryResolver;
+import org.apache.activemq.artemis.core.server.balancing.transformers.ConsistentHashModulo;
+import org.apache.activemq.artemis.core.server.balancing.transformers.KeyTransformer;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
+import org.apache.activemq.artemis.core.server.service.ActiveMQServiceResolver;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
@@ -54,6 +58,16 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class BrokerBalancerManager implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BrokerBalancerManager.class);
 
+   public static final String CACHE_ID_PREFIX = "$.BC.";
+
+   static {
+      ActiveMQServiceResolver.getInstance().registerService(LocalCache.NAME, () -> new LocalCache());
+      ActiveMQServiceResolver.getInstance().registerService(ConsistentHashModulo.NAME, () -> new ConsistentHashModulo());
+      ActiveMQServiceResolver.getInstance().registerService(ConsistentHashPolicy.NAME, () -> new ConsistentHashPolicy());
+      ActiveMQServiceResolver.getInstance().registerService(FirstElementPolicy.NAME, () -> new FirstElementPolicy());
+      ActiveMQServiceResolver.getInstance().registerService(LeastConnectionsPolicy.NAME, () -> new LeastConnectionsPolicy());
+      ActiveMQServiceResolver.getInstance().registerService(RoundRobinPolicy.NAME, () -> new RoundRobinPolicy());
+   }
 
    private final Configuration config;
 
@@ -91,6 +105,20 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       Target localTarget = new LocalTarget(null, server);
 
+      KeyTransformer transformer = null;
+      BrokerServiceConfiguration transformerConfiguration = config.getConnectionKeyConfiguration();
+      if (transformerConfiguration != null) {
+         transformer = deployKeyTransformer(transformerConfiguration);
+      }
+
+      Cache cache = null;
+      BrokerServiceConfiguration cacheConfiguration = config.getCacheConfiguration();
+      if (cacheConfiguration != null) {
+         cache = deployCache(cacheConfiguration, config.getName());
+      } else {
+
+      }
+
       Pool pool = null;
       final PoolConfiguration poolConfiguration = config.getPoolConfiguration();
       if (poolConfiguration != null) {
@@ -98,23 +126,37 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       }
 
       Policy policy = null;
-      NamedPropertyConfiguration policyConfiguration = config.getPolicyConfiguration();
+      BrokerServiceConfiguration policyConfiguration = config.getPolicyConfiguration();
       if (policyConfiguration != null) {
          policy = deployPolicy(policyConfiguration, pool);
       }
 
-      KeyTransformer transformer = null;
-      NamedPropertyConfiguration transformerConfiguration = config.getTransformerConfiguration();
-      if (transformerConfiguration != null) {
-         transformer = deployTransformer(transformerConfiguration);
-      }
-
-      BrokerBalancer balancer = new BrokerBalancer(config.getName(), config.getTargetKey(), config.getTargetKeyFilter(),
-                                                   localTarget, config.getLocalTargetFilter(), pool, policy, transformer, config.getCacheTimeout());
+      BrokerBalancer balancer = new BrokerBalancer(config.getName(), config.getConnectionKey(), config.getConnectionKeyFilter(),
+         transformer, localTarget, config.getLocalTargetFilter(), cache, pool, policy);
 
       balancerControllers.put(balancer.getName(), balancer);
 
       server.getManagementService().registerBrokerBalancer(balancer);
+   }
+
+   private KeyTransformer deployKeyTransformer(BrokerServiceConfiguration configuration) throws Exception {
+      KeyTransformer transformer = (KeyTransformer)ActiveMQServiceResolver.getInstance().create(configuration.getName());
+
+      transformer.init(configuration.getProperties());
+
+      return transformer;
+   }
+
+   private Cache deployCache(BrokerServiceConfiguration configuration, String name) throws ClassNotFoundException {
+      Cache cache = (Cache)ActiveMQServiceResolver.getInstance().create(configuration.getName());
+
+      Map<String, String> properties = new HashMap<>(configuration.getProperties());
+
+      properties.putIfAbsent(Cache.CACHE_ID_PROPERTY_NAME, CACHE_ID_PREFIX + name);
+
+      cache.init(properties);
+
+      return cache;
    }
 
    private Pool deployPool(PoolConfiguration config, Target localTarget) throws Exception {
@@ -169,10 +211,8 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       return pool;
    }
 
-   private Policy deployPolicy(NamedPropertyConfiguration policyConfig, Pool pool) throws ClassNotFoundException {
-      PolicyFactory policyFactory = PolicyFactoryResolver.getInstance().resolve(policyConfig.getName());
-
-      Policy policy = policyFactory.create();
+   private Policy deployPolicy(BrokerServiceConfiguration policyConfig, Pool pool) throws ClassNotFoundException {
+      Policy policy = (Policy)ActiveMQServiceResolver.getInstance().create(policyConfig.getName());
 
       policy.init(policyConfig.getProperties());
 
@@ -183,24 +223,24 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
       return policy;
    }
 
-   private KeyTransformer deployTransformer(NamedPropertyConfiguration configuration) throws Exception {
-      TransformerFactory factory = TransformerFactoryResolver.getInstance().resolve(configuration.getName());
-
-      KeyTransformer transformer = factory.create();
-
-      transformer.init(configuration.getProperties());
-
-      return transformer;
-   }
-
    public BrokerBalancer getBalancer(String name) {
       return balancerControllers.get(name);
    }
 
    @Override
    public void start() throws Exception {
-      for (BrokerBalancer brokerBalancer : balancerControllers.values()) {
-         brokerBalancer.start();
+      for (BrokerBalancer balancer : balancerControllers.values()) {
+         if (balancer.getConnectionKeyTransformer() != null) {
+            balancer.getConnectionKeyTransformer().start(server);
+         }
+         if (balancer.getCache() != null) {
+            balancer.getCache().start(server);
+         }
+         if (balancer.getPolicy() != null) {
+            balancer.getPolicy().start(server);
+         }
+
+         balancer.start();
       }
 
       started = true;
@@ -212,6 +252,17 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
 
       for (BrokerBalancer balancer : balancerControllers.values()) {
          balancer.stop();
+
+         if (balancer.getConnectionKeyTransformer() != null) {
+            balancer.getConnectionKeyTransformer().stop();
+         }
+         if (balancer.getCache() != null) {
+            balancer.getCache().stop();
+         }
+         if (balancer.getPolicy() != null) {
+            balancer.getPolicy().stop();
+         }
+
          server.getManagementService().unregisterBrokerBalancer(balancer.getName());
       }
    }

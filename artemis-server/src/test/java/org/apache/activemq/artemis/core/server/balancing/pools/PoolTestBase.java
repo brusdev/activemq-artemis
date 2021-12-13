@@ -61,29 +61,29 @@ public abstract class PoolTestBase {
 
       pool.setQuorumSize(quorumSize);
 
-      Assert.assertEquals(0, pool.getTargets().size());
+      Assert.assertEquals(0, pool.getReadyTargets().size());
 
       pool.start();
 
       try {
-         Wait.assertEquals(targets, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+         Wait.assertEquals(targets, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
 
          targetFactory.getCreatedTargets().stream().limit(targets - quorumSize + 1)
             .forEach(mockTarget -> mockTarget.setReady(false));
 
-         Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+         Wait.assertEquals(0, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
 
          targetFactory.getCreatedTargets().get(0).setReady(true);
 
-         Wait.assertEquals(quorumSize, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+         Wait.assertEquals(quorumSize, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
 
          pool.setQuorumSize(quorumSize + 1);
 
-         Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+         Wait.assertEquals(0, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
 
          targetFactory.getCreatedTargets().get(1).setReady(true);
 
-         Wait.assertEquals(quorumSize + 1, () -> pool.getTargets().size(), CHECK_TIMEOUT);
+         Wait.assertEquals(quorumSize + 1, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
       } finally {
          pool.stop();
       }
@@ -97,15 +97,15 @@ public abstract class PoolTestBase {
 
       pool.addTargetProbe(targetProbe);
 
+      Assert.assertEquals(0, pool.getReadyTargets().size());
       Assert.assertEquals(0, pool.getTargets().size());
-      Assert.assertEquals(0, pool.getAllTargets().size());
       Assert.assertEquals(0, targetFactory.getCreatedTargets().size());
 
       pool.start();
 
       try {
-         Assert.assertEquals(0, pool.getTargets().size());
-         Assert.assertEquals(targets, pool.getAllTargets().size());
+         Assert.assertEquals(0, pool.getReadyTargets().size());
+         Assert.assertEquals(targets, pool.getTargets().size());
          Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
          targetFactory.getCreatedTargets().forEach(mockTarget -> {
             Assert.assertFalse(pool.isTargetReady(mockTarget));
@@ -115,8 +115,8 @@ public abstract class PoolTestBase {
          if (targets > 0) {
             targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setConnectable(true));
 
-            Assert.assertEquals(0, pool.getTargets().size());
-            Assert.assertEquals(targets, pool.getAllTargets().size());
+            Assert.assertEquals(0, pool.getReadyTargets().size());
+            Assert.assertEquals(targets, pool.getTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
                Assert.assertFalse(pool.isTargetReady(mockTarget));
@@ -125,8 +125,8 @@ public abstract class PoolTestBase {
 
             targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setReady(true));
 
-            Assert.assertEquals(0, pool.getTargets().size());
-            Assert.assertEquals(targets, pool.getAllTargets().size());
+            Assert.assertEquals(0, pool.getReadyTargets().size());
+            Assert.assertEquals(targets, pool.getTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
                Assert.assertFalse(pool.isTargetReady(mockTarget));
@@ -137,8 +137,8 @@ public abstract class PoolTestBase {
 
             targetProbe.setChecked(true);
 
-            Wait.assertEquals(targets, () -> pool.getTargets().size(), CHECK_TIMEOUT);
-            Assert.assertEquals(targets, pool.getAllTargets().size());
+            Wait.assertEquals(targets, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
+            Assert.assertEquals(targets, pool.getTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
                Assert.assertTrue(pool.isTargetReady(mockTarget));
@@ -153,16 +153,16 @@ public abstract class PoolTestBase {
                }
             });
 
-            Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
-            Assert.assertEquals(targets, pool.getAllTargets().size());
+            Wait.assertEquals(0, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
+            Assert.assertEquals(targets, pool.getTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
 
             targetProbe.clearTargetExecutions();
 
             targetFactory.getCreatedTargets().forEach(mockTarget -> mockTarget.setConnectable(true));
 
-            Wait.assertEquals(targets, () -> pool.getTargets().size(), CHECK_TIMEOUT);
-            Assert.assertEquals(targets, pool.getAllTargets().size());
+            Wait.assertEquals(targets, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
+            Assert.assertEquals(targets, pool.getTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
                Wait.assertTrue(() -> pool.isTargetReady(mockTarget), CHECK_TIMEOUT);
@@ -173,8 +173,8 @@ public abstract class PoolTestBase {
 
             targetProbe.setChecked(false);
 
-            Wait.assertEquals(0, () -> pool.getTargets().size(), CHECK_TIMEOUT);
-            Assert.assertEquals(targets, pool.getAllTargets().size());
+            Wait.assertEquals(0, () -> pool.getReadyTargets().size(), CHECK_TIMEOUT);
+            Assert.assertEquals(targets, pool.getTargets().size());
             Assert.assertEquals(targets, targetFactory.getCreatedTargets().size());
             targetFactory.getCreatedTargets().forEach(mockTarget -> {
                Wait.assertTrue(() -> !pool.isTargetReady(mockTarget), CHECK_TIMEOUT);

@@ -36,8 +36,8 @@ public interface BrokerBalancerControl {
    String getLocalTargetFilter();
 
    @Operation(desc = "Set the target key filter regular expression", impact = MBeanOperationInfo.ACTION)
-   void setTargetKeyFilter(@Parameter(desc = "the regular expression", name = "regExp") String regExp);
+   void setConnectionKeyFilter(@Parameter(desc = "the regular expression", name = "regExp") String regExp);
 
    @Operation(desc = "Get the target key filter regular expression", impact = MBeanOperationInfo.INFO)
-   String getTargetKeyFilter();
+   String getConnectionKeyFilter();
 }

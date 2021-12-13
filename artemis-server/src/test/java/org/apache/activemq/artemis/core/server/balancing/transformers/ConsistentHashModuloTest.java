@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.transformer;
+package org.apache.activemq.artemis.core.server.balancing.transformers;
 
 import java.util.HashMap;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKeyResolver;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,7 @@ public class ConsistentHashModuloTest {
    public void transform() {
       ConsistentHashModulo underTest = new ConsistentHashModulo();
 
-      assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, underTest.transform(TargetKeyResolver.DEFAULT_KEY_VALUE));
+      assertEquals(ConnectionKeyResolver.DEFAULT_KEY_VALUE, underTest.transform(ConnectionKeyResolver.DEFAULT_KEY_VALUE));
 
       assertEquals("AA", underTest.transform("AA")); // default modulo 0 does nothing
 

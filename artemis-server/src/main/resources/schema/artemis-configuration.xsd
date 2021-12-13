@@ -2094,17 +2094,24 @@
 
    <xsd:complexType name="brokerBalancerType">
       <xsd:sequence maxOccurs="unbounded">
-         <xsd:element name="target-key" type="brokerBalancerTargetKeyType" maxOccurs="1" minOccurs="0">
+         <xsd:element name="connection-key" type="brokerBalancerConnectionKeyType" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
                   the optional target key
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
-         <xsd:element name="target-key-filter" type="xsd:string" maxOccurs="1" minOccurs="0">
+         <xsd:element name="connection-key-filter" type="xsd:string" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
                   the filter for the target key
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:element>
+         <xsd:element name="connection-key-transformer" type="brokerServiceType" maxOccurs="1" minOccurs="0">
+            <xsd:annotation>
+               <xsd:documentation>
+                  the local target key transformer configuration
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
@@ -2115,14 +2122,14 @@
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
-         <xsd:element name="cache-timeout" type="xsd:long" default="-1" maxOccurs="1" minOccurs="0">
+         <xsd:element name="cache" type="brokerServiceType" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
-                  the time period for a cache entry to remain active
+                  the cache configuration
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
-         <xsd:element name="policy" type="brokerBalancerPolicyType" maxOccurs="1" minOccurs="0">
+         <xsd:element name="policy" type="brokerServiceType" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
                   the policy configuration
@@ -2133,13 +2140,6 @@
             <xsd:annotation>
                <xsd:documentation>
                   the pool configuration
-               </xsd:documentation>
-            </xsd:annotation>
-         </xsd:element>
-         <xsd:element name="local-target-key-transformer" type="brokerBalancerKeyTransformerType" maxOccurs="1" minOccurs="0">
-            <xsd:annotation>
-               <xsd:documentation>
-                  the local target key transformer configuration
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
@@ -2154,7 +2154,7 @@
       <xsd:attributeGroup ref="xml:specialAttrs"/>
    </xsd:complexType>
 
-   <xsd:simpleType name="brokerBalancerTargetKeyType">
+   <xsd:simpleType name="brokerBalancerConnectionKeyType">
       <xsd:restriction base="xsd:string">
          <xsd:enumeration value="CLIENT_ID"/>
          <xsd:enumeration value="SNI_HOST"/>
@@ -2163,7 +2163,7 @@
       </xsd:restriction>
    </xsd:simpleType>
 
-   <xsd:complexType name="brokerBalancerPolicyType">
+   <xsd:complexType name="brokerServiceType">
       <xsd:sequence>
          <xsd:element ref="property" maxOccurs="unbounded" minOccurs="0">
             <xsd:annotation>
@@ -2176,27 +2176,7 @@
       <xsd:attribute name="name" type="xsd:ID" use="required">
          <xsd:annotation>
             <xsd:documentation>
-               the name of the policy
-            </xsd:documentation>
-         </xsd:annotation>
-      </xsd:attribute>
-      <xsd:attributeGroup ref="xml:specialAttrs"/>
-   </xsd:complexType>
-
-   <xsd:complexType name="brokerBalancerKeyTransformerType">
-      <xsd:sequence>
-         <xsd:element ref="property" maxOccurs="unbounded" minOccurs="0">
-            <xsd:annotation>
-               <xsd:documentation>
-                  properties to configure a key transformer
-               </xsd:documentation>
-            </xsd:annotation>
-         </xsd:element>
-      </xsd:sequence>
-      <xsd:attribute name="name" type="xsd:ID" use="required">
-         <xsd:annotation>
-            <xsd:documentation>
-               the name of the policy
+               the name of the service
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>

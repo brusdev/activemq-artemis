@@ -22,7 +22,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetResult;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 
-public abstract class RedirectHandler<T extends RedirectContext> {
+public abstract class BrokerBalancerHandler<T extends BrokerBalancerHandlerContext> {
    private final ActiveMQServer server;
 
 
@@ -31,23 +31,23 @@ public abstract class RedirectHandler<T extends RedirectContext> {
    }
 
 
-   protected RedirectHandler(ActiveMQServer server) {
+   protected BrokerBalancerHandler(ActiveMQServer server) {
       this.server = server;
    }
 
-   protected abstract void cannotRedirect(T context) throws Exception;
+   protected abstract void refuse(T context) throws Exception;
 
-   protected abstract void redirectTo(T context) throws Exception;
+   protected abstract void redirect(T context) throws Exception;
 
-   protected boolean redirect(T context) throws Exception {
+   protected boolean handle(T context) throws Exception {
       Connection transportConnection = context.getConnection().getTransportConnection();
 
-      BrokerBalancer brokerBalancer = getServer().getBalancerManager().getBalancer(transportConnection.getRedirectTo());
+      BrokerBalancer brokerBalancer = getServer().getBalancerManager().getBalancer(transportConnection.getBrokerBalancer());
 
       if (brokerBalancer == null) {
-         ActiveMQServerLogger.LOGGER.brokerBalancerNotFound(transportConnection.getRedirectTo());
+         ActiveMQServerLogger.LOGGER.brokerBalancerNotFound(transportConnection.getBrokerBalancer());
 
-         cannotRedirect(context);
+         refuse(context);
 
          return true;
       }
@@ -57,7 +57,7 @@ public abstract class RedirectHandler<T extends RedirectContext> {
       if (TargetResult.Status.OK != context.getResult().getStatus()) {
          ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
 
-         cannotRedirect(context);
+         refuse(context);
 
          return true;
       }
@@ -65,7 +65,7 @@ public abstract class RedirectHandler<T extends RedirectContext> {
       ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, context.getTarget());
 
       if (!context.getTarget().isLocal()) {
-         redirectTo(context);
+         redirect(context);
 
          return true;
       }

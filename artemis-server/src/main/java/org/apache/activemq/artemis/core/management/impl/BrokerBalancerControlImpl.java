@@ -118,13 +118,13 @@ public class BrokerBalancerControlImpl extends AbstractControl implements Broker
    }
 
    @Override
-   public void setTargetKeyFilter(String regExp) {
-      balancer.getTargetKeyResolver().setKeyFilter(regExp);
+   public void setConnectionKeyFilter(String regExp) {
+      balancer.getConnectionKeyResolver().setKeyFilter(regExp);
    }
 
    @Override
-   public String getTargetKeyFilter() {
-      return balancer.getTargetKeyResolver().getKeyFilter();
+   public String getConnectionKeyFilter() {
+      return balancer.getConnectionKeyResolver().getKeyFilter();
    }
 
    @Override

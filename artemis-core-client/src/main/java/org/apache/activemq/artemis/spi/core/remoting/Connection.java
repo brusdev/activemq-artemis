@@ -177,7 +177,7 @@ public interface Connection {
       return null;
    }
 
-   default String getRedirectTo() {
+   default String getBrokerBalancer() {
       return null;
    }
 }

@@ -21,7 +21,7 @@ import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetResult;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 
-public class RedirectContext {
+public class BrokerBalancerHandlerContext {
    private final RemotingConnection connection;
 
    private final String clientID;
@@ -54,7 +54,7 @@ public class RedirectContext {
       this.result = result;
    }
 
-   public RedirectContext(RemotingConnection connection, String clientID, String username) {
+   public BrokerBalancerHandlerContext(RemotingConnection connection, String clientID, String username) {
       this.connection = connection;
       this.clientID = clientID;
       this.username = username;

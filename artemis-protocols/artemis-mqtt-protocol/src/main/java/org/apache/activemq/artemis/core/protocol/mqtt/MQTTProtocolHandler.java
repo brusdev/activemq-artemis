@@ -181,8 +181,8 @@ public class MQTTProtocolHandler extends ChannelInboundHandlerAdapter {
       final String username = connect.payload().userName();
       final String password = connect.payload().passwordInBytes() == null ? null : new String( connect.payload().passwordInBytes(), CharsetUtil.UTF_8);
       final String validatedUser = server.validateUser(username, password, session.getConnection(), session.getProtocolManager().getSecurityDomain());
-      if (connection.getTransportConnection().getRedirectTo() == null ||
-         !protocolManager.getRedirectHandler().redirect(connection, session, connect)) {
+      if (connection.getTransportConnection().getBrokerBalancer() == null ||
+         !protocolManager.getBrokerBalancerHandler().handle(connection, session, connect)) {
          connectionEntry.ttl = connect.variableHeader().keepAliveTimeSeconds() * 1500L;
 
          String clientId = connect.payload().clientIdentifier();

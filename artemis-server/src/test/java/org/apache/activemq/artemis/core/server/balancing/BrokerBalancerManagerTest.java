@@ -17,16 +17,15 @@
 
 package org.apache.activemq.artemis.core.server.balancing;
 
-import java.util.HashMap;
+import java.util.Collections;
 
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.BrokerServiceConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
-import org.apache.activemq.artemis.core.server.balancing.transformer.ConsistentHashModulo;
+import org.apache.activemq.artemis.core.server.balancing.transformers.ConsistentHashModulo;
 import org.apache.activemq.artemis.core.server.management.ManagementService;
 import org.junit.After;
 import org.junit.Before;
@@ -66,7 +65,7 @@ public class BrokerBalancerManagerTest {
 
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration();
       brokerBalancerConfiguration.setName("partition-local-pool");
-      NamedPropertyConfiguration policyConfig = new NamedPropertyConfiguration();
+      BrokerServiceConfiguration policyConfig = new BrokerServiceConfiguration();
       policyConfig.setName(ConsistentHashPolicy.NAME);
       brokerBalancerConfiguration.setPolicyConfiguration(policyConfig);
 
@@ -96,13 +95,10 @@ public class BrokerBalancerManagerTest {
       Mockito.when(mockServer.getManagementService()).thenReturn(mockManagementService);
 
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration();
-      brokerBalancerConfiguration.setName("partition-local-consistent-hash").setTargetKey(TargetKey.CLIENT_ID).setLocalTargetFilter(String.valueOf(2));
-      NamedPropertyConfiguration policyConfig = new NamedPropertyConfiguration();
-      policyConfig.setName(ConsistentHashModulo.NAME);
-      HashMap<String, String> properties = new HashMap<>();
-      properties.put(ConsistentHashModulo.MODULO, String.valueOf(2));
-      policyConfig.setProperties(properties);
-      brokerBalancerConfiguration.setTransformerConfiguration(policyConfig);
+      brokerBalancerConfiguration.setName("partition-local-consistent-hash").setConnectionKey(ConnectionKey.CLIENT_ID).setLocalTargetFilter(String.valueOf(2));
+      brokerBalancerConfiguration.setConnectionKeyConfiguration(new BrokerServiceConfiguration()
+         .setName(ConsistentHashModulo.NAME)
+         .setProperties(Collections.singletonMap(ConsistentHashModulo.MODULO, String.valueOf(2))));
 
 
       underTest.deployBrokerBalancer(brokerBalancerConfiguration);

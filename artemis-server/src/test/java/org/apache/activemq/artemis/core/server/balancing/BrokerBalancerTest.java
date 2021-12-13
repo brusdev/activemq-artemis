@@ -22,13 +22,10 @@ import static org.mockito.Mockito.mock;
 
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
-import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetResult;
-import org.apache.activemq.artemis.core.server.balancing.transformer.KeyTransformer;
+import org.apache.activemq.artemis.core.server.balancing.transformers.KeyTransformer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,26 +47,17 @@ public class BrokerBalancerTest {
 
    @Test
    public void getTarget() {
-      Pool pool = null;
-      Policy policy = null;
-      underTest  = new BrokerBalancer("test", TargetKey.CLIENT_ID, "^.{3}",
-                                      localTarget, "^FOO.*", pool, policy, null, 0);
+      underTest  = new BrokerBalancer("test", ConnectionKey.CLIENT_ID, "^.{3}", null,
+                                      localTarget, "^FOO.*", null, null, null);
       assertEquals( localTarget, underTest.getTarget("FOO_EE").getTarget());
       assertEquals(TargetResult.REFUSED_USE_ANOTHER_RESULT, underTest.getTarget("BAR_EE"));
    }
 
    @Test
    public void getLocalTargetWithTransformer() throws Exception {
-      Pool pool = null;
-      Policy policy = null;
-      KeyTransformer keyTransformer = new KeyTransformer() {
-         @Override
-         public String transform(String key) {
-            return key.substring("TRANSFORM_TO".length() + 1);
-         }
-      };
-      underTest  = new BrokerBalancer("test", TargetKey.CLIENT_ID, "^.{3}",
-                                      localTarget, "^FOO.*", pool, policy, keyTransformer, 0);
+      KeyTransformer keyTransformer = key -> key.substring("TRANSFORM_TO".length() + 1);
+      underTest  = new BrokerBalancer("test", ConnectionKey.CLIENT_ID, "^.{3}", keyTransformer,
+                                      localTarget, "^FOO.*", null, null, null);
       assertEquals( localTarget, underTest.getTarget("TRANSFORM_TO_FOO_EE").getTarget());
    }
 

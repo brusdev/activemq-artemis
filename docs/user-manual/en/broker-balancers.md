@@ -1,6 +1,6 @@
 # Broker Balancers
 Apache ActiveMQ Artemis broker balancers allow incoming client connections to be distributed across multiple [target brokers](target-brokers).
-The target brokers are grouped in [pools](#pools) and the broker balancers use a [target key](#target-key)
+The target brokers are grouped in [pools](#pools) and the broker balancers use a [connection key](#connection-key)
 to select a target broker from a pool of brokers according to a [policy](#policies).
 
 ### This feature is still **EXPERIMENTAL** and not meant to be run in production yet. Furthermore, its configuration can change until declared as **officially stable**.
@@ -10,8 +10,8 @@ Target broker is a broker that can accept incoming client connections and is loc
 The local target is a special target that represents the same broker hosting the broker balancer.
 The remote target is another reachable broker.
 
-## Target Key
-The broker balancer uses a target key to select a target broker.
+## Connection Key
+The broker balancer uses a connection key to select a target broker.
 It is a string retrieved from an incoming client connection, the supported values are:
 * `CLIENT_ID` is the JMS client ID.
 * `SNI_HOST` is the hostname indicated by the client in the SNI extension of the TLS protocol.
@@ -99,15 +99,24 @@ A policy is defined by the `policy` element. Let's take a look at a policy examp
 <policy name="FIRST_ELEMENT"/>
 ```
 
-## Cache
-The broker balancer provides a cache with a timeout to improve the stickiness of the target broker selected,
-returning the same target broker for a target key as long as it is present in the cache and is ready.
+## Caches
+The cache improves the stickiness of the target broker selected,
+returning the same target broker for a connection key as long as it is present in the cache and is ready.
 So a broker balancer with the cache enabled doesn't strictly follow the configured policy.
-By default, the cache is enabled and will never timeout. See below
-for more details about setting the `cache-timeout` parameter.
+The only included cache is `LOCAL_CACHE`. It supports the following properties:
+* the `CACHE_TIMEOUT` property is the time period for a target broker to remain in the cache, measured in milliseconds, default is `-1`, meaning no expiration;
+* the `CACHE_PERSISTED` property defines if the cache is persisted, default is `false`;
+
+A cache is defined by the `cache` element. Let's take a look at a policy example from broker.xml:
+```xml
+<cache name="LOCAL_CACHE">
+  <property name="CACHE_TIMEOUT">60000</property>
+  <property name="CACHE_PERSISTED">true</property>
+</cache>
+```
 
 ## Key transformers
-A `local-target-key-transformer` allows target key transformation before matching against any local-target-filter. One use case is
+A `connection-key-transformer` allows connection key transformation before matching against any local-target-filter. One use case is
 CLIENT_ID sharding across a cluster of N brokers. With a consistent hash % N transformation, each client id
 can map exclusively to just one of the brokers. The included transformers are:
 * `CONSISTENT_HASH_MODULO` that takes a single `modulo` property to configure the bound.
@@ -115,20 +124,22 @@ can map exclusively to just one of the brokers. The included transformers are:
 ## Defining broker balancers
 A broker balancer is defined by the `broker-balancer` element, it includes the following items:
 * the `name` attribute defines the name of the broker balancer and is used to reference the balancer from an acceptor;
-* the `target-key` element defines what key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [target key](#target-key) for further details;
-* the `target-key-filter` element defines a regular expression to filter the resolved keys;
+* the `connection-key` element defines what key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [connection key](#connection-key) for further details;
+* the `connection-key-filter` element defines a regular expression to filter the resolved keys;
+* the `connection-key-transformer` element defines a key transformer, see [key transformers](#key-transformers);
 * the `local-target-filter` element defines a regular expression to match the keys that have to return a local target;
-* the `local-target-key-transformer` element defines a key transformer, see [key transformers](#key-transformers);
-* the `cache-timeout` element is the time period for a target broker to remain in the cache, measured in milliseconds, setting `0` will disable the cache, default is `-1`, meaning no expiration;
+* the `cache`  element defines the cache to store the keys and target brokers, see [pools](#caches).
 * the `pool` element defines the pool to group the target brokers, see [pools](#pools).
 * the `policy` element defines the policy used to select the target brokers from the pool, see [policies](#policies);
+
+element is the time period for a target broker to remain in the cache, measured in milliseconds, setting `0` will disable the cache, default is `-1`, meaning no expiration;
 
 Let's take a look at some broker balancer examples from broker.xml:
 ```xml
 <broker-balancers>
     <broker-balancer name="local-partition">
-         <target-key>CLIENT_ID</target-key>
-         <target-key-filter>^.{3}</target-key-filter>
+         <connection-key>CLIENT_ID</connection-key>
+         <connection-key-filter>^.{3}</connection-key-filter>
          <local-target-filter>^FOO.*</local-target-filter>
     </broker-balancer>
     <broker-balancer name="simple-balancer">
@@ -142,7 +153,7 @@ Let's take a look at some broker balancer examples from broker.xml:
         </pool>
     </broker-balancer>
     <broker-balancer name="consistent-hash-balancer">
-        <target-key>USER_NAME</target-key>
+        <connection-key>USER_NAME</connection-key>
         <local-target-filter>admin</local-target-filter>
         <policy name="CONSISTENT_HASH"/>
         <pool>
@@ -152,8 +163,8 @@ Let's take a look at some broker balancer examples from broker.xml:
     <policy name="CONSISTENT_HASH"/>
     </broker-balancer>
     <broker-balancer name="evenly-balancer">
-      <target-key>CLIENT_ID</target-key>
-      <target-key-filter>^.{3}</target-key-filter>
+      <connection-key>CLIENT_ID</connection-key>
+      <connection-key-filter>^.{3}</connection-key-filter>
       <policy name="LEAST_CONNECTIONS"/>
       <pool>
         <username>guest</username>
@@ -166,8 +177,8 @@ Let's take a look at some broker balancer examples from broker.xml:
 
 ## Broker Balancer Workflow
 The broker balancer workflow include the following steps:
-* Retrieve the target key from the incoming connection;
-* Return the local target broker if the target key matches the local filter;
+* Retrieve the connection key from the incoming connection;
+* Return the local target broker if the connection key matches the local filter;
 * Delegate to the pool:
 * Return the cached target broker if it is ready;
 * Get ready/active target brokers from the pool;
@@ -176,6 +187,7 @@ The broker balancer workflow include the following steps:
 * Return the selected broker.
 
 Let's take a look at flowchart of the broker balancer workflow:
+
 ![Broker Balancer Workflow](images/broker_balancer_workflow.png)
 
 ## Data gravity
@@ -186,7 +198,7 @@ If brokers are behind a round-robin load-balancer or have full knowledge of the 
 urls, `their` broker will eventually respond. The `local-target-filter` regular expression
 determines the granularity of partition that is best for preserving `data gravity` for your applications.
 
-The challenge is in providing a consistent [key](#Target_Key) in all related application connections.
+The challenge is in providing a consistent [key](#connection-key) in all related application connections.
 
 Note: the concept of `data gravity` tries to capture the reality that while addresses are shared by multiple
 applications, it is best to keep related addresses and their data co-located on a single broker. Typically,
@@ -199,12 +211,12 @@ applications and the addresses they need to interact with.
 ## Redirection
 Apache ActiveMQ Artemis provides a native redirection for supported clients and a new management API for other clients.
 The native redirection can be enabled per acceptor and is supported only for AMQP, CORE and OPENWIRE clients.
-The acceptor with the `redirect-to` url parameter will redirect the incoming connections.
-The `redirect-to` url parameter specifies the name of the broker balancer to use,
+The acceptor with the `broker-balancer` url parameter will redirect the incoming connections.
+The `broker-balancer` url parameter specifies the name of the broker balancer to use,
 ie the following acceptor will redirect the incoming CORE client connections using the broker balancer with the name `simple-balancer`:
 
 ```xml
-<acceptor name="artemis">tcp://0.0.0.0:61616?redirect-to=simple-balancer;protocols=CORE</acceptor>
+<acceptor name="artemis">tcp://0.0.0.0:61616?broker-balancer=simple-balancer;protocols=CORE</acceptor>
 ```
 ### Native Redirect Sequence
 

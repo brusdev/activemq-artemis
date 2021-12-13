@@ -55,10 +55,12 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
+import org.apache.activemq.artemis.core.server.balancing.caches.Cache;
+import org.apache.activemq.artemis.core.server.balancing.caches.LocalCache;
 import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.impl.ActiveMQServerImpl;
 import org.apache.activemq.artemis.core.server.impl.LegacyLDAPSecuritySettingPlugin;
@@ -76,7 +78,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.apache.activemq.artemis.core.server.balancing.transformer.ConsistentHashModulo.MODULO;
+import static org.apache.activemq.artemis.core.server.balancing.transformers.ConsistentHashModulo.MODULO;
 
 public class FileConfigurationTest extends ConfigurationImplTest {
 
@@ -270,38 +272,40 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       Assert.assertEquals(5, conf.getBalancerConfigurations().size());
       for (BrokerBalancerConfiguration bc : conf.getBalancerConfigurations()) {
          if (bc.getName().equals("simple-local")) {
-            Assert.assertEquals(bc.getTargetKey(), TargetKey.CLIENT_ID);
+            Assert.assertEquals(ConnectionKey.CLIENT_ID, bc.getConnectionKey());
             Assert.assertNotNull(bc.getLocalTargetFilter());
-            Assert.assertNotNull(bc.getTargetKeyFilter());
+            Assert.assertNotNull(bc.getConnectionKeyFilter());
             Assert.assertNull(bc.getPolicyConfiguration());
          } else if (bc.getName().equals("simple-local-with-transformer")) {
-            Assert.assertEquals(bc.getTargetKey(), TargetKey.CLIENT_ID);
+            Assert.assertEquals(ConnectionKey.CLIENT_ID, bc.getConnectionKey());
             Assert.assertNotNull(bc.getLocalTargetFilter());
-            Assert.assertNotNull(bc.getTargetKeyFilter());
+            Assert.assertNotNull(bc.getConnectionKeyFilter());
             Assert.assertNull(bc.getPolicyConfiguration());
-            Assert.assertNotNull(bc.getTransformerConfiguration());
-            Assert.assertNotNull(bc.getTransformerConfiguration().getProperties().get(MODULO));
+            Assert.assertNotNull(bc.getConnectionKeyConfiguration());
+            Assert.assertNotNull(bc.getConnectionKeyConfiguration().getProperties().get(MODULO));
          } else if (bc.getName().equals("simple-balancer")) {
-            Assert.assertEquals(bc.getTargetKey(), TargetKey.USER_NAME);
+            Assert.assertEquals(ConnectionKey.USER_NAME, bc.getConnectionKey());
             Assert.assertNull(bc.getLocalTargetFilter());
-            Assert.assertEquals(bc.getPolicyConfiguration().getName(), FirstElementPolicy.NAME);
+            Assert.assertEquals(FirstElementPolicy.NAME, bc.getPolicyConfiguration().getName());
             Assert.assertEquals(false, bc.getPoolConfiguration().isLocalTargetEnabled());
             Assert.assertEquals("connector1", bc.getPoolConfiguration().getStaticConnectors().get(0));
             Assert.assertEquals(null, bc.getPoolConfiguration().getDiscoveryGroupName());
          } else if (bc.getName().equals("consistent-hash-balancer")) {
-            Assert.assertEquals(bc.getTargetKey(), TargetKey.SNI_HOST);
-            Assert.assertEquals(bc.getTargetKeyFilter(), "^[^.]+");
-            Assert.assertEquals(bc.getLocalTargetFilter(), "DEFAULT");
-            Assert.assertEquals(bc.getPolicyConfiguration().getName(), ConsistentHashPolicy.NAME);
+            Assert.assertEquals(ConnectionKey.SNI_HOST, bc.getConnectionKey());
+            Assert.assertEquals("^[^.]+", bc.getConnectionKeyFilter());
+            Assert.assertEquals("DEFAULT", bc.getLocalTargetFilter());
+            Assert.assertEquals(ConsistentHashPolicy.NAME, bc.getPolicyConfiguration().getName());
             Assert.assertEquals(1000, bc.getPoolConfiguration().getCheckPeriod());
             Assert.assertEquals(true, bc.getPoolConfiguration().isLocalTargetEnabled());
             Assert.assertEquals(null, bc.getPoolConfiguration().getStaticConnectors());
             Assert.assertEquals("dg1", bc.getPoolConfiguration().getDiscoveryGroupName());
          } else {
-            Assert.assertEquals(bc.getTargetKey(), TargetKey.SOURCE_IP);
+            Assert.assertEquals(bc.getConnectionKey(), ConnectionKey.SOURCE_IP);
             Assert.assertEquals("least-connections-balancer", bc.getName());
-            Assert.assertEquals(60000, bc.getCacheTimeout());
-            Assert.assertEquals(bc.getPolicyConfiguration().getName(), LeastConnectionsPolicy.NAME);
+            Assert.assertEquals(LocalCache.NAME, bc.getCacheConfiguration().getName());
+            Assert.assertEquals("60000", bc.getCacheConfiguration().getProperties().get(Cache.CACHE_TIMEOUT_PROPERTY_NAME));
+            Assert.assertEquals("true", bc.getCacheConfiguration().getProperties().get(Cache.CACHE_PERSISTED_PROPERTY_NAME));
+            Assert.assertEquals(LeastConnectionsPolicy.NAME, bc.getPolicyConfiguration().getName());
             Assert.assertEquals(3000, bc.getPoolConfiguration().getCheckPeriod());
             Assert.assertEquals(2, bc.getPoolConfiguration().getQuorumSize());
             Assert.assertEquals(1000, bc.getPoolConfiguration().getQuorumTimeout());

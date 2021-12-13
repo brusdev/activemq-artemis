@@ -22,21 +22,21 @@ import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttProperties;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandler;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 
-public class MQTTRedirectHandler extends RedirectHandler<MQTTRedirectContext> {
+public class MQTTBrokerBalancerHandler extends BrokerBalancerHandler<MQTTBrokerBalancerHandlerContext> {
 
-   protected MQTTRedirectHandler(ActiveMQServer server) {
+   protected MQTTBrokerBalancerHandler(ActiveMQServer server) {
       super(server);
    }
 
-   public boolean redirect(MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) throws Exception {
-      return redirect(new MQTTRedirectContext(mqttConnection, mqttSession, connect));
+   public boolean handle(MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) throws Exception {
+      return handle(new MQTTBrokerBalancerHandlerContext(mqttConnection, mqttSession, connect));
    }
 
    @Override
-   protected void cannotRedirect(MQTTRedirectContext context) {
+   protected void refuse(MQTTBrokerBalancerHandlerContext context) {
       switch (context.getResult().getStatus()) {
          case REFUSED_USE_ANOTHER:
             context.getMQTTSession().getProtocolHandler().sendConnack(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER);
@@ -49,7 +49,7 @@ public class MQTTRedirectHandler extends RedirectHandler<MQTTRedirectContext> {
    }
 
    @Override
-   protected void redirectTo(MQTTRedirectContext context) {
+   protected void redirect(MQTTBrokerBalancerHandlerContext context) {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, context.getTarget().getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, context.getTarget().getConnector().getParams());
 

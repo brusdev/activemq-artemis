@@ -112,12 +112,12 @@ public abstract class AbstractPool implements Pool {
    }
 
    @Override
-   public List<Target> getAllTargets() {
+   public List<Target> getTargets() {
       return targetMonitors.stream().map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
    }
 
    @Override
-   public List<Target> getTargets() {
+   public List<Target> getReadyTargets() {
       List<Target> targets = targetMonitors.stream().filter(targetMonitor -> targetMonitor.isTargetReady())
          .map(targetMonitor -> targetMonitor.getTarget()).collect(Collectors.toList());
 
@@ -162,6 +162,38 @@ public abstract class AbstractPool implements Pool {
       for (TargetMonitor targetMonitor : targetMonitors) {
          if (nodeId.equals(targetMonitor.getTarget().getNodeID())) {
             return targetMonitor.getTarget();
+         }
+      }
+
+      return null;
+   }
+
+   @Override
+   public Target getReadyTarget(String nodeId) {
+      int readyTargets = 0;
+
+      for (TargetMonitor targetMonitor : targetMonitors) {
+         if (targetMonitor.isTargetReady()) {
+            readyTargets++;
+            if (nodeId.equals(targetMonitor.getTarget().getNodeID())) {
+               return targetMonitor.getTarget();
+            }
+         }
+      }
+
+      if (quorumTimeout > 0 && readyTargets < quorumSize) {
+         final long deadline = System.nanoTime() + quorumTimeoutNanos;
+         while (readyTargets < quorumSize && (System.nanoTime() - deadline) < 0) {
+            for (TargetMonitor targetMonitor : targetMonitors) {
+               if (targetMonitor.isTargetReady()) {
+                  readyTargets++;
+                  if (nodeId.equals(targetMonitor.getTarget().getNodeID())) {
+                     return targetMonitor.getTarget();
+                  }
+               }
+            }
+
+            LockSupport.parkNanos(quorumParkNanos);
          }
       }
 

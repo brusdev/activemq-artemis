@@ -19,7 +19,7 @@ package org.apache.activemq.artemis.protocol.amqp.proton;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandler;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ConnectionError;
@@ -29,27 +29,27 @@ import org.apache.qpid.proton.engine.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AMQPRedirectHandler extends RedirectHandler<AMQPRedirectContext> {
+public class AMQPBrokerBalancerHandler extends BrokerBalancerHandler<AMQPBrokerBalancerHandlerContext> {
 
-   public AMQPRedirectHandler(ActiveMQServer server) {
+   public AMQPBrokerBalancerHandler(ActiveMQServer server) {
       super(server);
    }
 
 
-   public boolean redirect(AMQPConnectionContext connectionContext, Connection protonConnection) throws Exception {
-      return redirect(new AMQPRedirectContext(connectionContext, protonConnection));
+   public boolean handle(AMQPConnectionContext connectionContext, Connection protonConnection) throws Exception {
+      return handle(new AMQPBrokerBalancerHandlerContext(connectionContext, protonConnection));
    }
 
    @Override
-   protected void cannotRedirect(AMQPRedirectContext context) {
+   protected void refuse(AMQPBrokerBalancerHandlerContext context) {
       ErrorCondition error = new ErrorCondition();
       error.setCondition(ConnectionError.CONNECTION_FORCED);
       switch (context.getResult().getStatus()) {
          case REFUSED_USE_ANOTHER:
-            error.setDescription(String.format("Broker balancer %s, rejected this connection", context.getConnection().getTransportConnection().getRedirectTo()));
+            error.setDescription(String.format("Broker balancer %s, rejected this connection", context.getConnection().getTransportConnection().getBrokerBalancer()));
             break;
          case REFUSED_UNAVAILABLE:
-            error.setDescription(String.format("Broker balancer %s is not ready to redirect", context.getConnection().getTransportConnection().getRedirectTo()));
+            error.setDescription(String.format("Broker balancer %s is not ready to redirect", context.getConnection().getTransportConnection().getBrokerBalancer()));
             break;
       }
 
@@ -59,13 +59,13 @@ public class AMQPRedirectHandler extends RedirectHandler<AMQPRedirectContext> {
    }
 
    @Override
-   protected void redirectTo(AMQPRedirectContext context) {
+   protected void redirect(AMQPBrokerBalancerHandlerContext context) {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, context.getTarget().getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, context.getTarget().getConnector().getParams());
 
       ErrorCondition error = new ErrorCondition();
       error.setCondition(ConnectionError.REDIRECT);
-      error.setDescription(String.format("Connection redirected to %s:%d by broker balancer %s", host, port, context.getConnection().getTransportConnection().getRedirectTo()));
+      error.setDescription(String.format("Connection redirected to %s:%d by broker balancer %s", host, port, context.getConnection().getTransportConnection().getBrokerBalancer()));
       Map<Symbol, Object>  info = new HashMap<>();
       info.put(AmqpSupport.NETWORK_HOST, host);
       info.put(AmqpSupport.PORT, port);

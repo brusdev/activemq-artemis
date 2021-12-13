@@ -21,11 +21,11 @@ The job of application developers in this scenario is to provide a key that can 
 expression that can capture an appropriate 'center of data gravity' for a broker.
 
 In configuration, the `local-target-filter` provides the regular expression that controls what keys are mapped to a broker.
-`Broker0` takes clientIDs with prefix FOO and `Broker1` takes prefix BAR. The `target-key-filter` specifies how the key is extracted,
+`Broker0` takes clientIDs with prefix FOO and `Broker1` takes prefix BAR. The `connection-key-filter` specifies how the key is extracted,
 we care about the first 3 characters, from the user supplied clientId.
 
       <broker-balancer name="symmetric-simple">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^.{3}</target-key-filter>
+            <connection-key>CLIENT_ID</connection-key>
+            <connection-key-filter>^.{3}</connection-key-filter>
             <local-target-filter>^FOO.*</local-target-filter>
       </broker-balancer>

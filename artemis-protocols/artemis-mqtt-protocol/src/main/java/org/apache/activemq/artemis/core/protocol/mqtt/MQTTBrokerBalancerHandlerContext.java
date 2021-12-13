@@ -15,16 +15,23 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.transformer;
+package org.apache.activemq.artemis.core.protocol.mqtt;
 
-import java.util.Map;
+import io.netty.handler.codec.mqtt.MqttConnectMessage;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandlerContext;
 
-public interface KeyTransformer {
+public class MQTTBrokerBalancerHandlerContext extends BrokerBalancerHandlerContext {
 
-   default void init(Map<String, String> properties) {
+   private final MQTTSession mqttSession;
+
+
+   public MQTTSession getMQTTSession() {
+      return mqttSession;
    }
 
-   default String transform(String key) {
-      return key;
+
+   public MQTTBrokerBalancerHandlerContext(MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) {
+      super(mqttConnection, connect.payload().clientIdentifier(), connect.payload().userName());
+      this.mqttSession = mqttSession;
    }
 }

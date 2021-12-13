@@ -357,9 +357,9 @@ public class TransportConstants {
 
    public static final boolean DEFAULT_PROXY_REMOTE_DNS = false;
 
-   public static final String REDIRECT_TO = "redirect-to";
+   public static final String BROKER_BALANCER = "broker-balancer";
 
-   public static final String DEFAULT_REDIRECT_TO = null;
+   public static final String DEFAULT_BROKER_BALANCER = null;
 
    private static int parseDefaultVariable(String variableName, int defaultValue) {
       try {
@@ -437,7 +437,7 @@ public class TransportConstants {
       allowableAcceptorKeys.add(TransportConstants.QUIET_PERIOD);
       allowableAcceptorKeys.add(TransportConstants.DISABLE_STOMP_SERVER_HEADER);
       allowableAcceptorKeys.add(TransportConstants.AUTO_START);
-      allowableAcceptorKeys.add(TransportConstants.REDIRECT_TO);
+      allowableAcceptorKeys.add(TransportConstants.BROKER_BALANCER);
 
       ALLOWABLE_ACCEPTOR_KEYS = Collections.unmodifiableSet(allowableAcceptorKeys);
 

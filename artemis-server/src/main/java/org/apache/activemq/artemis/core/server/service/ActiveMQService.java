@@ -15,21 +15,34 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.policies;
+package org.apache.activemq.artemis.core.server.service;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetProbe;
-import org.apache.activemq.artemis.core.server.service.ActiveMQService;
+import org.apache.activemq.artemis.core.server.ActiveMQServer;
 
-import java.util.List;
 import java.util.Map;
 
-public interface Policy extends ActiveMQService {
-   String getName();
+public interface ActiveMQService {
+   /**
+    * Init the service with the configured properties
+    *
+    * @param properties
+    */
+   default void init(Map<String, String> properties) {
+   }
 
-   TargetProbe getTargetProbe();
+   /**
+    * Start the service
+    *
+    * @param server
+    */
+   default void start(ActiveMQServer server) {
+   }
 
-   Map<String, String> getProperties();
+   /**
+    * Stop the service
+    */
+   default void stop() {
+   }
 
-   Target selectTarget(List<Target> targets, String key);
+
 }

@@ -48,7 +48,7 @@ import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfigura
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.Role;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
@@ -389,7 +389,7 @@ public class ElasticQueueTest extends ActiveMQTestBase {
       baseConfig.getAddressesSettings().put(qName, blockingQueue);
 
       BrokerBalancerConfiguration balancerConfiguration = new BrokerBalancerConfiguration();
-      balancerConfiguration.setName(balancerConfigName).setTargetKey(TargetKey.ROLE_NAME).setTargetKeyFilter("(?<=^EQ_).*"); // strip EQ_ prefix
+      balancerConfiguration.setName(balancerConfigName).setConnectionKey(ConnectionKey.ROLE_NAME).setConnectionKeyFilter("(?<=^EQ_).*"); // strip EQ_ prefix
       baseConfig.addBalancerConfiguration(balancerConfiguration);
 
       // prepare two nodes
@@ -626,13 +626,13 @@ public class ElasticQueueTest extends ActiveMQTestBase {
 
       // stop producer on Node0, only accept consumers. make it a tail broker
       BrokerBalancerControl balancerControl0 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node0NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl0.setTargetKeyFilter("(?<=^EQ_)CONSUMER");  // because both roles present, we need to filter the roles with an exact match, otherwise we get the first one!
+      balancerControl0.setConnectionKeyFilter("(?<=^EQ_)CONSUMER");  // because both roles present, we need to filter the roles with an exact match, otherwise we get the first one!
       // ensure nothing more can be produced
       addressControl0.block();
       System.out.println("Tail blocked!");
 
       // start new head exclusively for Producer
-      nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setTargetKeyFilter("(?<=^EQ_)PRODUCER"); // just accept the producer role as key
+      nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setConnectionKeyFilter("(?<=^EQ_)PRODUCER"); // just accept the producer role as key
       nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setLocalTargetFilter(null); // initially won't accept any till we pause
 
       // new Head needs the address configured, such that we can start the balancer with the address paused

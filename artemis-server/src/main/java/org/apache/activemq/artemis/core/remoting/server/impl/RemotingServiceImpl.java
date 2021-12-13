@@ -256,6 +256,12 @@ public class RemotingServiceImpl implements RemotingService, ServerConnectionLif
             locateProtocols(protocols, info, selectedProtocolFactories);
          }
 
+         String brokerBalancer = ConfigurationHelper.getStringProperty(TransportConstants.BROKER_BALANCER, null, info.getParams());
+         if (brokerBalancer != null && server.getBalancerManager().getBalancer(brokerBalancer) == null) {
+            throw new IllegalArgumentException("Invalid broker balancer " + brokerBalancer);
+         }
+
+
          ClusterConnection clusterConnection = lookupClusterConnection(info);
 
          // If empty: we get the default list

@@ -49,7 +49,7 @@ import org.apache.activemq.artemis.utils.collections.TypedProperties;
 /**
  * MQTTProtocolManager
  */
-public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQTTInterceptor, MQTTConnection, MQTTRedirectHandler> implements NotificationListener {
+public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQTTInterceptor, MQTTConnection, MQTTBrokerBalancerHandler> implements NotificationListener {
 
    private static final List<String> websocketRegistryNames = Arrays.asList("mqtt", "mqttv3.1");
 
@@ -64,7 +64,7 @@ public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQ
 
    private int defaultMqttSessionExpiryInterval = -1;
 
-   private final MQTTRedirectHandler redirectHandler;
+   private final MQTTBrokerBalancerHandler redirectHandler;
 
    MQTTProtocolManager(ActiveMQServer server,
                        List<BaseInterceptor> incomingInterceptors,
@@ -72,7 +72,7 @@ public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQ
       this.server = server;
       this.updateInterceptors(incomingInterceptors, outgoingInterceptors);
       server.getManagementService().addNotificationListener(this);
-      redirectHandler = new MQTTRedirectHandler(server);
+      redirectHandler = new MQTTBrokerBalancerHandler(server);
    }
 
    public int getDefaultMqttSessionExpiryInterval() {
@@ -239,7 +239,7 @@ public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQ
    }
 
    @Override
-   public MQTTRedirectHandler getRedirectHandler() {
+   public MQTTBrokerBalancerHandler getBrokerBalancerHandler() {
       return redirectHandler;
    }
 

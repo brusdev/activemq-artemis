@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
 import org.apache.activemq.artemis.protocol.amqp.proton.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -45,7 +45,7 @@ public class AmqpRedirectTest extends BalancingTestBase {
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
 
       // Zero quorum size to avoid the quorum delay, given it will never be satisfied
-      setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 0, 1);
+      setupBalancerServerWithStaticConnectors(0, ConnectionKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 0, 1);
 
       // Only start the balancer, so it can never become ready to redirect.
       startServers(0);
@@ -105,7 +105,7 @@ public class AmqpRedirectTest extends BalancingTestBase {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
 
-      setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
+      setupBalancerServerWithStaticConnectors(0, ConnectionKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
 
       startServers(0, 1);
 
@@ -195,7 +195,7 @@ public class AmqpRedirectTest extends BalancingTestBase {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
 
       // only accepts users with RoleName==B so will reject
-      setupBalancerServerWithLocalTarget(0, TargetKey.ROLE_NAME, "B", null);
+      setupBalancerServerWithLocalTarget(0, ConnectionKey.ROLE_NAME, "B", null);
 
       startServers(0);
 

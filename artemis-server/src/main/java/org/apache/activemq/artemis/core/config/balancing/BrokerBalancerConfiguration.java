@@ -16,20 +16,20 @@
  */
 package org.apache.activemq.artemis.core.config.balancing;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
 
 import java.io.Serializable;
 
 public class BrokerBalancerConfiguration implements Serializable {
 
    private String name = null;
-   private TargetKey targetKey = TargetKey.SOURCE_IP;
-   private String targetKeyFilter = null;
+   private ConnectionKey connectionKey = ConnectionKey.SOURCE_IP;
+   private String connectionKeyFilter = null;
    private String localTargetFilter = null;
-   private int cacheTimeout = -1;
    private PoolConfiguration poolConfiguration = null;
-   private NamedPropertyConfiguration policyConfiguration = null;
-   private NamedPropertyConfiguration transformerConfiguration = null;
+   private BrokerServiceConfiguration cacheConfiguration = null;
+   private BrokerServiceConfiguration policyConfiguration = null;
+   private BrokerServiceConfiguration connectionKeyConfiguration = null;
 
    public String getName() {
       return name;
@@ -40,21 +40,21 @@ public class BrokerBalancerConfiguration implements Serializable {
       return this;
    }
 
-   public TargetKey getTargetKey() {
-      return targetKey;
+   public ConnectionKey getConnectionKey() {
+      return connectionKey;
    }
 
-   public BrokerBalancerConfiguration setTargetKey(TargetKey targetKey) {
-      this.targetKey = targetKey;
+   public BrokerBalancerConfiguration setConnectionKey(ConnectionKey connectionKey) {
+      this.connectionKey = connectionKey;
       return this;
    }
 
-   public String getTargetKeyFilter() {
-      return targetKeyFilter;
+   public String getConnectionKeyFilter() {
+      return connectionKeyFilter;
    }
 
-   public BrokerBalancerConfiguration setTargetKeyFilter(String targetKeyFilter) {
-      this.targetKeyFilter = targetKeyFilter;
+   public BrokerBalancerConfiguration setConnectionKeyFilter(String connectionKeyFilter) {
+      this.connectionKeyFilter = connectionKeyFilter;
       return this;
    }
 
@@ -67,20 +67,20 @@ public class BrokerBalancerConfiguration implements Serializable {
       return this;
    }
 
-   public int getCacheTimeout() {
-      return cacheTimeout;
+   public BrokerServiceConfiguration getCacheConfiguration() {
+      return cacheConfiguration;
    }
 
-   public BrokerBalancerConfiguration setCacheTimeout(int cacheTimeout) {
-      this.cacheTimeout = cacheTimeout;
+   public BrokerBalancerConfiguration setCacheConfiguration(BrokerServiceConfiguration cacheConfiguration) {
+      this.cacheConfiguration = cacheConfiguration;
       return this;
    }
 
-   public NamedPropertyConfiguration getPolicyConfiguration() {
+   public BrokerServiceConfiguration getPolicyConfiguration() {
       return policyConfiguration;
    }
 
-   public BrokerBalancerConfiguration setPolicyConfiguration(NamedPropertyConfiguration policyConfiguration) {
+   public BrokerBalancerConfiguration setPolicyConfiguration(BrokerServiceConfiguration policyConfiguration) {
       this.policyConfiguration = policyConfiguration;
       return this;
    }
@@ -94,11 +94,11 @@ public class BrokerBalancerConfiguration implements Serializable {
       return this;
    }
 
-   public void setTransformerConfiguration(NamedPropertyConfiguration configuration) {
-      this.transformerConfiguration = configuration;
+   public void setConnectionKeyConfiguration(BrokerServiceConfiguration configuration) {
+      this.connectionKeyConfiguration = configuration;
    }
 
-   public NamedPropertyConfiguration getTransformerConfiguration() {
-      return transformerConfiguration;
+   public BrokerServiceConfiguration getConnectionKeyConfiguration() {
+      return connectionKeyConfiguration;
    }
 }

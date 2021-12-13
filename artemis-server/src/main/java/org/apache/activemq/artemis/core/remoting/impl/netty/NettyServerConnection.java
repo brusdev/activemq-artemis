@@ -25,17 +25,17 @@ public class NettyServerConnection extends NettyConnection {
 
    private String sniHostname;
 
-   private final String redirectTo;
+   private final String brokerBalancer;
 
    public NettyServerConnection(Map<String, Object> configuration,
                                 Channel channel,
                                 ServerConnectionLifeCycleListener listener,
                                 boolean batchingEnabled,
                                 boolean directDeliver,
-                                String redirectTo) {
+                                String brokerBalancer) {
       super(configuration, channel, listener, batchingEnabled, directDeliver);
 
-      this.redirectTo = redirectTo;
+      this.brokerBalancer = brokerBalancer;
    }
 
    @Override
@@ -48,7 +48,7 @@ public class NettyServerConnection extends NettyConnection {
    }
 
    @Override
-   public String getRedirectTo() {
-      return redirectTo;
+   public String getBrokerBalancer() {
+      return brokerBalancer;
    }
 }

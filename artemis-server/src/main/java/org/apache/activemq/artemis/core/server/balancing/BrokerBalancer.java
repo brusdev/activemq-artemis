@@ -17,35 +17,32 @@
 
 package org.apache.activemq.artemis.core.server.balancing;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
+import org.apache.activemq.artemis.core.server.balancing.caches.Cache;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetResult;
-import org.apache.activemq.artemis.core.server.balancing.transformer.KeyTransformer;
+import org.apache.activemq.artemis.core.server.balancing.transformers.KeyTransformer;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class BrokerBalancer implements ActiveMQComponent {
    private static final Logger logger = Logger.getLogger(BrokerBalancer.class);
 
-
    public static final String CLIENT_ID_PREFIX = ActiveMQDefaultConfiguration.DEFAULT_INTERNAL_NAMING_PREFIX + "balancer.client.";
 
    private final String name;
 
-   private final TargetKey targetKey;
+   private final ConnectionKey connectionKey;
 
-   private final TargetKeyResolver targetKeyResolver;
+   private final ConnectionKeyResolver connectionKeyResolver;
+
+   private final KeyTransformer connectionKeyTransformer;
 
    private final TargetResult localTarget;
 
@@ -55,9 +52,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    private final Policy policy;
 
-   private final KeyTransformer transformer;
-
-   private final Cache<String, TargetResult> cache;
+   private final Cache cache;
 
    private volatile boolean started = false;
 
@@ -65,8 +60,16 @@ public class BrokerBalancer implements ActiveMQComponent {
       return name;
    }
 
-   public TargetKey getTargetKey() {
-      return targetKey;
+   public ConnectionKey getConnectionKey() {
+      return connectionKey;
+   }
+
+   public ConnectionKeyResolver getConnectionKeyResolver() {
+      return connectionKeyResolver;
+   }
+
+   public KeyTransformer getConnectionKeyTransformer() {
+      return connectionKeyTransformer;
    }
 
    public Target getLocalTarget() {
@@ -77,6 +80,14 @@ public class BrokerBalancer implements ActiveMQComponent {
       return localTargetFilter != null ? localTargetFilter.pattern() : null;
    }
 
+   public void setLocalTargetFilter(String localTargetFilter) {
+      if (localTargetFilter == null || localTargetFilter.trim().isEmpty()) {
+         this.localTargetFilter = null;
+      } else {
+         this.localTargetFilter = Pattern.compile(localTargetFilter);
+      }
+   }
+
    public Pool getPool() {
       return pool;
    }
@@ -85,7 +96,7 @@ public class BrokerBalancer implements ActiveMQComponent {
       return policy;
    }
 
-   public Cache<String, TargetResult> getCache() {
+   public Cache getCache() {
       return cache;
    }
 
@@ -96,21 +107,21 @@ public class BrokerBalancer implements ActiveMQComponent {
 
 
    public BrokerBalancer(final String name,
-                         final TargetKey targetKey,
-                         final String targetKeyFilter,
+                         final ConnectionKey connectionKey,
+                         final String connectionKeyFilter,
+                         final KeyTransformer connectionKeyTransformer,
                          final Target localTarget,
                          final String localTargetFilter,
+                         final Cache cache,
                          final Pool pool,
-                         final Policy policy,
-                         KeyTransformer transformer,
-                         final int cacheTimeout) {
+                         final Policy policy) {
       this.name = name;
 
-      this.targetKey = targetKey;
+      this.connectionKey = connectionKey;
 
-      this.transformer = transformer;
+      this.connectionKeyResolver = new ConnectionKeyResolver(connectionKey, connectionKeyFilter);
 
-      this.targetKeyResolver = new TargetKeyResolver(targetKey, targetKeyFilter);
+      this.connectionKeyTransformer = connectionKeyTransformer;
 
       this.localTarget = new TargetResult(localTarget);
 
@@ -120,13 +131,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
       this.policy = policy;
 
-      if (cacheTimeout == -1) {
-         this.cache = CacheBuilder.newBuilder().build();
-      } else if (cacheTimeout > 0) {
-         this.cache = CacheBuilder.newBuilder().expireAfterAccess(cacheTimeout, TimeUnit.MILLISECONDS).build();
-      } else {
-         this.cache = null;
-      }
+      this.cache = cache;
    }
 
    @Override
@@ -156,14 +161,21 @@ public class BrokerBalancer implements ActiveMQComponent {
          return localTarget;
       }
 
-      return getTarget(targetKeyResolver.resolve(connection, clientID, username));
+      return getTarget(connectionKeyResolver.resolve(connection, clientID, username));
    }
 
    public TargetResult getTarget(String key) {
+      if (connectionKeyTransformer != null) {
+         key = connectionKeyTransformer.transform(key);
 
-      if (this.localTargetFilter != null && this.localTargetFilter.matcher(transform(key)).matches()) {
          if (logger.isDebugEnabled()) {
-            logger.debug("The " + targetKey + "[" + key + "] matches the localTargetFilter " + localTargetFilter.pattern());
+            logger.debug("The key is transformed to " + key);
+         }
+      }
+
+      if (this.localTargetFilter != null && this.localTargetFilter.matcher(key).matches()) {
+         if (logger.isDebugEnabled()) {
+            logger.debug("The " + connectionKey + "[" + key + "] matches the localTargetFilter " + localTargetFilter.pattern());
          }
 
          return localTarget;
@@ -173,67 +185,47 @@ public class BrokerBalancer implements ActiveMQComponent {
          return TargetResult.REFUSED_USE_ANOTHER_RESULT;
       }
 
-      TargetResult result = null;
-
       if (cache != null) {
-         result = cache.getIfPresent(key);
-      }
+         String nodeId = cache.get(key);
 
-      if (result != null) {
-         if (pool.isTargetReady(result.getTarget())) {
-            if (logger.isDebugEnabled()) {
-               logger.debug("The cache returns [" + result.getTarget() + "] ready for " + targetKey + "[" + key + "]");
+         logger.info("The cache returns target [" + nodeId + "] for " + connectionKey + "[" + key + "]");
+
+         if (nodeId != null) {
+            Target target = pool.getReadyTarget(nodeId);
+
+            if (target != null) {
+               if (logger.isDebugEnabled()) {
+                  logger.info("The target [" + nodeId + "] is ready for " + connectionKey + "[" + key + "]");
+               }
+
+               return new TargetResult(target);
             }
 
-            return result;
-         }
-
-         if (logger.isDebugEnabled()) {
-            logger.debug("The cache returns [" + result.getTarget() + "] not ready for " + targetKey + "[" + key + "]");
+            if (logger.isDebugEnabled()) {
+               logger.info("The target [" + nodeId + "] is not ready for " + connectionKey + "[" + key + "]");
+            }
          }
       }
 
-      List<Target> targets = pool.getTargets();
+      List<Target> targets = pool.getReadyTargets();
 
       Target target = policy.selectTarget(targets, key);
 
       if (logger.isDebugEnabled()) {
-         logger.debug("The policy selects [" + target + "] from " + targets + " for " + targetKey + "[" + key + "]");
+         logger.debug("The policy selects [" + target + "] from " + targets + " for " + connectionKey + "[" + key + "]");
       }
 
       if (target != null) {
-         result = new TargetResult(target);
          if (cache != null) {
             if (logger.isDebugEnabled()) {
-               logger.debug("Caching " + targetKey + "[" + key + "] for [" + target + "]");
+               logger.debug("Caching " + connectionKey + "[" + key + "] for [" + target + "]");
             }
-            cache.put(key, result);
+            cache.put(key, target.getNodeID());
          }
+
+         return new TargetResult(target);
       }
 
-      return result != null ? result : TargetResult.REFUSED_UNAVAILABLE_RESULT;
-   }
-
-   public void setLocalTargetFilter(String regExp) {
-      if (regExp == null || regExp.trim().isEmpty()) {
-         this.localTargetFilter = null;
-      } else {
-         this.localTargetFilter = Pattern.compile(regExp);
-      }
-   }
-
-   public TargetKeyResolver getTargetKeyResolver() {
-      return targetKeyResolver;
-   }
-
-   private String transform(String key) {
-      String result = key;
-      if (transformer != null) {
-         result = transformer.transform(key);
-         if (logger.isDebugEnabled()) {
-            logger.debug("Key: " + key + ", transformed to " + result);
-         }
-      }
-      return result;
+      return TargetResult.REFUSED_UNAVAILABLE_RESULT;
    }
 }

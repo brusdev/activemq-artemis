@@ -19,10 +19,10 @@ package org.apache.activemq.artemis.core.protocol.core.impl;
 
 import org.apache.activemq.artemis.core.protocol.core.CoreRemotingConnection;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
-import org.apache.activemq.artemis.core.server.balancing.RedirectContext;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandlerContext;
 
-public class ActiveMQRedirectContext extends RedirectContext {
-   public ActiveMQRedirectContext(CoreRemotingConnection connection, CreateSessionMessage message) {
+public class ActiveMQBrokerBalancerHandlerContext extends BrokerBalancerHandlerContext {
+   public ActiveMQBrokerBalancerHandlerContext(CoreRemotingConnection connection, CreateSessionMessage message) {
       super(connection, connection.getClientID(), message.getUsername());
    }
 }

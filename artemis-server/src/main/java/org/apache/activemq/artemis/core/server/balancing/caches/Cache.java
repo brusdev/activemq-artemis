@@ -15,31 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.config.balancing;
+package org.apache.activemq.artemis.core.server.balancing.caches;
 
-import java.io.Serializable;
-import java.util.Map;
+import org.apache.activemq.artemis.core.server.service.ActiveMQService;
 
-public class NamedPropertyConfiguration implements Serializable {
-   private String name;
+public interface Cache extends ActiveMQService {
+   String CACHE_ID_PROPERTY_NAME = "CACHE_ID";
+   String CACHE_TIMEOUT_PROPERTY_NAME = "CACHE_TIMEOUT";
+   String CACHE_PERSISTED_PROPERTY_NAME = "CACHE_PERSISTED";
 
-   private Map<String, String> properties;
+   String get(String key);
 
-   public String getName() {
-      return name;
-   }
-
-   public NamedPropertyConfiguration setName(String name) {
-      this.name = name;
-      return this;
-   }
-
-   public Map<String, String> getProperties() {
-      return properties;
-   }
-
-   public NamedPropertyConfiguration setProperties(Map<String, String> properties) {
-      this.properties = properties;
-      return this;
-   }
+   void put(String key, String nodeId);
 }

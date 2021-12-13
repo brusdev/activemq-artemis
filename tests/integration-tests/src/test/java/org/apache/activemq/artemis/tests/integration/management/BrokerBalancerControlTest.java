@@ -21,7 +21,7 @@ import org.apache.activemq.artemis.api.core.JsonUtil;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.management.BrokerBalancerControl;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
 import org.apache.activemq.artemis.tests.integration.balancing.BalancingTestBase;
 import org.junit.After;
 import org.junit.Assert;
@@ -158,14 +158,14 @@ public class BrokerBalancerControlTest extends BalancingTestBase {
       brokerBalancerControl.setLocalTargetFilter(null);
       assertNull(brokerBalancerControl.getLocalTargetFilter());
 
-      assertNull(brokerBalancerControl.getTargetKeyFilter());
-      brokerBalancerControl.setTargetKeyFilter(v);
-      assertEquals(v, brokerBalancerControl.getTargetKeyFilter());
-      brokerBalancerControl.setTargetKeyFilter("");
-      assertNull(brokerBalancerControl.getTargetKeyFilter());
+      assertNull(brokerBalancerControl.getConnectionKeyFilter());
+      brokerBalancerControl.setConnectionKeyFilter(v);
+      assertEquals(v, brokerBalancerControl.getConnectionKeyFilter());
+      brokerBalancerControl.setConnectionKeyFilter("");
+      assertNull(brokerBalancerControl.getConnectionKeyFilter());
 
-      brokerBalancerControl.setTargetKeyFilter(null);
-      assertNull(brokerBalancerControl.getTargetKeyFilter());
+      brokerBalancerControl.setConnectionKeyFilter(null);
+      assertNull(brokerBalancerControl.getConnectionKeyFilter());
    }
 
    @Test
@@ -189,7 +189,7 @@ public class BrokerBalancerControlTest extends BalancingTestBase {
 
    private BrokerBalancerControl getBrokerBalancerControlForTarget() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       getServer(0).setMBeanServer(mbeanServer);
 
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
@@ -201,7 +201,7 @@ public class BrokerBalancerControlTest extends BalancingTestBase {
 
    private BrokerBalancerControl getBrokerBalancerControlForLocalTarget() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, true, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.USER_NAME, FirstElementPolicy.NAME, null, true, null, 1);
       getServer(0).setMBeanServer(mbeanServer);
 
       startServers(0);

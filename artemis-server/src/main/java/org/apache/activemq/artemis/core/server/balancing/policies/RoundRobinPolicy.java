@@ -21,11 +21,14 @@ import org.apache.activemq.artemis.core.server.balancing.targets.Target;
 import org.apache.activemq.artemis.utils.RandomUtil;
 
 import java.util.List;
+import java.util.Map;
 
 public class RoundRobinPolicy extends AbstractPolicy {
    public static final String NAME = "ROUND_ROBIN";
 
-   private int pos = RandomUtil.randomInterval(0, Integer.MAX_VALUE);
+   public static final String RANDOMIZE = "RANDOMIZE";
+
+   private int pos = 0;
 
    public RoundRobinPolicy() {
       super(NAME);
@@ -33,6 +36,17 @@ public class RoundRobinPolicy extends AbstractPolicy {
 
    protected RoundRobinPolicy(String name) {
       super(name);
+   }
+
+   @Override
+   public void init(Map<String, String> properties) {
+      super.init(properties);
+
+      if (properties != null) {
+         if (properties.containsKey(RANDOMIZE) && Boolean.parseBoolean(properties.get(RANDOMIZE))) {
+            pos = RandomUtil.randomInterval(0, Integer.MAX_VALUE);
+         }
+      }
    }
 
    @Override

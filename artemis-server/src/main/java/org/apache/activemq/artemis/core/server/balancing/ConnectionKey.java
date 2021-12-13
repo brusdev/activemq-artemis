@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.targets;
+package org.apache.activemq.artemis.core.server.balancing;
 
-public enum TargetKey {
+public enum ConnectionKey {
    CLIENT_ID, SNI_HOST, SOURCE_IP, USER_NAME, ROLE_NAME;
 
    public static final String validValues;
 
    static {
       StringBuffer stringBuffer = new StringBuffer();
-      for (TargetKey type : TargetKey.values()) {
+      for (ConnectionKey type : ConnectionKey.values()) {
 
          if (stringBuffer.length() != 0) {
             stringBuffer.append(",");
@@ -36,7 +36,7 @@ public enum TargetKey {
       validValues = stringBuffer.toString();
    }
 
-   public static TargetKey getType(String type) {
+   public static ConnectionKey getType(String type) {
       switch (type) {
          case "CLIENT_ID":
             return CLIENT_ID;

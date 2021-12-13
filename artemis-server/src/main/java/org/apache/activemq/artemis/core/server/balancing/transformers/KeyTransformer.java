@@ -15,23 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.protocol.amqp.proton;
+package org.apache.activemq.artemis.core.server.balancing.transformers;
 
-import org.apache.activemq.artemis.core.server.balancing.RedirectContext;
-import org.apache.qpid.proton.engine.Connection;
+import org.apache.activemq.artemis.core.server.service.ActiveMQService;
 
-public class AMQPRedirectContext extends RedirectContext {
-   private final Connection protonConnection;
-
-
-   public Connection getProtonConnection() {
-      return protonConnection;
-   }
-
-
-   public AMQPRedirectContext(AMQPConnectionContext connectionContext, Connection protonConnection) {
-      super(connectionContext.getConnectionCallback().getProtonConnectionDelegate(), connectionContext.getRemoteContainer(),
-         connectionContext.getSASLResult() != null ? connectionContext.getSASLResult().getUser() : null);
-      this.protonConnection = protonConnection;
-   }
+public interface KeyTransformer extends ActiveMQService {
+   String transform(String key);
 }

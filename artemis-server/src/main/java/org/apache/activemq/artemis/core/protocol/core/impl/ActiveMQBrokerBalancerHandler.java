@@ -22,24 +22,24 @@ import org.apache.activemq.artemis.core.protocol.core.CoreRemotingConnection;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.CreateSessionMessage;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.balancing.RedirectHandler;
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandler;
 
-public class ActiveMQRedirectHandler extends RedirectHandler<ActiveMQRedirectContext> {
+public class ActiveMQBrokerBalancerHandler extends BrokerBalancerHandler<ActiveMQBrokerBalancerHandlerContext> {
 
-   public ActiveMQRedirectHandler(ActiveMQServer server) {
+   public ActiveMQBrokerBalancerHandler(ActiveMQServer server) {
       super(server);
    }
 
-   public boolean redirect(CoreRemotingConnection connection, CreateSessionMessage message) throws Exception {
+   public boolean handle(CoreRemotingConnection connection, CreateSessionMessage message) throws Exception {
       if (!connection.isVersionSupportRedirect()) {
          throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
       }
 
-      return redirect(new ActiveMQRedirectContext(connection, message));
+      return handle(new ActiveMQBrokerBalancerHandlerContext(connection, message));
    }
 
    @Override
-   public void cannotRedirect(ActiveMQRedirectContext context) throws Exception {
+   public void refuse(ActiveMQBrokerBalancerHandlerContext context) throws Exception {
       switch (context.getResult().getStatus()) {
          case REFUSED_UNAVAILABLE:
             throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
@@ -49,7 +49,7 @@ public class ActiveMQRedirectHandler extends RedirectHandler<ActiveMQRedirectCon
    }
 
    @Override
-   public void redirectTo(ActiveMQRedirectContext context) throws Exception {
+   public void redirect(ActiveMQBrokerBalancerHandlerContext context) throws Exception {
       context.getConnection().disconnect(DisconnectReason.REDIRECT, context.getTarget().getNodeID(), context.getTarget().getConnector());
 
       throw ActiveMQMessageBundle.BUNDLE.redirectConnection(context.getTarget().getConnector());

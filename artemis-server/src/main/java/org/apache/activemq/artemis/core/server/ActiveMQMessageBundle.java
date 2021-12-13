@@ -509,7 +509,7 @@ public interface ActiveMQMessageBundle {
    ActiveMQIllegalStateException bindingAlreadyExists(String name, String binding);
 
    @Message(id = 229236, value = "Invalid target key {0}", format = Message.Format.MESSAGE_FORMAT)
-   IllegalArgumentException invalidTargetKey(String val);
+   IllegalArgumentException invalidConnectionKey(String val);
 
    @Message(id = 229237, value = "Connection redirected to {0}", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQRedirectedException redirectConnection(TransportConfiguration connector);

@@ -15,8 +15,23 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.transformer;
+package org.apache.activemq.artemis.core.protocol.openwire;
 
-public interface TransformerFactory {
-   KeyTransformer create();
+import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerHandlerContext;
+import org.apache.activemq.command.ConnectionInfo;
+
+public class OpenWireBrokerBalancerHandlerContext extends BrokerBalancerHandlerContext {
+
+   private final OpenWireConnection openWireConnection;
+
+
+   public OpenWireConnection getOpenWireConnection() {
+      return openWireConnection;
+   }
+
+
+   public OpenWireBrokerBalancerHandlerContext(OpenWireConnection openWireConnection, ConnectionInfo connectionInfo) {
+      super(openWireConnection.getRemotingConnection(), connectionInfo.getClientId(), connectionInfo.getUserName());
+      this.openWireConnection = openWireConnection;
+   }
 }

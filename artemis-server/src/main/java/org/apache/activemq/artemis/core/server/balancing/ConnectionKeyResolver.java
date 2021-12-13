@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.balancing.targets;
+package org.apache.activemq.artemis.core.server.balancing;
 
 import javax.security.auth.Subject;
 
@@ -26,22 +26,22 @@ import org.jboss.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TargetKeyResolver {
+public class ConnectionKeyResolver {
    public static final String DEFAULT_KEY_VALUE = "DEFAULT";
 
 
-   private static final Logger logger = Logger.getLogger(TargetKeyResolver.class);
+   private static final Logger logger = Logger.getLogger(ConnectionKeyResolver.class);
 
    private static final char SOCKET_ADDRESS_DELIMITER = ':';
    private static final String SOCKET_ADDRESS_PREFIX = "/";
 
 
-   private final TargetKey key;
+   private final ConnectionKey key;
 
    private volatile Pattern keyFilter;
 
 
-   public TargetKey getKey() {
+   public ConnectionKey getKey() {
       return key;
    }
 
@@ -49,7 +49,7 @@ public class TargetKeyResolver {
       return keyFilter != null ? keyFilter.pattern() : null;
    }
 
-   public TargetKeyResolver(TargetKey key, String keyFilter) {
+   public ConnectionKeyResolver(ConnectionKey key, String keyFilter) {
       this.key = key;
       setKeyFilter(keyFilter);
    }

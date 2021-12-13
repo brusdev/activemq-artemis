@@ -26,7 +26,7 @@ import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServers;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.ConnectionKey;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.apache.activemq.artemis.tests.integration.security.SecurityTest;
 import org.apache.activemq.artemis.utils.Wait;
@@ -66,7 +66,7 @@ public class MQTTRedirectTest extends BalancingTestBase {
 
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+      setupBalancerServerWithDiscovery(0, ConnectionKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
 
       startServers(0, 1);
 
@@ -137,7 +137,7 @@ public class MQTTRedirectTest extends BalancingTestBase {
 
       ActiveMQJAASSecurityManager securityManager = new ActiveMQJAASSecurityManager("PropertiesLogin");
       servers[0] = addServer(ActiveMQServers.newActiveMQServer(createDefaultConfig(true).setSecurityEnabled(true), ManagementFactory.getPlatformMBeanServer(), securityManager, false));
-      setupBalancerServerWithLocalTarget(0, TargetKey.ROLE_NAME, "b", "b");
+      setupBalancerServerWithLocalTarget(0, ConnectionKey.ROLE_NAME, "b", "b");
 
       startServers(0);
 
