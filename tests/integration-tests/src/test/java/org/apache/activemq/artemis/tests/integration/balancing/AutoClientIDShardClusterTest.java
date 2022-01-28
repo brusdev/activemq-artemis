@@ -39,7 +39,7 @@ import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.protocol.openwire.OpenWireProtocolManagerFactory;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
 import org.apache.activemq.artemis.core.server.balancing.transformer.ConsistentHashModulo;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
@@ -275,7 +275,7 @@ public class AutoClientIDShardClusterTest extends BalancingTestBase {
       for (int node = 0; node < numberOfNodes; node++) {
          Configuration configuration = servers[node].getConfiguration();
          BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
-         brokerBalancerConfiguration.setTargetKey(TargetKey.CLIENT_ID).setLocalTargetFilter(TargetKeyResolver.DEFAULT_KEY_VALUE + "|" + node);
+         brokerBalancerConfiguration.setKeyType(KeyType.CLIENT_ID).setLocalTargetFilter(TargetKeyResolver.DEFAULT_KEY_VALUE + "|" + node);
          NamedPropertyConfiguration transformerConfig = new NamedPropertyConfiguration();
          transformerConfig.setName(ConsistentHashModulo.NAME);
          HashMap<String, String> properties = new HashMap<>();

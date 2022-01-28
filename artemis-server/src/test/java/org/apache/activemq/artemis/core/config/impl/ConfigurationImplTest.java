@@ -600,7 +600,7 @@ public class ConfigurationImplTest extends ActiveMQTestBase {
 
       Properties properties = new Properties();
       properties.put("balancerConfigurations.joe.localTargetFilter", "LF");
-      properties.put("balancerConfigurations(joe).targetKeyFilter", "TF");
+      properties.put("balancerConfigurations(joe).keyFilter", "TF");
 
       properties.put("acceptorConfigurations.tcp.params.HOST", "LOCALHOST");
       properties.put("acceptorConfigurations.tcp.params.PORT", "61616");
@@ -625,7 +625,7 @@ public class ConfigurationImplTest extends ActiveMQTestBase {
 
       Assert.assertEquals(1, configuration.getBalancerConfigurations().size());
       Assert.assertEquals("LF", configuration.getBalancerConfigurations().get(0).getLocalTargetFilter());
-      Assert.assertEquals("TF", configuration.getBalancerConfigurations().get(0).getTargetKeyFilter());
+      Assert.assertEquals("TF", configuration.getBalancerConfigurations().get(0).getKeyFilter());
 
       Assert.assertEquals(2, configuration.getAcceptorConfigurations().size());
 
@@ -661,14 +661,14 @@ public class ConfigurationImplTest extends ActiveMQTestBase {
       Properties properties = new Properties();
       properties.put("balancerConfigurations.joe.localTargetFilter", "LF");
       // does not exist, ignored
-      properties.put("balancerConfigurations(bob).targetKeyFilter", "TF");
-      properties.put("balancerConfigurations(joe).targetKeyFilter", "TF");
+      properties.put("balancerConfigurations(bob).keyFilter", "TF");
+      properties.put("balancerConfigurations(joe).keyFilter", "TF");
 
       configuration.parsePrefixedProperties(properties, null);
 
       Assert.assertEquals(1, configuration.getBalancerConfigurations().size());
       Assert.assertEquals("LF", configuration.getBalancerConfigurations().get(0).getLocalTargetFilter());
-      Assert.assertEquals("TF", configuration.getBalancerConfigurations().get(0).getTargetKeyFilter());
+      Assert.assertEquals("TF", configuration.getBalancerConfigurations().get(0).getKeyFilter());
    }
 
    @Test

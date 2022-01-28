@@ -25,7 +25,7 @@ In configuration, the `local-target-filter` provides the regular expression that
 we care about the first 3 characters, from the user supplied clientId.
 
       <broker-balancer name="symmetric-simple">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^.{3}</target-key-filter>
+            <key-type>CLIENT_ID</key-type>
+            <key-filter>^.{3}</key-filter>
             <local-target-filter>^FOO.*</local-target-filter>
       </broker-balancer>

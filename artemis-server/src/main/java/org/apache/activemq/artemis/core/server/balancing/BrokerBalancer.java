@@ -23,7 +23,7 @@ import org.apache.activemq.artemis.core.server.balancing.caches.Cache;
 import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetResult;
 import org.apache.activemq.artemis.core.server.balancing.transformer.KeyTransformer;
@@ -41,7 +41,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
    private final String name;
 
-   private final TargetKey targetKey;
+   private final KeyType keyType;
 
    private final TargetKeyResolver targetKeyResolver;
 
@@ -63,8 +63,8 @@ public class BrokerBalancer implements ActiveMQComponent {
       return name;
    }
 
-   public TargetKey getTargetKey() {
-      return targetKey;
+   public KeyType getTargetKey() {
+      return keyType;
    }
 
    public Target getLocalTarget() {
@@ -94,7 +94,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
 
    public BrokerBalancer(final String name,
-                         final TargetKey targetKey,
+                         final KeyType keyType,
                          final String targetKeyFilter,
                          final Target localTarget,
                          final String localTargetFilter,
@@ -104,11 +104,11 @@ public class BrokerBalancer implements ActiveMQComponent {
                          KeyTransformer transformer) {
       this.name = name;
 
-      this.targetKey = targetKey;
+      this.keyType = keyType;
 
       this.transformer = transformer;
 
-      this.targetKeyResolver = new TargetKeyResolver(targetKey, targetKeyFilter);
+      this.targetKeyResolver = new TargetKeyResolver(keyType, targetKeyFilter);
 
       this.localTarget = new TargetResult(localTarget);
 
@@ -163,7 +163,7 @@ public class BrokerBalancer implements ActiveMQComponent {
 
       if (this.localTargetFilter != null && this.localTargetFilter.matcher(transform(key)).matches()) {
          if (logger.isDebugEnabled()) {
-            logger.debug("The " + targetKey + "[" + key + "] matches the localTargetFilter " + localTargetFilter.pattern());
+            logger.debug("The " + keyType + "[" + key + "] matches the localTargetFilter " + localTargetFilter.pattern());
          }
 
          return localTarget;
@@ -179,21 +179,21 @@ public class BrokerBalancer implements ActiveMQComponent {
          String nodeId = cache.get(key);
 
          if (logger.isDebugEnabled()) {
-            logger.debug("The cache returns target [" + nodeId + "] for " + targetKey + "[" + key + "]");
+            logger.debug("The cache returns target [" + nodeId + "] for " + keyType + "[" + key + "]");
          }
 
          if (nodeId != null) {
             Target target = pool.getReadyTarget(nodeId);
             if (target != null) {
                if (logger.isDebugEnabled()) {
-                  logger.debug("The target [" + nodeId + "] is ready for " + targetKey + "[" + key + "]");
+                  logger.debug("The target [" + nodeId + "] is ready for " + keyType + "[" + key + "]");
                }
 
                return new TargetResult(target);
             }
 
             if (logger.isDebugEnabled()) {
-               logger.debug("The target [" + nodeId + "] is not ready for " + targetKey + "[" + key + "]");
+               logger.debug("The target [" + nodeId + "] is not ready for " + keyType + "[" + key + "]");
             }
          }
       }
@@ -203,14 +203,14 @@ public class BrokerBalancer implements ActiveMQComponent {
       Target target = policy.selectTarget(targets, key);
 
       if (logger.isDebugEnabled()) {
-         logger.debug("The policy selects [" + target + "] from " + targets + " for " + targetKey + "[" + key + "]");
+         logger.debug("The policy selects [" + target + "] from " + targets + " for " + keyType + "[" + key + "]");
       }
 
       if (target != null) {
          result = new TargetResult(target);
          if (cache != null) {
             if (logger.isDebugEnabled()) {
-               logger.debug("Caching " + targetKey + "[" + key + "] for [" + target + "]");
+               logger.debug("Caching " + keyType + "[" + key + "] for [" + target + "]");
             }
             cache.put(key, target.getNodeID());
          }

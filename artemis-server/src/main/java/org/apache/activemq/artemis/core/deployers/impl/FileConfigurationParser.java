@@ -93,7 +93,7 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
 import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.balancing.transformer.TransformerFactoryResolver;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
@@ -2648,9 +2648,9 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
 
       brokerBalancerConfiguration.setName(e.getAttribute("name"));
 
-      brokerBalancerConfiguration.setTargetKey(TargetKey.valueOf(getString(e, "target-key", brokerBalancerConfiguration.getTargetKey().name(), Validators.TARGET_KEY)));
+      brokerBalancerConfiguration.setKeyType(KeyType.valueOf(getString(e, "key-type", brokerBalancerConfiguration.getKeyType().name(), Validators.KEY_TYPE)));
 
-      brokerBalancerConfiguration.setTargetKeyFilter(getString(e, "target-key-filter", brokerBalancerConfiguration.getTargetKeyFilter(), Validators.NO_CHECK));
+      brokerBalancerConfiguration.setKeyFilter(getString(e, "key-filter", brokerBalancerConfiguration.getKeyFilter(), Validators.NO_CHECK));
 
       brokerBalancerConfiguration.setLocalTargetFilter(getString(e, "local-target-filter", brokerBalancerConfiguration.getLocalTargetFilter(), Validators.NO_CHECK));
 

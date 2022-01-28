@@ -2102,14 +2102,14 @@
 
    <xsd:complexType name="brokerBalancerType">
       <xsd:sequence maxOccurs="unbounded">
-         <xsd:element name="target-key" type="brokerBalancerTargetKeyType" maxOccurs="1" minOccurs="0">
+         <xsd:element name="key-type" type="brokerBalancerKeyType" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
                   the optional target key
                </xsd:documentation>
             </xsd:annotation>
          </xsd:element>
-         <xsd:element name="target-key-filter" type="xsd:string" maxOccurs="1" minOccurs="0">
+         <xsd:element name="key-filter" type="xsd:string" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
                   the filter for the target key
@@ -2162,7 +2162,7 @@
       <xsd:attributeGroup ref="xml:specialAttrs"/>
    </xsd:complexType>
 
-   <xsd:simpleType name="brokerBalancerTargetKeyType">
+   <xsd:simpleType name="brokerBalancerKeyType">
       <xsd:restriction base="xsd:string">
          <xsd:enumeration value="CLIENT_ID"/>
          <xsd:enumeration value="SNI_HOST"/>

@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.artemis.core.config.balancing;
 
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 
 import java.io.Serializable;
 
 public class BrokerBalancerConfiguration implements Serializable {
 
    private String name = null;
-   private TargetKey targetKey = TargetKey.SOURCE_IP;
-   private String targetKeyFilter = null;
+   private KeyType keyType = KeyType.SOURCE_IP;
+   private String keyFilter = null;
    private String localTargetFilter = null;
    private CacheConfiguration cacheConfiguration = null;
    private PoolConfiguration poolConfiguration = null;
@@ -40,21 +40,21 @@ public class BrokerBalancerConfiguration implements Serializable {
       return this;
    }
 
-   public TargetKey getTargetKey() {
-      return targetKey;
+   public KeyType getKeyType() {
+      return keyType;
    }
 
-   public BrokerBalancerConfiguration setTargetKey(TargetKey targetKey) {
-      this.targetKey = targetKey;
+   public BrokerBalancerConfiguration setKeyType(KeyType keyType) {
+      this.keyType = keyType;
       return this;
    }
 
-   public String getTargetKeyFilter() {
-      return targetKeyFilter;
+   public String getKeyFilter() {
+      return keyFilter;
    }
 
-   public BrokerBalancerConfiguration setTargetKeyFilter(String targetKeyFilter) {
-      this.targetKeyFilter = targetKeyFilter;
+   public BrokerBalancerConfiguration setKeyFilter(String keyFilter) {
+      this.keyFilter = keyFilter;
       return this;
    }
 

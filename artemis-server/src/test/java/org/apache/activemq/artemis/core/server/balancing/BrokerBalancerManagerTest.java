@@ -25,7 +25,7 @@ import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfigurat
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.balancing.transformer.ConsistentHashModulo;
 import org.apache.activemq.artemis.core.server.management.ManagementService;
 import org.junit.After;
@@ -96,7 +96,7 @@ public class BrokerBalancerManagerTest {
       Mockito.when(mockServer.getManagementService()).thenReturn(mockManagementService);
 
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration();
-      brokerBalancerConfiguration.setName("partition-local-consistent-hash").setTargetKey(TargetKey.CLIENT_ID).setLocalTargetFilter(String.valueOf(2));
+      brokerBalancerConfiguration.setName("partition-local-consistent-hash").setKeyType(KeyType.CLIENT_ID).setLocalTargetFilter(String.valueOf(2));
       NamedPropertyConfiguration policyConfig = new NamedPropertyConfiguration();
       policyConfig.setName(ConsistentHashModulo.NAME);
       HashMap<String, String> properties = new HashMap<>();

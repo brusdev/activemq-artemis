@@ -38,7 +38,7 @@ import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHash
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
 import org.apache.activemq.artemis.core.server.balancing.policies.RoundRobinPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.junit.Assert;
 import org.junit.Test;
@@ -84,11 +84,11 @@ public class RedirectTest extends BalancingTestBase {
       if (CLUSTER_POOL.equals(pool)) {
          setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
-         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
+         setupBalancerServerWithCluster(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
+         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
       }
 
       startServers(0, 1);
@@ -179,11 +179,11 @@ public class RedirectTest extends BalancingTestBase {
          for (int node : nodes) {
             setupDiscoveryClusterConnection("cluster" + node, node, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          }
-         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, policyName, properties, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", targets, "cluster0");
+         setupBalancerServerWithCluster(0, KeyType.USER_NAME, policyName, properties, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", targets, "cluster0");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, policyName, properties, false, null, targets);
+         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, policyName, properties, false, null, targets);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, policyName, properties, false, null, targets, 1, 2, 3);
+         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, policyName, properties, false, null, targets, 1, 2, 3);
       }
 
       if (withFailure) {
@@ -265,14 +265,14 @@ public class RedirectTest extends BalancingTestBase {
       if (CLUSTER_POOL.equals(pool)) {
          setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
-         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster0");
-         setupBalancerServerWithCluster(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster1");
+         setupBalancerServerWithCluster(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster0");
+         setupBalancerServerWithCluster(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster1");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
-         setupBalancerServerWithDiscovery(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
+         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
+         setupBalancerServerWithDiscovery(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 1);
-         setupBalancerServerWithStaticConnectors(1, TargetKey.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 0);
+         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 1);
+         setupBalancerServerWithStaticConnectors(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 0);
       }
 
       startServers(0, 1);
@@ -340,11 +340,11 @@ public class RedirectTest extends BalancingTestBase {
          setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster2", 2, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
-         setupBalancerServerWithCluster(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
+         setupBalancerServerWithCluster(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       } else {
-         setupBalancerServerWithStaticConnectors(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1, 2);
+         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1, 2);
       }
 
       startServers(0, 1, 2);

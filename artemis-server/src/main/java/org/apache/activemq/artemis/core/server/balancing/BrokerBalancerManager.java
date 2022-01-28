@@ -121,7 +121,7 @@ public final class BrokerBalancerManager implements ActiveMQComponent {
          transformer = deployTransformer(transformerConfiguration);
       }
 
-      BrokerBalancer balancer = new BrokerBalancer(config.getName(), config.getTargetKey(), config.getTargetKeyFilter(),
+      BrokerBalancer balancer = new BrokerBalancer(config.getName(), config.getKeyType(), config.getKeyFilter(),
                                                    localTarget, config.getLocalTargetFilter(), cache, pool, policy, transformer);
 
       balancerControllers.put(balancer.getName(), balancer);

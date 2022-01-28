@@ -31,7 +31,7 @@ import org.apache.activemq.artemis.core.config.balancing.CacheConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
@@ -80,13 +80,13 @@ public class BalancingTestBase extends ClusterTestBase {
       return defaultServerConnector;
    }
 
-   protected void setupBalancerServerWithCluster(final int node, final TargetKey targetKey, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, String clusterConnection) {
+   protected void setupBalancerServerWithCluster(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, String clusterConnection) {
       Configuration configuration = getServer(node).getConfiguration();
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
 
       setupDefaultServerConnector(node);
 
-      brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
+      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setClusterConnection(clusterConnection))
          .setPolicyConfiguration(new NamedPropertyConfiguration().setName(policyName).setProperties(properties));
@@ -97,13 +97,13 @@ public class BalancingTestBase extends ClusterTestBase {
       acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
    }
 
-   protected void setupBalancerServerWithDiscovery(final int node, final TargetKey targetKey, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
+   protected void setupBalancerServerWithDiscovery(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
       Configuration configuration = getServer(node).getConfiguration();
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
 
       setupDefaultServerConnector(node);
 
-      brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
+      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setDiscoveryGroupName("dg1"))
          .setPolicyConfiguration(new NamedPropertyConfiguration().setName(policyName).setProperties(properties));
@@ -114,7 +114,7 @@ public class BalancingTestBase extends ClusterTestBase {
       acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
    }
 
-   protected void setupBalancerServerWithStaticConnectors(final int node, final TargetKey targetKey, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
+   protected void setupBalancerServerWithStaticConnectors(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
       Configuration configuration = getServer(node).getConfiguration();
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
 
@@ -127,7 +127,7 @@ public class BalancingTestBase extends ClusterTestBase {
          staticConnectors.add(connector.getName());
       }
 
-      brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter)
+      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setStaticConnectors(staticConnectors))
          .setPolicyConfiguration(new NamedPropertyConfiguration().setName(policyName).setProperties(properties));
@@ -139,11 +139,11 @@ public class BalancingTestBase extends ClusterTestBase {
    }
 
 
-   protected void setupBalancerServerWithLocalTarget(final int node, final TargetKey targetKey, final String targetKeyFilter, final String localTargetFilter) {
+   protected void setupBalancerServerWithLocalTarget(final int node, final KeyType keyType, final String targetKeyFilter, final String localTargetFilter) {
 
       Configuration configuration = getServer(node).getConfiguration();
       BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
-      brokerBalancerConfiguration.setTargetKey(targetKey).setLocalTargetFilter(localTargetFilter).setTargetKeyFilter(targetKeyFilter);
+      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter).setKeyFilter(targetKeyFilter);
 
       configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
 

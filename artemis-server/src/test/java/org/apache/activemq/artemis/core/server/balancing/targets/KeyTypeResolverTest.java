@@ -30,7 +30,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class TargetKeyResolverTest {
+public class KeyTypeResolverTest {
 
    @Test
    public void testClientIDKey() {
@@ -43,7 +43,7 @@ public class TargetKeyResolverTest {
    }
 
    private void testClientIDKey(String expected, String clientID, String filter) {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(TargetKey.CLIENT_ID, filter);
+      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.CLIENT_ID, filter);
 
       Assert.assertEquals(expected, targetKeyResolver.resolve(null, clientID, null));
 
@@ -63,7 +63,7 @@ public class TargetKeyResolverTest {
    private void testSNIHostKey(String expected, String sniHost, String filter) {
       Connection connection = Mockito.mock(Connection.class);
 
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(TargetKey.SNI_HOST, filter);
+      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.SNI_HOST, filter);
 
       Mockito.when(connection.getSNIHostName()).thenReturn(sniHost);
       Assert.assertEquals(expected, targetKeyResolver.resolve(connection, null, null));
@@ -87,7 +87,7 @@ public class TargetKeyResolverTest {
    private void testSourceIPKey(String expected, String remoteAddress, String filter) {
       Connection connection = Mockito.mock(Connection.class);
 
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(TargetKey.SOURCE_IP, filter);
+      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.SOURCE_IP, filter);
 
       Mockito.when(connection.getRemoteAddress()).thenReturn(remoteAddress);
       Assert.assertEquals(expected, targetKeyResolver.resolve(connection, null, null));
@@ -109,7 +109,7 @@ public class TargetKeyResolverTest {
    }
 
    private void testUserNameKey(String expected, String username, String filter) {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(TargetKey.USER_NAME, filter);
+      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.USER_NAME, filter);
 
       Assert.assertEquals(expected, targetKeyResolver.resolve(null, null, username));
 
@@ -118,7 +118,7 @@ public class TargetKeyResolverTest {
 
    @Test
    public void testRoleNameKeyWithFilter() throws Exception {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(TargetKey.ROLE_NAME, "B");
+      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.ROLE_NAME, "B");
 
       Connection connection = Mockito.mock(Connection.class);
       Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
@@ -146,7 +146,7 @@ public class TargetKeyResolverTest {
 
    @Test
    public void testRoleNameKeyWithoutFilter() throws Exception {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(TargetKey.ROLE_NAME, null);
+      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.ROLE_NAME, null);
 
       Connection connection = Mockito.mock(Connection.class);
       Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));

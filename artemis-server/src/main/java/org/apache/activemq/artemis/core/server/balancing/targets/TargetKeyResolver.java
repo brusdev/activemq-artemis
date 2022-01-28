@@ -36,12 +36,12 @@ public class TargetKeyResolver {
    private static final String SOCKET_ADDRESS_PREFIX = "/";
 
 
-   private final TargetKey key;
+   private final KeyType key;
 
    private volatile Pattern keyFilter;
 
 
-   public TargetKey getKey() {
+   public KeyType getKey() {
       return key;
    }
 
@@ -49,7 +49,7 @@ public class TargetKeyResolver {
       return keyFilter != null ? keyFilter.pattern() : null;
    }
 
-   public TargetKeyResolver(TargetKey key, String keyFilter) {
+   public TargetKeyResolver(KeyType key, String keyFilter) {
       this.key = key;
       setKeyFilter(keyFilter);
    }

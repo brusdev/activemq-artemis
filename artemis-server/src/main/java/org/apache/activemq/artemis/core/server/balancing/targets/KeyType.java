@@ -17,14 +17,14 @@
 
 package org.apache.activemq.artemis.core.server.balancing.targets;
 
-public enum TargetKey {
+public enum KeyType {
    CLIENT_ID, SNI_HOST, SOURCE_IP, USER_NAME, ROLE_NAME;
 
    public static final String validValues;
 
    static {
       StringBuffer stringBuffer = new StringBuffer();
-      for (TargetKey type : TargetKey.values()) {
+      for (KeyType type : KeyType.values()) {
 
          if (stringBuffer.length() != 0) {
             stringBuffer.append(",");
@@ -36,7 +36,7 @@ public enum TargetKey {
       validValues = stringBuffer.toString();
    }
 
-   public static TargetKey getType(String type) {
+   public static KeyType getType(String type) {
       switch (type) {
          case "CLIENT_ID":
             return CLIENT_ID;

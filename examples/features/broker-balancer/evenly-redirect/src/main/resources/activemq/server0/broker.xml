@@ -56,8 +56,8 @@ under the License.
 
       <broker-balancers>
          <broker-balancer name="evenly-balancer">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^.{3}</target-key-filter>
+            <key-type>CLIENT_ID</key-type>
+            <key-filter>^.{3}</key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
             <policy name="LEAST_CONNECTIONS"/>
             <pool>

@@ -21,7 +21,7 @@ import org.apache.activemq.artemis.api.core.JsonUtil;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.management.BrokerBalancerControl;
 import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.tests.integration.balancing.BalancingTestBase;
 import org.junit.After;
 import org.junit.Assert;
@@ -189,7 +189,7 @@ public class BrokerBalancerControlTest extends BalancingTestBase {
 
    private BrokerBalancerControl getBrokerBalancerControlForTarget() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+      setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       getServer(0).setMBeanServer(mbeanServer);
 
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
@@ -201,7 +201,7 @@ public class BrokerBalancerControlTest extends BalancingTestBase {
 
    private BrokerBalancerControl getBrokerBalancerControlForLocalTarget() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, TargetKey.USER_NAME, FirstElementPolicy.NAME, null, true, null, 1);
+      setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, true, null, 1);
       getServer(0).setMBeanServer(mbeanServer);
 
       startServers(0);

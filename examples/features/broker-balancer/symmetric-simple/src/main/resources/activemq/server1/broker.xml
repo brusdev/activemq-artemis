@@ -51,8 +51,8 @@ under the License.
 
       <broker-balancers>
          <broker-balancer name="symmetric-simple">
-            <target-key>CLIENT_ID</target-key>
-            <target-key-filter>^.{3}</target-key-filter>
+            <key-type>CLIENT_ID</key-type>
+            <key-filter>^.{3}</key-filter>
             <local-target-filter>^BAR.*</local-target-filter>
          </broker-balancer>
       </broker-balancers>

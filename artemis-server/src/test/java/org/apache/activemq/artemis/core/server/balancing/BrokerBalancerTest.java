@@ -26,7 +26,7 @@ import org.apache.activemq.artemis.core.server.balancing.policies.Policy;
 import org.apache.activemq.artemis.core.server.balancing.pools.Pool;
 import org.apache.activemq.artemis.core.server.balancing.targets.LocalTarget;
 import org.apache.activemq.artemis.core.server.balancing.targets.Target;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKey;
+import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.balancing.targets.TargetResult;
 import org.apache.activemq.artemis.core.server.balancing.transformer.KeyTransformer;
 import org.junit.Before;
@@ -52,7 +52,7 @@ public class BrokerBalancerTest {
    public void getTarget() {
       Pool pool = null;
       Policy policy = null;
-      underTest  = new BrokerBalancer("test", TargetKey.CLIENT_ID, "^.{3}",
+      underTest  = new BrokerBalancer("test", KeyType.CLIENT_ID, "^.{3}",
                                       localTarget, "^FOO.*", null, pool, policy, null);
       assertEquals( localTarget, underTest.getTarget("FOO_EE").getTarget());
       assertEquals(TargetResult.REFUSED_USE_ANOTHER_RESULT, underTest.getTarget("BAR_EE"));
@@ -68,7 +68,7 @@ public class BrokerBalancerTest {
             return key.substring("TRANSFORM_TO".length() + 1);
          }
       };
-      underTest  = new BrokerBalancer("test", TargetKey.CLIENT_ID, "^.{3}",
+      underTest  = new BrokerBalancer("test", KeyType.CLIENT_ID, "^.{3}",
                                       localTarget, "^FOO.*", null, pool, policy, keyTransformer);
       assertEquals( localTarget, underTest.getTarget("TRANSFORM_TO_FOO_EE").getTarget());
    }

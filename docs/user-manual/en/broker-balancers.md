@@ -1,6 +1,6 @@
 # Broker Balancers
 Apache ActiveMQ Artemis broker balancers allow incoming client connections to be distributed across multiple [target brokers](target-brokers).
-The target brokers are grouped in [pools](#pools) and the broker balancers use a [target key](#target-key)
+The target brokers are grouped in [pools](#pools) and the broker balancers use a [key](#key)
 to select a target broker from a pool of brokers according to a [policy](#policies).
 
 ### This feature is still **EXPERIMENTAL** and not meant to be run in production yet. Furthermore, its configuration can change until declared as **officially stable**.
@@ -10,9 +10,9 @@ Target broker is a broker that can accept incoming client connections and is loc
 The local target is a special target that represents the same broker hosting the broker balancer.
 The remote target is another reachable broker.
 
-## Target Key
-The broker balancer uses a target key to select a target broker.
-It is a string retrieved from an incoming client connection, the supported values are:
+## Key
+The broker balancer uses a key to select a target broker.
+It is a string retrieved from an incoming client connection, the supported key types are:
 * `CLIENT_ID` is the JMS client ID.
 * `SNI_HOST` is the hostname indicated by the client in the SNI extension of the TLS protocol.
 * `SOURCE_IP` is the source IP address of the client.
@@ -126,8 +126,8 @@ can map exclusively to just one of the brokers. The included transformers are:
 ## Defining broker balancers
 A broker balancer is defined by the `broker-balancer` element, it includes the following items:
 * the `name` attribute defines the name of the broker balancer and is used to reference the balancer from an acceptor;
-* the `target-key` element defines what key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [target key](#target-key) for further details;
-* the `target-key-filter` element defines a regular expression to filter the resolved keys;
+* the `key-type` element defines what type of key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [target key](#target-key) for further details;
+* the `key-filter` element defines a regular expression to filter the resolved keys;
 * the `local-target-filter` element defines a regular expression to match the keys that have to return a local target;
 * the `local-target-key-transformer` element defines a key transformer, see [key transformers](#key-transformers);
 * the `pool` element defines the pool to group the target brokers, see [pools](#pools);
@@ -137,8 +137,8 @@ Let's take a look at some broker balancer examples from broker.xml:
 ```xml
 <broker-balancers>
     <broker-balancer name="local-partition">
-         <target-key>CLIENT_ID</target-key>
-         <target-key-filter>^.{3}</target-key-filter>
+         <key-type>CLIENT_ID</key-type>
+         <key-filter>^.{3}</key-filter>
          <local-target-filter>^FOO.*</local-target-filter>
     </broker-balancer>
     <broker-balancer name="simple-balancer">
@@ -152,7 +152,7 @@ Let's take a look at some broker balancer examples from broker.xml:
         </pool>
     </broker-balancer>
     <broker-balancer name="consistent-hash-balancer">
-        <target-key>USER_NAME</target-key>
+        <key-type>USER_NAME</key-type>
         <local-target-filter>admin</local-target-filter>
         <policy name="CONSISTENT_HASH"/>
         <pool>
@@ -162,8 +162,8 @@ Let's take a look at some broker balancer examples from broker.xml:
     <policy name="CONSISTENT_HASH"/>
     </broker-balancer>
     <broker-balancer name="evenly-balancer">
-      <target-key>CLIENT_ID</target-key>
-      <target-key-filter>^.{3}</target-key-filter>
+      <key-type>CLIENT_ID</key-type>
+      <key-filter>^.{3}</key-filter>
       <policy name="LEAST_CONNECTIONS"/>
       <pool>
         <username>guest</username>
