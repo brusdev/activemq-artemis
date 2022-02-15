@@ -627,7 +627,7 @@
             </xsd:annotation>
          </xsd:element>
 
-         <xsd:element name="broker-balancers" maxOccurs="1" minOccurs="0">
+         <xsd:element name="connection-routers" maxOccurs="1" minOccurs="0">
             <xsd:annotation>
                <xsd:documentation>
                   A list of balancers
@@ -635,7 +635,7 @@
             </xsd:annotation>
             <xsd:complexType>
                <xsd:sequence>
-                  <xsd:element name="broker-balancer" type="brokerBalancerType" maxOccurs="unbounded" minOccurs="0"/>
+                  <xsd:element name="connection-router" type="brokerBalancerType" maxOccurs="unbounded" minOccurs="0"/>
                </xsd:sequence>
                <xsd:attributeGroup ref="xml:specialAttrs"/>
             </xsd:complexType>
@@ -2155,7 +2155,7 @@
       <xsd:attribute name="name" type="xsd:string" use="required">
          <xsd:annotation>
             <xsd:documentation>
-               a unique name for the broker balancer
+               a unique name for the connection router
             </xsd:documentation>
          </xsd:annotation>
       </xsd:attribute>

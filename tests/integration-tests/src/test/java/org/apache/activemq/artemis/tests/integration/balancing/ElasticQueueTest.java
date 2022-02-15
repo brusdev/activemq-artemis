@@ -41,15 +41,15 @@ import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.AddressControl;
-import org.apache.activemq.artemis.api.core.management.BrokerBalancerControl;
+import org.apache.activemq.artemis.api.core.management.ConnectionRouterControl;
 import org.apache.activemq.artemis.api.core.management.ObjectNameBuilder;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreAddressConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.security.CheckType;
 import org.apache.activemq.artemis.core.security.Role;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
@@ -76,7 +76,7 @@ public class ElasticQueueTest extends ActiveMQTestBase {
    final int base_port = 61616;
    final Stack<Worker> workers = new Stack<>();
    final Stack<EmbeddedActiveMQ> nodes = new Stack<>();
-   private final String balancerConfigName = "role_name_sharder";
+   private final String roleNameSharder = "role_name_sharder";
 
    private final ExecutorService executorService = Executors.newFixedThreadPool(3);
    @After
@@ -427,23 +427,23 @@ public class ElasticQueueTest extends ActiveMQTestBase {
       Configuration baseConfig = new ConfigurationImpl();
       baseConfig.getAddressesSettings().put(qName, blockingQueue);
 
-      BrokerBalancerConfiguration balancerConfiguration = new BrokerBalancerConfiguration();
-      balancerConfiguration.setName(balancerConfigName).setKeyType(KeyType.ROLE_NAME).setKeyFilter("(?<=^EQ_).*"); // strip EQ_ prefix
-      baseConfig.addBalancerConfiguration(balancerConfiguration);
+      ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration();
+      connectionRouterConfiguration.setName(roleNameSharder).setKeyType(KeyType.ROLE_NAME).setKeyFilter("(?<=^EQ_).*"); // strip EQ_ prefix
+      baseConfig.addConnectionRouter(connectionRouterConfiguration);
 
       // prepare two nodes
       for (int nodeId = 0; nodeId < 2; nodeId++) {
          Configuration configuration = baseConfig.copy();
          configuration.setName("Node" + nodeId);
          configuration.setBrokerInstance(new File(getTestDirfile(), configuration.getName()));
-         configuration.addAcceptorConfiguration("tcp", "tcp://localhost:" + (base_port + (nodeId)) + "?redirect-to=" + balancerConfigName + ";amqpCredits=1000;amqpMinCredits=300");
+         configuration.addAcceptorConfiguration("tcp", "tcp://localhost:" + (base_port + (nodeId)) + "?router=" + roleNameSharder + ";amqpCredits=1000;amqpMinCredits=300");
          nodes.add(new EmbeddedActiveMQ().setConfiguration(configuration));
          nodes.get(nodeId).setSecurityManager(customSecurityManager);
          nodes.get(nodeId).setMbeanServer(mBeanServer);
       }
 
       // node0 initially handles both producer & consumer (head & tail)
-      nodes.get(0).getConfiguration().getBalancerConfigurations().get(0).setLocalTargetFilter("PRODUCER|CONSUMER");
+      nodes.get(0).getConfiguration().getConnectionRouters().get(0).setLocalTargetFilter("PRODUCER|CONSUMER");
       nodes.get(0).start();
    }
 
@@ -475,11 +475,11 @@ public class ElasticQueueTest extends ActiveMQTestBase {
       },10000, 500));
 
       // stop producer on Node0, only accept consumers
-      BrokerBalancerControl balancerControl0 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node0NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl0.setLocalTargetFilter("CONSUMER");
+      ConnectionRouterControl routerControl0 = (ConnectionRouterControl) ManagementControlHelper.createProxy(node0NameBuilder.getConnectionRouterObjectName(roleNameSharder), ConnectionRouterControl.class, mBeanServer);
+      routerControl0.setLocalTargetFilter("CONSUMER");
 
       // start node1 exclusively for Producer
-      nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setLocalTargetFilter("PRODUCER");
+      nodes.get(1).getConfiguration().getConnectionRouters().get(0).setLocalTargetFilter("PRODUCER");
       nodes.get(1).start();
 
       // auto created address when producer connects
@@ -501,10 +501,10 @@ public class ElasticQueueTest extends ActiveMQTestBase {
          System.out.println("Want 0, Node0 (tail) usage % " + usage);
          return usage == 0;
       },20000, 500));
-      balancerControl0.setLocalTargetFilter(""); // Node0 is out of service, Node1 (new head&tail) is where it is all at going forward!
+      routerControl0.setLocalTargetFilter(""); // Node0 is out of service, Node1 (new head&tail) is where it is all at going forward!
 
-      BrokerBalancerControl balancerControl1 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node1NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl1.setLocalTargetFilter("CONSUMER|PRODUCER"); // Node1 is serving (head & tail)
+      ConnectionRouterControl routerControl0Control1 = (ConnectionRouterControl) ManagementControlHelper.createProxy(node1NameBuilder.getConnectionRouterObjectName(roleNameSharder), ConnectionRouterControl.class, mBeanServer);
+      routerControl0Control1.setLocalTargetFilter("CONSUMER|PRODUCER"); // Node1 is serving (head & tail)
 
       // back to one element in the chain
       nodes.get(0).stop();
@@ -566,11 +566,11 @@ public class ElasticQueueTest extends ActiveMQTestBase {
       long lastProducedToHeadTail = eqProducerConsumer.getLastProduced();
 
       // stop producer on Node0, only accept consumers. make it a tail broker
-      BrokerBalancerControl balancerControl0 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node0NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl0.setLocalTargetFilter("CONSUMER");
+      ConnectionRouterControl routerControl0 = (ConnectionRouterControl) ManagementControlHelper.createProxy(node0NameBuilder.getConnectionRouterObjectName(roleNameSharder), ConnectionRouterControl.class, mBeanServer);
+      routerControl0.setLocalTargetFilter("CONSUMER");
 
       // start new head exclusively for Producer
-      nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setLocalTargetFilter("PRODUCER");
+      nodes.get(1).getConfiguration().getConnectionRouters().get(0).setLocalTargetFilter("PRODUCER");
       nodes.get(1).start();
 
       // ensure nothing can be consumed from the head
@@ -602,8 +602,8 @@ public class ElasticQueueTest extends ActiveMQTestBase {
 
       eqConsumer.done.set(true);
 
-      balancerControl0 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node0NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl0.setLocalTargetFilter(""); // out of service
+      routerControl0 = (ConnectionRouterControl) ManagementControlHelper.createProxy(node0NameBuilder.getConnectionRouterObjectName(roleNameSharder), ConnectionRouterControl.class, mBeanServer);
+      routerControl0.setLocalTargetFilter(""); // out of service
 
       nodes.get(0).stop();
 
@@ -662,17 +662,17 @@ public class ElasticQueueTest extends ActiveMQTestBase {
       assertTrue("producer got full error and reconnected", Wait.waitFor(() -> eqProducerConsumer.connectionCount.get() > 0));
 
       // stop producer on Node0, only accept consumers. make it a tail broker
-      BrokerBalancerControl balancerControl0 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node0NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl0.setTargetKeyFilter("(?<=^EQ_)CONSUMER");  // because both roles present, we need to filter the roles with an exact match, otherwise we get the first one!
+      ConnectionRouterControl routerControl0 = (ConnectionRouterControl) ManagementControlHelper.createProxy(node0NameBuilder.getConnectionRouterObjectName(roleNameSharder), ConnectionRouterControl.class, mBeanServer);
+      routerControl0.setTargetKeyFilter("(?<=^EQ_)CONSUMER");  // because both roles present, we need to filter the roles with an exact match, otherwise we get the first one!
       // ensure nothing more can be produced
       addressControl0.block();
       System.out.println("Tail blocked!");
 
       // start new head exclusively for Producer
-      nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setKeyFilter("(?<=^EQ_)PRODUCER"); // just accept the producer role as key
-      nodes.get(1).getConfiguration().getBalancerConfigurations().get(0).setLocalTargetFilter(null); // initially won't accept any till we pause
+      nodes.get(1).getConfiguration().getConnectionRouters().get(0).setKeyFilter("(?<=^EQ_)PRODUCER"); // just accept the producer role as key
+      nodes.get(1).getConfiguration().getConnectionRouters().get(0).setLocalTargetFilter(null); // initially won't accept any till we pause
 
-      // new Head needs the address configured, such that we can start the balancer with the address paused
+      // new Head needs the address configured, such that we can start the routerControl0 with the address paused
       nodes.get(1).getConfiguration().getAddressConfigurations().add(new CoreAddressConfiguration().setName(qName).addRoutingType(RoutingType.ANYCAST).addQueueConfiguration(new QueueConfiguration(qName).setRoutingType(RoutingType.ANYCAST)));
       nodes.get(1).start();
 
@@ -686,8 +686,8 @@ public class ElasticQueueTest extends ActiveMQTestBase {
          }
          return false;
       }, 5000, 100));
-      BrokerBalancerControl balancerControl1 = (BrokerBalancerControl) ManagementControlHelper.createProxy(node1NameBuilder.getBrokerBalancerObjectName(balancerConfigName), BrokerBalancerControl.class, mBeanServer);
-      balancerControl1.setLocalTargetFilter("PRODUCER");
+      ConnectionRouterControl routerControl0Control1 = (ConnectionRouterControl) ManagementControlHelper.createProxy(node1NameBuilder.getConnectionRouterObjectName(roleNameSharder), ConnectionRouterControl.class, mBeanServer);
+      routerControl0Control1.setLocalTargetFilter("PRODUCER");
       System.out.println("Head enabled for producers... limit: " + addressControl1.getAddressLimitPercent());
 
       // let the consumer run as fast as possible
@@ -701,7 +701,7 @@ public class ElasticQueueTest extends ActiveMQTestBase {
       }, 20000, 200));
 
       System.out.println("Tail drained!");
-      balancerControl0.setLocalTargetFilter(null); // out of service
+      routerControl0.setLocalTargetFilter(null); // out of service
 
       // resume consumers on the new head&tail
       addressControl1.resume();

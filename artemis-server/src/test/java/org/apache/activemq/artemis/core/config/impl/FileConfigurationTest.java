@@ -46,7 +46,7 @@ import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.config.FileDeploymentManager;
 import org.apache.activemq.artemis.core.config.HAPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.MetricsConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.config.ha.LiveOnlyPolicyConfiguration;
 import org.apache.activemq.artemis.core.journal.impl.JournalImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
@@ -55,10 +55,10 @@ import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
-import org.apache.activemq.artemis.core.server.balancing.policies.ConsistentHashPolicy;
-import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.policies.LeastConnectionsPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.policies.ConsistentHashPolicy;
+import org.apache.activemq.artemis.core.server.routing.policies.FirstElementPolicy;
+import org.apache.activemq.artemis.core.server.routing.policies.LeastConnectionsPolicy;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.impl.ActiveMQServerImpl;
 import org.apache.activemq.artemis.core.server.impl.LegacyLDAPSecuritySettingPlugin;
@@ -76,7 +76,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.apache.activemq.artemis.core.server.balancing.transformer.ConsistentHashModulo.MODULO;
+import static org.apache.activemq.artemis.core.server.routing.transformer.ConsistentHashModulo.MODULO;
 
 public class FileConfigurationTest extends ConfigurationImplTest {
 
@@ -268,8 +268,8 @@ public class FileConfigurationTest extends ConfigurationImplTest {
          }
       }
 
-      Assert.assertEquals(5, conf.getBalancerConfigurations().size());
-      for (BrokerBalancerConfiguration bc : conf.getBalancerConfigurations()) {
+      Assert.assertEquals(5, conf.getConnectionRouters().size());
+      for (ConnectionRouterConfiguration bc : conf.getConnectionRouters()) {
          if (bc.getName().equals("simple-local")) {
             Assert.assertEquals(bc.getKeyType(), KeyType.CLIENT_ID);
             Assert.assertNotNull(bc.getLocalTargetFilter());

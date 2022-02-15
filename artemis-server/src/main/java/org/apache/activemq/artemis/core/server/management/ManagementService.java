@@ -44,7 +44,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Divert;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.QueueFactory;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancer;
+import org.apache.activemq.artemis.core.server.routing.ConnectionRouter;
 import org.apache.activemq.artemis.core.server.cluster.Bridge;
 import org.apache.activemq.artemis.core.server.cluster.BroadcastGroup;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
@@ -128,9 +128,9 @@ public interface ManagementService extends NotificationService, ActiveMQComponen
 
    void unregisterCluster(String name) throws Exception;
 
-   void registerBrokerBalancer(BrokerBalancer balancer) throws Exception;
+   void registerConnectionRouter(ConnectionRouter balancer) throws Exception;
 
-   void unregisterBrokerBalancer(String name) throws Exception;
+   void unregisterConnectionRouter(String name) throws Exception;
 
    Object getResource(String resourceName);
 

@@ -153,21 +153,21 @@
             <exclusive>false</exclusive>
          </divert>
       </diverts>
-      <broker-balancers>
-         <broker-balancer name="simple-local">
+      <connection-routers>
+         <connection-router name="simple-local">
             <key-type>CLIENT_ID</key-type>
             <key-filter>^[^.]+</key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
-         </broker-balancer>
-         <broker-balancer name="simple-local-with-transformer">
+         </connection-router>
+         <connection-router name="simple-local-with-transformer">
             <key-type>CLIENT_ID</key-type>
             <key-filter>^[^.]+</key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
             <local-target-key-transformer name="CONSISTENT_HASH_MODULO">
                <property key="modulo" value="2"></property>
             </local-target-key-transformer>
-         </broker-balancer>
-         <broker-balancer name="simple-balancer">
+         </connection-router>
+         <connection-router name="simple-balancer">
             <key-type>USER_NAME</key-type>
             <policy name="FIRST_ELEMENT"/>
             <pool>
@@ -175,8 +175,8 @@
                   <connector-ref>connector1</connector-ref>
                </static-connectors>
             </pool>
-         </broker-balancer>
-         <broker-balancer name="consistent-hash-balancer">
+         </connection-router>
+         <connection-router name="consistent-hash-balancer">
             <key-type>SNI_HOST</key-type>
             <key-filter>^[^.]+</key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
@@ -186,8 +186,8 @@
                <local-target-enabled>true</local-target-enabled>
                <discovery-group-ref discovery-group-name="dg1"/>
             </pool>
-         </broker-balancer>
-         <broker-balancer name="least-connections-balancer">
+         </connection-router>
+         <connection-router name="least-connections-balancer">
             <cache>
                <persisted>true</persisted>
                <timeout>60000</timeout>
@@ -199,8 +199,8 @@
                <quorum-timeout>1000</quorum-timeout>
                <discovery-group-ref discovery-group-name="dg2"/>
             </pool>
-         </broker-balancer>
-      </broker-balancers>
+         </connection-router>
+      </connection-routers>
       <amqp-use-core-subscription-naming>true</amqp-use-core-subscription-naming>
       <queues>
          <queue name="queue1">

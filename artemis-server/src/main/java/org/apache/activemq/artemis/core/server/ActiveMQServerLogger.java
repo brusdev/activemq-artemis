@@ -40,7 +40,7 @@ import org.apache.activemq.artemis.core.persistence.OperationContext;
 import org.apache.activemq.artemis.core.protocol.core.Packet;
 import org.apache.activemq.artemis.core.protocol.core.impl.wireformat.BackupReplicationStartFailedMessage;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.balancing.targets.Target;
+import org.apache.activemq.artemis.core.server.routing.targets.Target;
 import org.apache.activemq.artemis.core.server.cluster.Bridge;
 import org.apache.activemq.artemis.core.server.cluster.impl.BridgeImpl;
 import org.apache.activemq.artemis.core.server.cluster.impl.ClusterConnectionImpl;
@@ -2189,8 +2189,8 @@ public interface ActiveMQServerLogger extends BasicLogger {
    void pageStoreStop(SimpleString storeName, long addressSize, long maxSize, long globalMaxSize);
 
    @LogMessage(level = Logger.Level.WARN)
-   @Message(id = 224109, value = "BrokerBalancer {0} not found", format = Message.Format.MESSAGE_FORMAT)
-   void brokerBalancerNotFound(String name);
+   @Message(id = 224109, value = "ConnectionRouter {0} not found", format = Message.Format.MESSAGE_FORMAT)
+   void connectionRouterNotFound(String name);
 
    @LogMessage(level = Logger.Level.WARN)
    @Message(id = 224110, value = "Configuration 'whitelist' is deprecated, please use the 'allowlist' configuration", format = Message.Format.MESSAGE_FORMAT)

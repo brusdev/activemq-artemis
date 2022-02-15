@@ -36,12 +36,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.protocol.openwire.OpenWireProtocolManagerFactory;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
-import org.apache.activemq.artemis.core.server.balancing.targets.TargetKeyResolver;
-import org.apache.activemq.artemis.core.server.balancing.transformer.ConsistentHashModulo;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.routing.transformer.ConsistentHashModulo;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManagerFactory;
@@ -274,19 +274,19 @@ public class AutoClientIDShardClusterTest extends BalancingTestBase {
       final int numberOfNodes = 2;
       for (int node = 0; node < numberOfNodes; node++) {
          Configuration configuration = servers[node].getConfiguration();
-         BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
-         brokerBalancerConfiguration.setKeyType(KeyType.CLIENT_ID).setLocalTargetFilter(TargetKeyResolver.DEFAULT_KEY_VALUE + "|" + node);
+         ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
+         connectionRouterConfiguration.setKeyType(KeyType.CLIENT_ID).setLocalTargetFilter(TargetKeyResolver.DEFAULT_KEY_VALUE + "|" + node);
          NamedPropertyConfiguration transformerConfig = new NamedPropertyConfiguration();
          transformerConfig.setName(ConsistentHashModulo.NAME);
          HashMap<String, String> properties = new HashMap<>();
          properties.put(ConsistentHashModulo.MODULO, String.valueOf(numberOfNodes));
          transformerConfig.setProperties(properties);
-         brokerBalancerConfiguration.setTransformerConfiguration(transformerConfig);
+         connectionRouterConfiguration.setTransformerConfiguration(transformerConfig);
 
-         configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
+         configuration.setConnectionRouters(Collections.singletonList(connectionRouterConfiguration));
 
          TransportConfiguration acceptor = getDefaultServerAcceptor(node);
-         acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
+         acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
       }
    }
 

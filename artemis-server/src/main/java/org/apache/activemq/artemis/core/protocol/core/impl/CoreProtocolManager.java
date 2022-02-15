@@ -73,7 +73,7 @@ import org.apache.activemq.artemis.spi.core.remoting.Acceptor;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
-public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveMQRedirectHandler> {
+public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveMQRoutingHandler> {
 
    private static final Logger logger = Logger.getLogger(CoreProtocolManager.class);
 
@@ -91,7 +91,7 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
 
    private String securityDomain;
 
-   private final ActiveMQRedirectHandler redirectHandler;
+   private final ActiveMQRoutingHandler redirectHandler;
 
    public CoreProtocolManager(final CoreProtocolManagerFactory factory,
                               final ActiveMQServer server,
@@ -105,7 +105,7 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
 
       this.outgoingInterceptors = outgoingInterceptors;
 
-      this.redirectHandler = new ActiveMQRedirectHandler(server);
+      this.redirectHandler = new ActiveMQRoutingHandler(server);
    }
 
    @Override
@@ -239,7 +239,7 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
    }
 
    @Override
-   public ActiveMQRedirectHandler getRedirectHandler() {
+   public ActiveMQRoutingHandler getRedirectHandler() {
       return redirectHandler;
    }
 

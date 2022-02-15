@@ -21,8 +21,8 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.policies.FirstElementPolicy;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.protocol.amqp.proton.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -78,7 +78,7 @@ public class AmqpRedirectTest extends BalancingTestBase {
                return;
             }
 
-            String expectedDescription = "Broker balancer " + BROKER_BALANCER_NAME + " is not ready to redirect";
+            String expectedDescription = "Broker balancer " + CONNECTION_ROUTER_NAME + " is not ready to redirect";
             String actualDescription = remoteError.getDescription();
             if (!expectedDescription.equals(actualDescription)) {
                markAsInvalid("Broker did not set description as expected, was: " + actualDescription);
@@ -139,7 +139,7 @@ public class AmqpRedirectTest extends BalancingTestBase {
 
             Integer redirectPort = TransportConstants.DEFAULT_PORT + 1;
 
-            String expectedDescription = "Connection redirected to localhost:" + redirectPort + " by broker balancer " + BROKER_BALANCER_NAME;
+            String expectedDescription = "Connection redirected to localhost:" + redirectPort + " by connection router " + CONNECTION_ROUTER_NAME;
             String actualDescription = remoteError.getDescription();
             if (!expectedDescription.equals(actualDescription)) {
                markAsInvalid("Broker did not set description as expected, was: " + actualDescription);
@@ -226,7 +226,7 @@ public class AmqpRedirectTest extends BalancingTestBase {
                markAsInvalid("Broker did not set condition to " + ConnectionError.CONNECTION_FORCED);
                return;
             }
-            String expectedDescription = "Broker balancer " + BROKER_BALANCER_NAME + ", rejected this connection";
+            String expectedDescription = "Broker balancer " + CONNECTION_ROUTER_NAME + ", rejected this connection";
             String actualDescription = remoteError.getDescription();
             if (!expectedDescription.equals(actualDescription)) {
                markAsInvalid("Broker did not set description as expected, was: " + actualDescription);

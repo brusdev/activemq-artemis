@@ -363,7 +363,7 @@ public class TransportConstants {
 
    public static final boolean DEFAULT_PROXY_REMOTE_DNS = false;
 
-   public static final String REDIRECT_TO = "redirect-to";
+   public static final String REDIRECT_TO = "router";
 
    public static final String DEFAULT_REDIRECT_TO = null;
 

@@ -28,14 +28,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
-import org.apache.activemq.artemis.api.core.management.BrokerBalancerControl;
+import org.apache.activemq.artemis.api.core.management.ConnectionRouterControl;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.protocol.mqtt.MQTTReasonCodes;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQServers;
-import org.apache.activemq.artemis.core.server.balancing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.policies.FirstElementPolicy;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.apache.activemq.artemis.tests.integration.security.SecurityTest;
 import org.apache.activemq.artemis.utils.Wait;
@@ -95,10 +95,10 @@ public class MQTTRedirectTest extends BalancingTestBase {
       }
       client0.close();
 
-      BrokerBalancerControl brokerBalancerControl = (BrokerBalancerControl)getServer(0).getManagementService()
-         .getResource(ResourceNames.BROKER_BALANCER + BROKER_BALANCER_NAME);
+      ConnectionRouterControl connectionRouterControl = (ConnectionRouterControl)getServer(0).getManagementService()
+         .getResource(ResourceNames.CONNECTION_ROUTER + CONNECTION_ROUTER_NAME);
 
-      CompositeData targetData = brokerBalancerControl.getTarget("admin");
+      CompositeData targetData = connectionRouterControl.getTarget("admin");
       CompositeData targetConnectorData = (CompositeData)targetData.get("connector");
       TabularData targetConnectorParams = (TabularData)targetConnectorData.get("params");
       CompositeData hostData = targetConnectorParams.get(new Object[]{TransportConstants.HOST_PROP_NAME});

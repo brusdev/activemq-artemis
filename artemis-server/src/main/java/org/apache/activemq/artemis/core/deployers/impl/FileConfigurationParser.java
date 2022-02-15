@@ -46,7 +46,7 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.UDPBroadcastEndpointFactory;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.CacheConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
@@ -92,9 +92,9 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType;
 import org.apache.activemq.artemis.core.server.JournalType;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
-import org.apache.activemq.artemis.core.server.balancing.policies.PolicyFactoryResolver;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
-import org.apache.activemq.artemis.core.server.balancing.transformer.TransformerFactoryResolver;
+import org.apache.activemq.artemis.core.server.routing.policies.PolicyFactoryResolver;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.transformer.TransformerFactoryResolver;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
@@ -633,10 +633,10 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          parseDivertConfiguration(dvNode, config);
       }
 
-      NodeList ccBalancers = e.getElementsByTagName("broker-balancers");
+      NodeList ccBalancers = e.getElementsByTagName("connection-routers");
 
       if (ccBalancers != null) {
-         NodeList ccBalancer = e.getElementsByTagName("broker-balancer");
+         NodeList ccBalancer = e.getElementsByTagName("connection-router");
 
          if (ccBalancer != null) {
             for (int i = 0; i < ccBalancer.getLength(); i++) {
@@ -2644,15 +2644,15 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
    }
 
    private void parseBalancerConfiguration(final Element e, final Configuration config) throws Exception {
-      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration();
+      ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration();
 
-      brokerBalancerConfiguration.setName(e.getAttribute("name"));
+      connectionRouterConfiguration.setName(e.getAttribute("name"));
 
-      brokerBalancerConfiguration.setKeyType(KeyType.valueOf(getString(e, "key-type", brokerBalancerConfiguration.getKeyType().name(), Validators.KEY_TYPE)));
+      connectionRouterConfiguration.setKeyType(KeyType.valueOf(getString(e, "key-type", connectionRouterConfiguration.getKeyType().name(), Validators.KEY_TYPE)));
 
-      brokerBalancerConfiguration.setKeyFilter(getString(e, "key-filter", brokerBalancerConfiguration.getKeyFilter(), Validators.NO_CHECK));
+      connectionRouterConfiguration.setKeyFilter(getString(e, "key-filter", connectionRouterConfiguration.getKeyFilter(), Validators.NO_CHECK));
 
-      brokerBalancerConfiguration.setLocalTargetFilter(getString(e, "local-target-filter", brokerBalancerConfiguration.getLocalTargetFilter(), Validators.NO_CHECK));
+      connectionRouterConfiguration.setLocalTargetFilter(getString(e, "local-target-filter", connectionRouterConfiguration.getLocalTargetFilter(), Validators.NO_CHECK));
 
       NamedPropertyConfiguration policyConfiguration = null;
       PoolConfiguration poolConfiguration = null;
@@ -2664,23 +2664,23 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          if (child.getNodeName().equals("cache")) {
             CacheConfiguration cacheConfiguration = new CacheConfiguration();
             parseCacheConfiguration((Element) child, cacheConfiguration);
-            brokerBalancerConfiguration.setCacheConfiguration(cacheConfiguration);
+            connectionRouterConfiguration.setCacheConfiguration(cacheConfiguration);
          } else if (child.getNodeName().equals("policy")) {
             policyConfiguration = new NamedPropertyConfiguration();
             parsePolicyConfiguration((Element) child, policyConfiguration);
-            brokerBalancerConfiguration.setPolicyConfiguration(policyConfiguration);
+            connectionRouterConfiguration.setPolicyConfiguration(policyConfiguration);
          } else if (child.getNodeName().equals("pool")) {
             poolConfiguration = new PoolConfiguration();
             parsePoolConfiguration((Element) child, config, poolConfiguration);
-            brokerBalancerConfiguration.setPoolConfiguration(poolConfiguration);
+            connectionRouterConfiguration.setPoolConfiguration(poolConfiguration);
          } else if (child.getNodeName().equals("local-target-key-transformer")) {
             policyConfiguration = new NamedPropertyConfiguration();
             parseTransformerConfiguration((Element) child, policyConfiguration);
-            brokerBalancerConfiguration.setTransformerConfiguration(policyConfiguration);
+            connectionRouterConfiguration.setTransformerConfiguration(policyConfiguration);
          }
       }
 
-      config.getBalancerConfigurations().add(brokerBalancerConfiguration);
+      config.getConnectionRouters().add(connectionRouterConfiguration);
    }
 
    private void parseCacheConfiguration(final Element e, final CacheConfiguration cacheConfiguration) throws ClassNotFoundException {

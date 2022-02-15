@@ -26,12 +26,12 @@ import java.util.Map;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.balancing.BrokerBalancerConfiguration;
+import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.CacheConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.balancing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
@@ -46,7 +46,7 @@ public class BalancingTestBase extends ClusterTestBase {
    protected static final String DISCOVERY_POOL = "DISCOVERY";
    protected static final String STATIC_POOL = "STATIC";
 
-   protected static final String BROKER_BALANCER_NAME = "bb1";
+   protected static final String CONNECTION_ROUTER_NAME = "bb1";
 
    protected static final String DEFAULT_CONNECTOR_NAME = "DEFAULT";
 
@@ -82,41 +82,41 @@ public class BalancingTestBase extends ClusterTestBase {
 
    protected void setupBalancerServerWithCluster(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, String clusterConnection) {
       Configuration configuration = getServer(node).getConfiguration();
-      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
+      ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
 
       setupDefaultServerConnector(node);
 
-      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
+      connectionRouterConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setClusterConnection(clusterConnection))
          .setPolicyConfiguration(new NamedPropertyConfiguration().setName(policyName).setProperties(properties));
 
-      configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
+      configuration.setConnectionRouters(Collections.singletonList(connectionRouterConfiguration));
 
       TransportConfiguration acceptor = getDefaultServerAcceptor(node);
-      acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
+      acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
    }
 
    protected void setupBalancerServerWithDiscovery(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
       Configuration configuration = getServer(node).getConfiguration();
-      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
+      ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
 
       setupDefaultServerConnector(node);
 
-      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
+      connectionRouterConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setDiscoveryGroupName("dg1"))
          .setPolicyConfiguration(new NamedPropertyConfiguration().setName(policyName).setProperties(properties));
 
-      configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
+      configuration.setConnectionRouters(Collections.singletonList(connectionRouterConfiguration));
 
       TransportConfiguration acceptor = getDefaultServerAcceptor(node);
-      acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
+      acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
    }
 
    protected void setupBalancerServerWithStaticConnectors(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
       Configuration configuration = getServer(node).getConfiguration();
-      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
+      ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
 
       setupDefaultServerConnector(node);
 
@@ -127,38 +127,38 @@ public class BalancingTestBase extends ClusterTestBase {
          staticConnectors.add(connector.getName());
       }
 
-      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
+      connectionRouterConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter)
          .setPoolConfiguration(new PoolConfiguration().setCheckPeriod(1000).setQuorumSize(quorumSize)
             .setLocalTargetEnabled(localTargetEnabled).setStaticConnectors(staticConnectors))
          .setPolicyConfiguration(new NamedPropertyConfiguration().setName(policyName).setProperties(properties));
 
-      configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
+      configuration.setConnectionRouters(Collections.singletonList(connectionRouterConfiguration));
 
       TransportConfiguration acceptor = getDefaultServerAcceptor(node);
-      acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
+      acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
    }
 
 
    protected void setupBalancerServerWithLocalTarget(final int node, final KeyType keyType, final String targetKeyFilter, final String localTargetFilter) {
 
       Configuration configuration = getServer(node).getConfiguration();
-      BrokerBalancerConfiguration brokerBalancerConfiguration = new BrokerBalancerConfiguration().setName(BROKER_BALANCER_NAME);
-      brokerBalancerConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter).setKeyFilter(targetKeyFilter);
+      ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
+      connectionRouterConfiguration.setKeyType(keyType).setLocalTargetFilter(localTargetFilter).setKeyFilter(targetKeyFilter);
 
-      configuration.setBalancerConfigurations(Collections.singletonList(brokerBalancerConfiguration));
+      configuration.setConnectionRouters(Collections.singletonList(connectionRouterConfiguration));
 
       TransportConfiguration acceptor = getDefaultServerAcceptor(node);
-      acceptor.getParams().put("redirect-to", BROKER_BALANCER_NAME);
+      acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
 
    }
 
    protected void setupBalancerLocalCache(final int node, boolean persisted, int timeout) {
 
       Configuration configuration = getServer(node).getConfiguration();
-      BrokerBalancerConfiguration brokerBalancerConfiguration = configuration.getBalancerConfigurations().stream()
-         .filter(brokerBalancerConfiguration1 -> brokerBalancerConfiguration1.getName().equals(BROKER_BALANCER_NAME)).findFirst().get();
+      ConnectionRouterConfiguration connectionRouterConfiguration = configuration.getConnectionRouters().stream()
+         .filter(brokerBalancerConfiguration1 -> brokerBalancerConfiguration1.getName().equals(CONNECTION_ROUTER_NAME)).findFirst().get();
 
-      brokerBalancerConfiguration.setCacheConfiguration(
+      connectionRouterConfiguration.setCacheConfiguration(
          new CacheConfiguration().setPersisted(persisted).setTimeout(timeout));
    }
 

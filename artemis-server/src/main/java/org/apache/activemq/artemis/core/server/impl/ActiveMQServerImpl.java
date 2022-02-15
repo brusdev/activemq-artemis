@@ -172,7 +172,7 @@ import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerMessagePlugi
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerQueuePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerResourcePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerSessionPlugin;
-import org.apache.activemq.artemis.core.server.balancing.BrokerBalancerManager;
+import org.apache.activemq.artemis.core.server.routing.ConnectionRouterManager;
 import org.apache.activemq.artemis.core.server.reload.ReloadManager;
 import org.apache.activemq.artemis.core.server.reload.ReloadManagerImpl;
 import org.apache.activemq.artemis.core.server.replay.ReplayManager;
@@ -293,7 +293,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
    private volatile RemotingService remotingService;
 
-   private volatile BrokerBalancerManager balancerManager;
+   private volatile ConnectionRouterManager balancerManager;
 
    private final List<ProtocolManagerFactory> protocolManagerFactories = new ArrayList<>();
 
@@ -1676,7 +1676,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
    }
 
    @Override
-   public BrokerBalancerManager getBalancerManager() {
+   public ConnectionRouterManager getBalancerManager() {
       return balancerManager;
    }
 
@@ -3163,7 +3163,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       federationManager.deploy();
 
-      balancerManager = new BrokerBalancerManager(configuration, this, scheduledPool);
+      balancerManager = new ConnectionRouterManager(configuration, this, scheduledPool);
 
       balancerManager.deploy();
 
