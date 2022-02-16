@@ -1,6 +1,6 @@
 # Connection Routers
 Apache ActiveMQ Artemis connection routers allow incoming client connections to be distributed across multiple [target brokers](target-brokers).
-The target brokers are grouped in [pools](#pools) and the connection routers use a [key](#key)
+The target brokers are grouped in [pools](#pools) and the connection routers use a [key](#keys)
 to select a target broker from a pool of brokers according to a [policy](#policies).
 
 ## Target Broker
@@ -8,7 +8,7 @@ Target broker is a broker that can accept incoming client connections and is loc
 The local target is a special target that represents the same broker hosting the connection router.
 The remote target is another reachable broker.
 
-## Key
+## Keys
 The connection router uses a key to select a target broker.
 It is a string retrieved from an incoming client connection, the supported key types are:
 * `CLIENT_ID` is the JMS client ID.
@@ -99,7 +99,7 @@ A policy is defined by the `policy` element. Let's take a look at a policy examp
 
 ## Cache
 The connection router provides a cache with a timeout to improve the stickiness of the target broker selected,
-returning the same target broker for a target key as long as it is present in the cache and is ready.
+returning the same target broker for a key value as long as it is present in the cache and is ready.
 So a connection router with the cache enabled doesn't strictly follow the configured policy.
 By default, the cache is not enabled.
 
@@ -116,7 +116,7 @@ Let's take a look at a cache example from broker.xml:
 ```
 
 ## Key transformers
-A `local-target-key-transformer` allows target key transformation before matching against any local-target-filter. One use case is
+A `local-target-key-transformer` allows key value transformation before matching against any local-target-filter. One use case is
 CLIENT_ID sharding across a cluster of N brokers. With a consistent hash % N transformation, each client id
 can map exclusively to just one of the brokers. The included transformers are:
 * `CONSISTENT_HASH_MODULO` that takes a single `modulo` property to configure the bound.
@@ -124,7 +124,7 @@ can map exclusively to just one of the brokers. The included transformers are:
 ## Defining connection routers
 A connection router is defined by the `connection-router` element, it includes the following items:
 * the `name` attribute defines the name of the connection router and is used to reference the balancer from an acceptor;
-* the `key-type` element defines what type of key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [target key](#target-key) for further details;
+* the `key-type` element defines what type of key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [Keys](#keys) for further details;
 * the `key-filter` element defines a regular expression to filter the resolved keys;
 * the `local-target-filter` element defines a regular expression to match the keys that have to return a local target;
 * the `local-target-key-transformer` element defines a key transformer, see [key transformers](#key-transformers);
@@ -174,8 +174,8 @@ Let's take a look at some connection router examples from broker.xml:
 
 ## Connection Routers Workflow
 The connection router workflow include the following steps:
-* Retrieve the target key from the incoming connection;
-* Return the local target broker if the target key matches the local filter;
+* Retrieve the key value from the incoming connection;
+* Return the local target broker if the key value matches the local filter;
 * Delegate to the pool:
 * Return the cached target broker if it is ready;
 * Get ready/active target brokers from the pool;
@@ -194,7 +194,7 @@ If brokers are behind a round-robin load-balancer or have full knowledge of the 
 urls, `their` broker will eventually respond. The `local-target-filter` regular expression
 determines the granularity of partition that is best for preserving `data gravity` for your applications.
 
-The challenge is in providing a consistent [key](#Target_Key) in all related application connections.
+The challenge is in providing a consistent [key](#Keys) in all related application connections.
 
 Note: the concept of `data gravity` tries to capture the reality that while addresses are shared by multiple
 applications, it is best to keep related addresses and their data co-located on a single broker. Typically,
