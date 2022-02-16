@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.config.balancing;
+package org.apache.activemq.artemis.core.config.routing;
 
 import java.io.Serializable;
 import java.util.Map;

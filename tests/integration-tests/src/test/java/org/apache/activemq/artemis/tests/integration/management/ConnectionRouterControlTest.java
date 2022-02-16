@@ -22,7 +22,7 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.management.ConnectionRouterControl;
 import org.apache.activemq.artemis.core.server.routing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
-import org.apache.activemq.artemis.tests.integration.balancing.BalancingTestBase;
+import org.apache.activemq.artemis.tests.integration.routing.RoutingTestBase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,7 +36,7 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import java.util.Map;
 
-public class ConnectionRouterControlTest extends BalancingTestBase {
+public class ConnectionRouterControlTest extends RoutingTestBase {
 
    private MBeanServer mbeanServer;
 

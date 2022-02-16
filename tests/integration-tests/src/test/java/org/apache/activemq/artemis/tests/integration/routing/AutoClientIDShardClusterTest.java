@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.tests.integration.balancing;
+package org.apache.activemq.artemis.tests.integration.routing;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -36,8 +36,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
+import org.apache.activemq.artemis.core.config.routing.ConnectionRouterConfiguration;
+import org.apache.activemq.artemis.core.config.routing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.protocol.openwire.OpenWireProtocolManagerFactory;
 import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.core.server.routing.targets.TargetKeyResolver;
@@ -53,7 +53,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AutoClientIDShardClusterTest extends BalancingTestBase {
+public class AutoClientIDShardClusterTest extends RoutingTestBase {
 
    @Parameterized.Parameters(name = "protocol: {0}")
    public static Collection<Object[]> data() {

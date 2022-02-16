@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.tests.integration.balancing;
+package org.apache.activemq.artemis.tests.integration.routing;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -46,7 +46,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class RedirectTest extends BalancingTestBase {
+public class RedirectTest extends RoutingTestBase {
 
    @Parameterized.Parameters(name = "protocol: {0}, pool: {1}")
    public static Collection<Object[]> data() {

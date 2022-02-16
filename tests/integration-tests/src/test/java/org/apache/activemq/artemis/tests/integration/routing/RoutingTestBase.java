@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.tests.integration.balancing;
+package org.apache.activemq.artemis.tests.integration.routing;
 
 import javax.jms.ConnectionFactory;
 
@@ -26,10 +26,10 @@ import java.util.Map;
 
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.CacheConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
+import org.apache.activemq.artemis.core.config.routing.ConnectionRouterConfiguration;
+import org.apache.activemq.artemis.core.config.routing.CacheConfiguration;
+import org.apache.activemq.artemis.core.config.routing.NamedPropertyConfiguration;
+import org.apache.activemq.artemis.core.config.routing.PoolConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
@@ -37,7 +37,7 @@ import org.apache.activemq.artemis.tests.integration.cluster.distribution.Cluste
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.qpid.jms.JmsConnectionFactory;
 
-public class BalancingTestBase extends ClusterTestBase {
+public class RoutingTestBase extends ClusterTestBase {
    protected static final String AMQP_PROTOCOL = "AMQP";
    protected static final String CORE_PROTOCOL = "CORE";
    protected static final String OPENWIRE_PROTOCOL = "OPENWIRE";

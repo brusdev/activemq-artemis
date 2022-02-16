@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.tests.integration.balancing;
+package org.apache.activemq.artemis.tests.integration.routing;
 
 import java.net.URI;
 import java.util.Map;
@@ -37,7 +37,7 @@ import org.junit.Test;
  *
  * This class only adds some additional validations that are AMQP-specific.
  */
-public class AmqpRedirectTest extends BalancingTestBase {
+public class AmqpRedirectTest extends RoutingTestBase {
 
    @Test
    public void testBalancerRejectionDueToOfflineTargetPool() throws Exception {

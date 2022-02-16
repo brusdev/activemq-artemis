@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.tests.integration.balancing;
+package org.apache.activemq.artemis.tests.integration.routing;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
@@ -47,7 +47,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class MQTTRedirectTest extends BalancingTestBase {
+public class MQTTRedirectTest extends RoutingTestBase {
 
    static {
       String path = System.getProperty("java.security.auth.login.config");

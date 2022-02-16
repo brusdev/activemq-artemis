@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.tests.integration.balancing;
+package org.apache.activemq.artemis.tests.integration.routing;
 
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.Role;
@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Set;
 
 @RunWith(Parameterized.class)
-public class KeyTypeTest extends BalancingTestBase {
+public class KeyTypeTest extends RoutingTestBase {
 
    private static final String MOCK_POLICY_NAME = "MOCK_POLICY";
 

@@ -20,9 +20,9 @@ package org.apache.activemq.artemis.core.server.routing;
 import java.util.HashMap;
 
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.core.config.balancing.ConnectionRouterConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.NamedPropertyConfiguration;
-import org.apache.activemq.artemis.core.config.balancing.PoolConfiguration;
+import org.apache.activemq.artemis.core.config.routing.ConnectionRouterConfiguration;
+import org.apache.activemq.artemis.core.config.routing.NamedPropertyConfiguration;
+import org.apache.activemq.artemis.core.config.routing.PoolConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.routing.policies.ConsistentHashPolicy;
 import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
