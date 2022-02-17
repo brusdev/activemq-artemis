@@ -293,7 +293,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
    private volatile RemotingService remotingService;
 
-   private volatile ConnectionRouterManager balancerManager;
+   private volatile ConnectionRouterManager connectionRouterManager;
 
    private final List<ProtocolManagerFactory> protocolManagerFactories = new ArrayList<>();
 
@@ -1235,7 +1235,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
             }
          }
 
-         stopComponent(balancerManager);
+         stopComponent(connectionRouterManager);
 
          stopComponent(connectorsService);
 
@@ -1676,8 +1676,8 @@ public class ActiveMQServerImpl implements ActiveMQServer {
    }
 
    @Override
-   public ConnectionRouterManager getBalancerManager() {
-      return balancerManager;
+   public ConnectionRouterManager getConnectionRouterManager() {
+      return connectionRouterManager;
    }
 
    public BackupManager getBackupManager() {
@@ -3163,9 +3163,9 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       federationManager.deploy();
 
-      balancerManager = new ConnectionRouterManager(configuration, this, scheduledPool);
+      connectionRouterManager = new ConnectionRouterManager(configuration, this, scheduledPool);
 
-      balancerManager.deploy();
+      connectionRouterManager.deploy();
 
       remotingService = new RemotingServiceImpl(clusterManager, configuration, this, managementService, scheduledPool, protocolManagerFactories, executorFactory.getExecutor(), serviceRegistry);
 
@@ -3330,7 +3330,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
             federationManager.start();
          }
 
-         balancerManager.start();
+         connectionRouterManager.start();
 
          startProtocolServices();
 

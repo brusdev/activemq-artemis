@@ -33,21 +33,21 @@ import org.apache.qpid.proton.engine.Connection;
 import org.junit.Test;
 
 /**
- * Note: The primary balancer tests for AMQP clients are in e.g {@link RedirectTest} along with those for other protocols.
+ * Note: The primary routing tests for AMQP clients are in e.g {@link RedirectTest} along with those for other protocols.
  *
  * This class only adds some additional validations that are AMQP-specific.
  */
 public class AmqpRedirectTest extends RoutingTestBase {
 
    @Test
-   public void testBalancerRejectionDueToOfflineTargetPool() throws Exception {
+   public void testRouterRejectionDueToOfflineTargetPool() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
 
       // Zero quorum size to avoid the quorum delay, given it will never be satisfied
-      setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 0, 1);
+      setupRouterServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 0, 1);
 
-      // Only start the balancer, so it can never become ready to redirect.
+      // Only start the broker with the router, so it can never become ready to redirect.
       startServers(0);
 
       URI uri = new URI("tcp://localhost:" + TransportConstants.DEFAULT_PORT);
@@ -78,7 +78,7 @@ public class AmqpRedirectTest extends RoutingTestBase {
                return;
             }
 
-            String expectedDescription = "Broker balancer " + CONNECTION_ROUTER_NAME + " is not ready to redirect";
+            String expectedDescription = "Connection router " + CONNECTION_ROUTER_NAME + " is not ready to redirect";
             String actualDescription = remoteError.getDescription();
             if (!expectedDescription.equals(actualDescription)) {
                markAsInvalid("Broker did not set description as expected, was: " + actualDescription);
@@ -101,11 +101,11 @@ public class AmqpRedirectTest extends RoutingTestBase {
    }
 
    @Test
-   public void testBalancerRedirectDetails() throws Exception {
+   public void testRouterRedirectDetails() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
 
-      setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
+      setupRouterServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
 
       startServers(0, 1);
 
@@ -191,11 +191,11 @@ public class AmqpRedirectTest extends RoutingTestBase {
    }
 
    @Test
-   public void testBalancerRejectionUseAnother() throws Exception {
+   public void testRouterRejectionUseAnother() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
 
       // only accepts users with RoleName==B so will reject
-      setupBalancerServerWithLocalTarget(0, KeyType.ROLE_NAME, "B", null);
+      setupRouterServerWithLocalTarget(0, KeyType.ROLE_NAME, "B", null);
 
       startServers(0);
 
@@ -226,7 +226,7 @@ public class AmqpRedirectTest extends RoutingTestBase {
                markAsInvalid("Broker did not set condition to " + ConnectionError.CONNECTION_FORCED);
                return;
             }
-            String expectedDescription = "Broker balancer " + CONNECTION_ROUTER_NAME + ", rejected this connection";
+            String expectedDescription = "Connection router " + CONNECTION_ROUTER_NAME + ", rejected this connection";
             String actualDescription = remoteError.getDescription();
             if (!expectedDescription.equals(actualDescription)) {
                markAsInvalid("Broker did not set description as expected, was: " + actualDescription);

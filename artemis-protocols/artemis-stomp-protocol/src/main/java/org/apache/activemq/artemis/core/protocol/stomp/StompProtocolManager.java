@@ -186,7 +186,7 @@ public class StompProtocolManager extends AbstractProtocolManager<StompFrame, St
    }
 
    @Override
-   public RoutingHandler getRedirectHandler() {
+   public RoutingHandler getRoutingHandler() {
       return null;
    }
 

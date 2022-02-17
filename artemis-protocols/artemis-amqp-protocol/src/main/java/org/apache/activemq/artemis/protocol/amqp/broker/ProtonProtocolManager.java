@@ -106,7 +106,7 @@ public class ProtonProtocolManager extends AbstractProtocolManager<AMQPMessage, 
 
    private boolean directDeliver = true;
 
-   private final AMQPRoutingHandler redirectHandler;
+   private final AMQPRoutingHandler routingHandler;
 
    /*
    * used when you want to treat senders as a subscription on an address rather than consuming from the actual queue for
@@ -120,7 +120,7 @@ public class ProtonProtocolManager extends AbstractProtocolManager<AMQPMessage, 
       this.factory = factory;
       this.server = server;
       this.updateInterceptors(incomingInterceptors, outgoingInterceptors);
-      redirectHandler = new AMQPRoutingHandler(server);
+      routingHandler = new AMQPRoutingHandler(server);
    }
 
    public synchronized ReferenceNodeStore getReferenceIDSupplier() {
@@ -348,8 +348,8 @@ public class ProtonProtocolManager extends AbstractProtocolManager<AMQPMessage, 
    }
 
    @Override
-   public AMQPRoutingHandler getRedirectHandler() {
-      return redirectHandler;
+   public AMQPRoutingHandler getRoutingHandler() {
+      return routingHandler;
    }
 
    public String invokeIncoming(AMQPMessage message, ActiveMQProtonRemotingConnection connection) {

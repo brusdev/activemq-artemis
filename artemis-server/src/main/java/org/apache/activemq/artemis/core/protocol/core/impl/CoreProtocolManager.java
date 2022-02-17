@@ -91,7 +91,7 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
 
    private String securityDomain;
 
-   private final ActiveMQRoutingHandler redirectHandler;
+   private final ActiveMQRoutingHandler routingHandler;
 
    public CoreProtocolManager(final CoreProtocolManagerFactory factory,
                               final ActiveMQServer server,
@@ -105,7 +105,7 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
 
       this.outgoingInterceptors = outgoingInterceptors;
 
-      this.redirectHandler = new ActiveMQRoutingHandler(server);
+      this.routingHandler = new ActiveMQRoutingHandler(server);
    }
 
    @Override
@@ -239,8 +239,8 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
    }
 
    @Override
-   public ActiveMQRoutingHandler getRedirectHandler() {
-      return redirectHandler;
+   public ActiveMQRoutingHandler getRoutingHandler() {
+      return routingHandler;
    }
 
    private boolean isArtemis(ActiveMQBuffer buffer) {

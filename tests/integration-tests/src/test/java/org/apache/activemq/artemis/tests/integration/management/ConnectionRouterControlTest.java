@@ -189,7 +189,7 @@ public class ConnectionRouterControlTest extends RoutingTestBase {
 
    private ConnectionRouterControl getConnectionRouterControlForTarget() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       getServer(0).setMBeanServer(mbeanServer);
 
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
@@ -201,7 +201,7 @@ public class ConnectionRouterControlTest extends RoutingTestBase {
 
    private ConnectionRouterControl getConnectionRouterControlForLocalTarget() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, true, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, true, null, 1);
       getServer(0).setMBeanServer(mbeanServer);
 
       startServers(0);

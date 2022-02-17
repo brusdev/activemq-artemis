@@ -327,7 +327,7 @@ public class ClusteredResetMockTest extends ActiveMQTestBase {
       }
 
       @Override
-      public void registerConnectionRouter(ConnectionRouter balancer) throws Exception {
+      public void registerConnectionRouter(ConnectionRouter router) throws Exception {
 
       }
 

@@ -30,28 +30,28 @@ public class ActiveMQRoutingHandler extends RoutingHandler<ActiveMQRoutingContex
       super(server);
    }
 
-   public boolean redirect(CoreRemotingConnection connection, CreateSessionMessage message) throws Exception {
-      if (!connection.isVersionSupportRedirect()) {
+   public boolean handle(CoreRemotingConnection connection, CreateSessionMessage message) throws Exception {
+      if (!connection.isVersionSupportRouting()) {
          throw ActiveMQMessageBundle.BUNDLE.incompatibleClientServer();
       }
 
-      return redirect(new ActiveMQRoutingContext(connection, message));
+      return handle(new ActiveMQRoutingContext(connection, message));
    }
 
    @Override
-   public void cannotRedirect(ActiveMQRoutingContext context) throws Exception {
+   public void refuse(ActiveMQRoutingContext context) throws Exception {
       switch (context.getResult().getStatus()) {
          case REFUSED_UNAVAILABLE:
-            throw ActiveMQMessageBundle.BUNDLE.cannotRedirect();
+            throw ActiveMQMessageBundle.BUNDLE.connectionRouterNotReady(context.getRouter());
          case REFUSED_USE_ANOTHER:
-            throw ActiveMQMessageBundle.BUNDLE.balancerReject();
+            throw ActiveMQMessageBundle.BUNDLE.connectionRejected(context.getRouter());
       }
    }
 
    @Override
-   public void redirectTo(ActiveMQRoutingContext context) throws Exception {
+   public void redirect(ActiveMQRoutingContext context) throws Exception {
       context.getConnection().disconnect(DisconnectReason.REDIRECT, context.getTarget().getNodeID(), context.getTarget().getConnector());
 
-      throw ActiveMQMessageBundle.BUNDLE.redirectConnection(context.getTarget().getConnector());
+      throw ActiveMQMessageBundle.BUNDLE.connectionRedirected(context.getRouter(), context.getTarget().getConnector());
    }
 }

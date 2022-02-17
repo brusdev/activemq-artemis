@@ -82,5 +82,5 @@ public interface ProtocolManager<P extends BaseInterceptor, R extends RoutingHan
 
    String getSecurityDomain();
 
-   R getRedirectHandler();
+   R getRoutingHandler();
 }

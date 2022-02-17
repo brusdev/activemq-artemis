@@ -32,12 +32,12 @@ public class MQTTRoutingHandler extends RoutingHandler<MQTTRoutingContext> {
       super(server);
    }
 
-   public boolean redirect(MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) throws Exception {
-      return redirect(new MQTTRoutingContext(mqttConnection, mqttSession, connect));
+   public boolean handle(MQTTConnection mqttConnection, MQTTSession mqttSession, MqttConnectMessage connect) throws Exception {
+      return handle(new MQTTRoutingContext(mqttConnection, mqttSession, connect));
    }
 
    @Override
-   protected void cannotRedirect(MQTTRoutingContext context) {
+   protected void refuse(MQTTRoutingContext context) {
       switch (context.getResult().getStatus()) {
          case REFUSED_USE_ANOTHER:
             context.getMQTTSession().getProtocolHandler().sendConnack(MQTTReasonCodes.USE_ANOTHER_SERVER);
@@ -50,7 +50,7 @@ public class MQTTRoutingHandler extends RoutingHandler<MQTTRoutingContext> {
    }
 
    @Override
-   protected void redirectTo(MQTTRoutingContext context) {
+   protected void redirect(MQTTRoutingContext context) {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, context.getTarget().getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, context.getTarget().getConnector().getParams());
 

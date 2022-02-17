@@ -33,20 +33,20 @@ public class OpenWireRoutingHandler extends RoutingHandler<OpenWireRoutingContex
       this.protocolManager = protocolManager;
    }
 
-   public boolean redirect(OpenWireConnection openWireConnection, ConnectionInfo connectionInfo) throws Exception {
+   public boolean handle(OpenWireConnection openWireConnection, ConnectionInfo connectionInfo) throws Exception {
       if (!connectionInfo.isFaultTolerant()) {
          throw new java.lang.IllegalStateException("Client not fault tolerant");
       }
 
-      return redirect(new OpenWireRoutingContext(openWireConnection, connectionInfo));
+      return handle(new OpenWireRoutingContext(openWireConnection, connectionInfo));
    }
 
    @Override
-   protected void cannotRedirect(OpenWireRoutingContext context) throws Exception {
+   protected void refuse(OpenWireRoutingContext context) throws Exception {
    }
 
    @Override
-   protected void redirectTo(OpenWireRoutingContext context) throws Exception {
+   protected void redirect(OpenWireRoutingContext context) throws Exception {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, context.getTarget().getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, context.getTarget().getConnector().getParams());
 

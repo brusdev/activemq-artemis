@@ -68,7 +68,7 @@ public final class ConnectionRouterManager implements ActiveMQComponent {
 
    private volatile boolean started = false;
 
-   private Map<String, ConnectionRouter> routerControllers = new HashMap<>();
+   private Map<String, ConnectionRouter> connectionRouters = new HashMap<>();
 
 
    @Override
@@ -84,8 +84,8 @@ public final class ConnectionRouterManager implements ActiveMQComponent {
    }
 
    public void deploy() throws Exception {
-      for (ConnectionRouterConfiguration balancerConfig : config.getConnectionRouters()) {
-         deployConnectionRouter(balancerConfig);
+      for (ConnectionRouterConfiguration connectionRouterConfig : config.getConnectionRouters()) {
+         deployConnectionRouter(connectionRouterConfig);
       }
    }
 
@@ -121,12 +121,12 @@ public final class ConnectionRouterManager implements ActiveMQComponent {
          transformer = deployTransformer(transformerConfiguration);
       }
 
-      ConnectionRouter balancer = new ConnectionRouter(config.getName(), config.getKeyType(), config.getKeyFilter(),
-                                                   localTarget, config.getLocalTargetFilter(), cache, pool, policy, transformer);
+      ConnectionRouter connectionRouter = new ConnectionRouter(config.getName(), config.getKeyType(),
+         config.getKeyFilter(), localTarget, config.getLocalTargetFilter(), cache, pool, policy, transformer);
 
-      routerControllers.put(balancer.getName(), balancer);
+      connectionRouters.put(connectionRouter.getName(), connectionRouter);
 
-      server.getManagementService().registerConnectionRouter(balancer);
+      server.getManagementService().registerConnectionRouter(connectionRouter);
    }
 
    private Cache deployCache(CacheConfiguration configuration, String name) throws ClassNotFoundException {
@@ -213,12 +213,12 @@ public final class ConnectionRouterManager implements ActiveMQComponent {
    }
 
    public ConnectionRouter getRouter(String name) {
-      return routerControllers.get(name);
+      return connectionRouters.get(name);
    }
 
    @Override
    public void start() throws Exception {
-      for (ConnectionRouter connectionRouter : routerControllers.values()) {
+      for (ConnectionRouter connectionRouter : connectionRouters.values()) {
          connectionRouter.start();
       }
 
@@ -229,9 +229,9 @@ public final class ConnectionRouterManager implements ActiveMQComponent {
    public void stop() throws Exception {
       started = false;
 
-      for (ConnectionRouter balancer : routerControllers.values()) {
-         balancer.stop();
-         server.getManagementService().unregisterConnectionRouter(balancer.getName());
+      for (ConnectionRouter connectionRouter : connectionRouters.values()) {
+         connectionRouter.stop();
+         server.getManagementService().unregisterConnectionRouter(connectionRouter.getName());
       }
    }
 }

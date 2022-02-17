@@ -20,7 +20,7 @@ package org.apache.activemq.artemis.core.server.routing.transformer;
 import java.util.Map;
 
 import org.apache.activemq.artemis.core.server.routing.policies.ConsistentHashPolicy;
-import org.apache.activemq.artemis.core.server.routing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyResolver;
 
 public class ConsistentHashModulo implements KeyTransformer {
    public static final String NAME = "CONSISTENT_HASH_MODULO";
@@ -29,7 +29,7 @@ public class ConsistentHashModulo implements KeyTransformer {
 
    @Override
    public String transform(String str) {
-      if (TargetKeyResolver.DEFAULT_KEY_VALUE.equals(str)) {
+      if (KeyResolver.DEFAULT_KEY_VALUE.equals(str)) {
          // we only want to transform resolved keys
          return str;
       }

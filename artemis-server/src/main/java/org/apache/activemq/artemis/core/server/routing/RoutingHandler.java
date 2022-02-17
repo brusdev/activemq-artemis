@@ -35,37 +35,35 @@ public abstract class RoutingHandler<T extends RoutingContext> {
       this.server = server;
    }
 
-   protected abstract void cannotRedirect(T context) throws Exception;
+   protected abstract void refuse(T context) throws Exception;
 
-   protected abstract void redirectTo(T context) throws Exception;
+   protected abstract void redirect(T context) throws Exception;
 
-   protected boolean redirect(T context) throws Exception {
-      Connection transportConnection = context.getConnection().getTransportConnection();
-
-      ConnectionRouter connectionRouter = getServer().getBalancerManager().getRouter(transportConnection.getRedirectTo());
+   protected boolean handle(T context) throws Exception {
+      ConnectionRouter connectionRouter = getServer().getConnectionRouterManager().getRouter(context.getRouter());
 
       if (connectionRouter == null) {
-         ActiveMQServerLogger.LOGGER.connectionRouterNotFound(transportConnection.getRedirectTo());
+         ActiveMQServerLogger.LOGGER.connectionRouterNotFound(context.getRouter());
 
-         cannotRedirect(context);
+         refuse(context);
 
          return true;
       }
 
-      context.setResult(connectionRouter.getTarget(transportConnection, context.getClientID(), context.getUsername()));
+      context.setResult(connectionRouter.getTarget(context.getTransportConnection(), context.getClientID(), context.getUsername()));
 
       if (TargetResult.Status.OK != context.getResult().getStatus()) {
-         ActiveMQServerLogger.LOGGER.cannotRedirectClientConnection(transportConnection);
+         ActiveMQServerLogger.LOGGER.cannotRouteClientConnection(context.getTransportConnection());
 
-         cannotRedirect(context);
+         refuse(context);
 
          return true;
       }
 
-      ActiveMQServerLogger.LOGGER.redirectClientConnection(transportConnection, context.getTarget());
+      ActiveMQServerLogger.LOGGER.routeClientConnection(context.getTransportConnection(), context.getTarget());
 
       if (!context.getTarget().isLocal()) {
-         redirectTo(context);
+         redirect(context);
 
          return true;
       }

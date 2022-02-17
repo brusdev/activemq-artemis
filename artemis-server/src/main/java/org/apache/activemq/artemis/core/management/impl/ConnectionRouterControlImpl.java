@@ -41,7 +41,7 @@ import javax.management.openmbean.TabularType;
 import java.util.Map;
 
 public class ConnectionRouterControlImpl extends AbstractControl implements ConnectionRouterControl {
-   private final ConnectionRouter balancer;
+   private final ConnectionRouter connectionRouter;
 
 
    private static CompositeType parameterType;
@@ -53,14 +53,14 @@ public class ConnectionRouterControlImpl extends AbstractControl implements Conn
    private static CompositeType targetType;
 
 
-   public ConnectionRouterControlImpl(final ConnectionRouter balancer, final StorageManager storageManager) throws NotCompliantMBeanException {
+   public ConnectionRouterControlImpl(final ConnectionRouter connectionRouter, final StorageManager storageManager) throws NotCompliantMBeanException {
       super(ConnectionRouterControl.class, storageManager);
-      this.balancer = balancer;
+      this.connectionRouter = connectionRouter;
    }
 
    @Override
    public CompositeData getTarget(String key) throws Exception {
-      TargetResult result = balancer.getTarget(key);
+      TargetResult result = connectionRouter.getTarget(key);
       if (TargetResult.Status.OK == result.getStatus()) {
          CompositeData connectorData = null;
          TransportConfiguration connector = result.getTarget().getConnector();
@@ -87,7 +87,7 @@ public class ConnectionRouterControlImpl extends AbstractControl implements Conn
 
    @Override
    public String getTargetAsJSON(String key) {
-      TargetResult result = balancer.getTarget(key);
+      TargetResult result = connectionRouter.getTarget(key);
       if (TargetResult.Status.OK == result.getStatus()) {
          TransportConfiguration connector = result.getTarget().getConnector();
 
@@ -109,22 +109,22 @@ public class ConnectionRouterControlImpl extends AbstractControl implements Conn
 
    @Override
    public void setLocalTargetFilter(String regExp) {
-      balancer.setLocalTargetFilter(regExp);
+      connectionRouter.setLocalTargetFilter(regExp);
    }
 
    @Override
    public String getLocalTargetFilter() {
-      return balancer.getLocalTargetFilter();
+      return connectionRouter.getLocalTargetFilter();
    }
 
    @Override
    public void setTargetKeyFilter(String regExp) {
-      balancer.getTargetKeyResolver().setKeyFilter(regExp);
+      connectionRouter.getTargetKeyResolver().setKeyFilter(regExp);
    }
 
    @Override
    public String getTargetKeyFilter() {
-      return balancer.getTargetKeyResolver().getKeyFilter();
+      return connectionRouter.getTargetKeyResolver().getKeyFilter();
    }
 
    @Override

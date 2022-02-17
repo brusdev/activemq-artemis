@@ -958,7 +958,7 @@ public interface ActiveMQServer extends ServiceComponent {
 
    void reloadConfigurationFile() throws Exception;
 
-   ConnectionRouterManager getBalancerManager();
+   ConnectionRouterManager getConnectionRouterManager();
 
    String validateUser(String username, String password, RemotingConnection connection, String securityDomain) throws Exception;
 

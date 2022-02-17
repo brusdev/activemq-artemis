@@ -22,7 +22,7 @@ The pool is a group of target brokers with periodic checks on their state.
 It provides a list of ready target brokers to distribute incoming client connections only when it is active.
 A pool becomes active when the minimum number of target brokers, as defined by the `quorum-size` parameter, become ready.
 When it is not active, it doesn't provide any target avoiding weird distribution at startup or after a restart.
-Including the local broker in the target pool allows broker hosting the balancer to accept incoming client connections as well.
+Including the local broker in the target pool allows broker hosting the router to accept incoming client connections as well.
 By default, a pool doesn't include the local broker, to include it as a target the `local-target-enabled` parameter must be `true`.
 There are three pool types: [cluster pool](#cluster-pool), [discovery pool](#discovery-pool) and [static pool](#static-pool).
 
@@ -123,7 +123,7 @@ can map exclusively to just one of the brokers. The included transformers are:
 
 ## Defining connection routers
 A connection router is defined by the `connection-router` element, it includes the following items:
-* the `name` attribute defines the name of the connection router and is used to reference the balancer from an acceptor;
+* the `name` attribute defines the name of the connection router and is used to reference the router from an acceptor;
 * the `key-type` element defines what type of key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [Keys](#keys) for further details;
 * the `key-filter` element defines a regular expression to filter the resolved keys;
 * the `local-target-filter` element defines a regular expression to match the keys that have to return a local target;
@@ -139,7 +139,7 @@ Let's take a look at some connection router examples from broker.xml:
          <key-filter>^.{3}</key-filter>
          <local-target-filter>^FOO.*</local-target-filter>
     </connection-router>
-    <connection-router name="simple-balancer">
+    <connection-router name="simple-router">
         <policy name="FIRST_ELEMENT"/>
         <pool>
             <static-connectors>
@@ -149,7 +149,7 @@ Let's take a look at some connection router examples from broker.xml:
             </static-connectors>
         </pool>
     </connection-router>
-    <connection-router name="consistent-hash-balancer">
+    <connection-router name="consistent-hash-router">
         <key-type>USER_NAME</key-type>
         <local-target-filter>admin</local-target-filter>
         <policy name="CONSISTENT_HASH"/>
@@ -159,7 +159,7 @@ Let's take a look at some connection router examples from broker.xml:
         </pool>
     <policy name="CONSISTENT_HASH"/>
     </connection-router>
-    <connection-router name="evenly-balancer">
+    <connection-router name="evenly-router">
       <key-type>CLIENT_ID</key-type>
       <key-filter>^.{3}</key-filter>
       <policy name="LEAST_CONNECTIONS"/>
@@ -172,7 +172,7 @@ Let's take a look at some connection router examples from broker.xml:
 </connection-routers>
 ```
 
-## Connection Routers Workflow
+## Connection Router Workflow
 The connection router workflow include the following steps:
 * Retrieve the key value from the incoming connection;
 * Return the local target broker if the key value matches the local filter;
@@ -184,10 +184,10 @@ The connection router workflow include the following steps:
 * Return the selected broker.
 
 Let's take a look at flowchart of the connection router workflow:
-![Connection Routers Workflow](images/broker_balancer_workflow.png)
+![Connection Router Workflow](images/connection_router_workflow.png)
 
 ## Data gravity
-The first balancer configuration: `local-partition`, demonstrates the simplest use case,
+The first router configuration: `local-partition`, demonstrates the simplest use case,
 that of preserving `data gravity` by confining a subset of application data to a given broker.
 Each broker is given a subset of keys that it will exclusively service or reject.
 If brokers are behind a round-robin load-balancer or have full knowledge of the broker
@@ -209,10 +209,10 @@ Apache ActiveMQ Artemis provides a native redirection for supported clients and 
 The native redirection can be enabled per acceptor and is supported only for AMQP, CORE and OPENWIRE clients.
 The acceptor with the `router` url parameter will redirect the incoming connections.
 The `router` url parameter specifies the name of the connection router to use,
-ie the following acceptor will redirect the incoming CORE client connections using the connection router with the name `simple-balancer`:
+ie the following acceptor will redirect the incoming CORE client connections using the connection router with the name `simple-router`:
 
 ```xml
-<acceptor name="artemis">tcp://0.0.0.0:61616?router=simple-balancer;protocols=CORE</acceptor>
+<acceptor name="artemis">tcp://0.0.0.0:61616?router=simple-router;protocols=CORE</acceptor>
 ```
 ### Native Redirect Sequence
 

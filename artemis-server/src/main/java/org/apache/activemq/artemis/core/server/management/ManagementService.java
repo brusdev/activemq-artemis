@@ -128,7 +128,7 @@ public interface ManagementService extends NotificationService, ActiveMQComponen
 
    void unregisterCluster(String name) throws Exception;
 
-   void registerConnectionRouter(ConnectionRouter balancer) throws Exception;
+   void registerConnectionRouter(ConnectionRouter router) throws Exception;
 
    void unregisterConnectionRouter(String name) throws Exception;
 

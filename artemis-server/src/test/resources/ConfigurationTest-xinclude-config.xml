@@ -158,7 +158,7 @@
                <property key="modulo" value="2"></property>
             </local-target-key-transformer>
          </connection-router>
-         <connection-router name="simple-balancer">
+         <connection-router name="simple-router">
             <key-type>USER_NAME</key-type>
             <policy name="FIRST_ELEMENT"/>
             <pool>
@@ -167,7 +167,7 @@
                </static-connectors>
             </pool>
          </connection-router>
-         <connection-router name="consistent-hash-balancer">
+         <connection-router name="consistent-hash-router">
             <key-type>SNI_HOST</key-type>
             <key-filter>^[^.]+</key-filter>
             <local-target-filter>DEFAULT</local-target-filter>
@@ -178,7 +178,7 @@
                <discovery-group-ref discovery-group-name="dg1"/>
             </pool>
          </connection-router>
-         <connection-router name="least-connections-balancer">
+         <connection-router name="least-connections-router">
             <cache>
                <persisted>true</persisted>
                <timeout>60000</timeout>

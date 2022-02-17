@@ -19,16 +19,16 @@ package org.apache.activemq.artemis.api.core;
 /**
  * A client was redirected.
  */
-public final class ActiveMQRedirectedException extends ActiveMQException {
+public final class ActiveMQRoutingException extends ActiveMQException {
 
    private static final long serialVersionUID = 7414966383933311627L;
 
-   public ActiveMQRedirectedException() {
-      super(ActiveMQExceptionType.REDIRECTED);
+   public ActiveMQRoutingException() {
+      super(ActiveMQExceptionType.ROUTING_EXCEPTION);
    }
 
-   public ActiveMQRedirectedException(String message) {
-      super(ActiveMQExceptionType.REDIRECTED, message);
+   public ActiveMQRoutingException(String message) {
+      super(ActiveMQExceptionType.ROUTING_EXCEPTION, message);
    }
 }
 

@@ -84,11 +84,11 @@ public class RedirectTest extends RoutingTestBase {
       if (CLUSTER_POOL.equals(pool)) {
          setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
-         setupBalancerServerWithCluster(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
+         setupRouterServerWithCluster(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+         setupRouterServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       } else {
-         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
+         setupRouterServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1);
       }
 
       startServers(0, 1);
@@ -179,15 +179,15 @@ public class RedirectTest extends RoutingTestBase {
          for (int node : nodes) {
             setupDiscoveryClusterConnection("cluster" + node, node, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          }
-         setupBalancerServerWithCluster(0, KeyType.USER_NAME, policyName, properties, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", targets, "cluster0");
+         setupRouterServerWithCluster(0, KeyType.USER_NAME, policyName, properties, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", targets, "cluster0");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, policyName, properties, false, null, targets);
+         setupRouterServerWithDiscovery(0, KeyType.USER_NAME, policyName, properties, false, null, targets);
       } else {
-         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, policyName, properties, false, null, targets, 1, 2, 3);
+         setupRouterServerWithStaticConnectors(0, KeyType.USER_NAME, policyName, properties, false, null, targets, 1, 2, 3);
       }
 
       if (withFailure) {
-         setupBalancerLocalCache(0, true, 0);
+         setupRouterLocalCache(0, true, 0);
       }
 
       startServers(nodes);
@@ -265,14 +265,14 @@ public class RedirectTest extends RoutingTestBase {
       if (CLUSTER_POOL.equals(pool)) {
          setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
-         setupBalancerServerWithCluster(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster0");
-         setupBalancerServerWithCluster(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster1");
+         setupRouterServerWithCluster(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster0");
+         setupRouterServerWithCluster(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, "ACTIVEMQ.CLUSTER.ADMIN.USER", 2, "cluster1");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
-         setupBalancerServerWithDiscovery(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
+         setupRouterServerWithDiscovery(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
+         setupRouterServerWithDiscovery(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2);
       } else {
-         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 1);
-         setupBalancerServerWithStaticConnectors(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 0);
+         setupRouterServerWithStaticConnectors(0, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 1);
+         setupRouterServerWithStaticConnectors(1, KeyType.USER_NAME, ConsistentHashPolicy.NAME, null, true, null, 2, 0);
       }
 
       startServers(0, 1);
@@ -340,11 +340,11 @@ public class RedirectTest extends RoutingTestBase {
          setupDiscoveryClusterConnection("cluster0", 0, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster1", 1, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
          setupDiscoveryClusterConnection("cluster2", 2, "dg1", "queues", MessageLoadBalancingType.OFF, 1, true);
-         setupBalancerServerWithCluster(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
+         setupRouterServerWithCluster(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, "ACTIVEMQ.CLUSTER.ADMIN.USER", 1, "cluster0");
       } else if (DISCOVERY_POOL.equals(pool)) {
-         setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+         setupRouterServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
       } else {
-         setupBalancerServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1, 2);
+         setupRouterServerWithStaticConnectors(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1, 1, 2);
       }
 
       startServers(0, 1, 2);

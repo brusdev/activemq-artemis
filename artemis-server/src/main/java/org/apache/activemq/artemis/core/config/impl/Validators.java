@@ -280,7 +280,7 @@ public final class Validators {
       public void validate(final String name, final Object value) {
          String val = (String) value;
          if (val == null || !EnumSet.allOf(KeyType.class).contains(KeyType.valueOf(val))) {
-            throw ActiveMQMessageBundle.BUNDLE.invalidTargetKey(val);
+            throw ActiveMQMessageBundle.BUNDLE.invalidConnectionRouterKey(val);
          }
       }
    };

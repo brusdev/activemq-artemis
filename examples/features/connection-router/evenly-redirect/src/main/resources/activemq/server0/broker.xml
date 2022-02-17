@@ -46,7 +46,7 @@ under the License.
 
       <acceptors>
          <!-- Acceptor for every supported protocol -->
-         <acceptor name="artemis">tcp://0.0.0.0:61616?router=evenly-balancer;tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true</acceptor>
+         <acceptor name="artemis">tcp://0.0.0.0:61616?router=evenly-router;tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true</acceptor>
       </acceptors>
 
       <connectors>
@@ -55,7 +55,7 @@ under the License.
       </connectors>
 
       <connection-routers>
-         <connection-router name="evenly-balancer">
+         <connection-router name="evenly-router">
             <key-type>CLIENT_ID</key-type>
             <key-filter>^.{3}</key-filter>
             <local-target-filter>DEFAULT</local-target-filter>

@@ -19,7 +19,7 @@ package org.apache.activemq.artemis.core.server.routing.transformer;
 
 import java.util.HashMap;
 
-import org.apache.activemq.artemis.core.server.routing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyResolver;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,7 @@ public class ConsistentHashModuloTest {
    public void transform() {
       ConsistentHashModulo underTest = new ConsistentHashModulo();
 
-      assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, underTest.transform(TargetKeyResolver.DEFAULT_KEY_VALUE));
+      assertEquals(KeyResolver.DEFAULT_KEY_VALUE, underTest.transform(KeyResolver.DEFAULT_KEY_VALUE));
 
       assertEquals("AA", underTest.transform("AA")); // default modulo 0 does nothing
 

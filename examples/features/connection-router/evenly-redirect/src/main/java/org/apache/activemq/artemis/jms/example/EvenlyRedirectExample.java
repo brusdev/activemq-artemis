@@ -71,7 +71,7 @@ public class EvenlyRedirectExample {
        * Step 2. create a connection for consumer0 and consumer1, and receive a few messages.
        * the server0 will redirect the connection to the same target broker of the respective producer
        * because the consumer and the producer connections have the same clientID prefix, which
-       * the balancer configuration filters the target key on and caches the target broker the policy selects.
+       * the router configuration filters the target key on and caches the target broker the policy selects.
        */
       ConnectionFactory connectionFactoryConsumer0 = new ActiveMQConnectionFactory("tcp://localhost:61616?ha=true&reconnectAttempts=30&clientID=BAR_CONSUMER");
       ConnectionFactory connectionFactoryConsumer1 = new ActiveMQConnectionFactory("tcp://localhost:61616?ha=true&reconnectAttempts=30&clientID=FOO_CONSUMER");

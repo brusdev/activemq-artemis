@@ -106,7 +106,7 @@ public class KeyTypeTest extends RoutingTestBase {
    @Test
    public void testClientIDKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, KeyType.CLIENT_ID, MOCK_POLICY_NAME, null, true, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.CLIENT_ID, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -141,7 +141,7 @@ public class KeyTypeTest extends RoutingTestBase {
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PATH_PROP_NAME, "server-keystore.jks");
       getDefaultServerAcceptor(0).getParams().put(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "securepass");
 
-      setupBalancerServerWithDiscovery(0, KeyType.SNI_HOST, MOCK_POLICY_NAME, null, true, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.SNI_HOST, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, true, localHostname,
@@ -158,7 +158,7 @@ public class KeyTypeTest extends RoutingTestBase {
    @Test
    public void testSourceIPKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, KeyType.SOURCE_IP, MOCK_POLICY_NAME, null, true, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.SOURCE_IP, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -175,7 +175,7 @@ public class KeyTypeTest extends RoutingTestBase {
    @Test
    public void testUserNameKey() throws Exception {
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, MOCK_POLICY_NAME, null, true, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.USER_NAME, MOCK_POLICY_NAME, null, true, null, 1);
       startServers(0);
 
       ConnectionFactory connectionFactory = createFactory(protocol, false, TransportConstants.DEFAULT_HOST,
@@ -194,7 +194,7 @@ public class KeyTypeTest extends RoutingTestBase {
 
       ActiveMQJAASSecurityManager securityManager = new ActiveMQJAASSecurityManager("PropertiesLogin");
       servers[0] = addServer(ActiveMQServers.newActiveMQServer(createDefaultConfig(true).setSecurityEnabled(true), ManagementFactory.getPlatformMBeanServer(), securityManager, false));
-      setupBalancerServerWithLocalTarget(0, KeyType.ROLE_NAME, "b", "b");
+      setupRouterServerWithLocalTarget(0, KeyType.ROLE_NAME, "b", "b");
 
       // ensure advisory permission is present for openwire connection creation by 'b'
       HierarchicalRepository<Set<Role>> securityRepository = servers[0].getSecurityRepository();

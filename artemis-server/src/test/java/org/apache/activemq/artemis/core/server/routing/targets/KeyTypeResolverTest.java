@@ -43,11 +43,11 @@ public class KeyTypeResolverTest {
    }
 
    private void testClientIDKey(String expected, String clientID, String filter) {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.CLIENT_ID, filter);
+      KeyResolver keyResolver = new KeyResolver(KeyType.CLIENT_ID, filter);
 
-      Assert.assertEquals(expected, targetKeyResolver.resolve(null, clientID, null));
+      Assert.assertEquals(expected, keyResolver.resolve(null, clientID, null));
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(null, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(null, null, null));
    }
 
    @Test
@@ -63,15 +63,15 @@ public class KeyTypeResolverTest {
    private void testSNIHostKey(String expected, String sniHost, String filter) {
       Connection connection = Mockito.mock(Connection.class);
 
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.SNI_HOST, filter);
+      KeyResolver keyResolver = new KeyResolver(KeyType.SNI_HOST, filter);
 
       Mockito.when(connection.getSNIHostName()).thenReturn(sniHost);
-      Assert.assertEquals(expected, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(expected, keyResolver.resolve(connection, null, null));
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(null, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(null, null, null));
 
       Mockito.when(connection.getSNIHostName()).thenReturn(null);
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(null, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(null, null, null));
    }
 
    @Test
@@ -87,15 +87,15 @@ public class KeyTypeResolverTest {
    private void testSourceIPKey(String expected, String remoteAddress, String filter) {
       Connection connection = Mockito.mock(Connection.class);
 
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.SOURCE_IP, filter);
+      KeyResolver keyResolver = new KeyResolver(KeyType.SOURCE_IP, filter);
 
       Mockito.when(connection.getRemoteAddress()).thenReturn(remoteAddress);
-      Assert.assertEquals(expected, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(expected, keyResolver.resolve(connection, null, null));
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(null, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(null, null, null));
 
       Mockito.when(connection.getRemoteAddress()).thenReturn(null);
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(null, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(null, null, null));
    }
 
    @Test
@@ -109,71 +109,71 @@ public class KeyTypeResolverTest {
    }
 
    private void testUserNameKey(String expected, String username, String filter) {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.USER_NAME, filter);
+      KeyResolver keyResolver = new KeyResolver(KeyType.USER_NAME, filter);
 
-      Assert.assertEquals(expected, targetKeyResolver.resolve(null, null, username));
+      Assert.assertEquals(expected, keyResolver.resolve(null, null, username));
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(null, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(null, null, null));
    }
 
    @Test
    public void testRoleNameKeyWithFilter() throws Exception {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.ROLE_NAME, "B");
+      KeyResolver keyResolver = new KeyResolver(KeyType.ROLE_NAME, "B");
 
       Connection connection = Mockito.mock(Connection.class);
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       RemotingConnection protocolConnection = Mockito.mock(RemotingConnection.class);
       Mockito.when(connection.getProtocolConnection()).thenReturn(protocolConnection);
       Subject subject = Mockito.mock(Subject.class);
       Mockito.when(protocolConnection.getAuditSubject()).thenReturn(subject);
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       Set<RolePrincipal> rolePrincipals = new HashSet<>();
       Mockito.when(subject.getPrincipals(RolePrincipal.class)).thenReturn(rolePrincipals);
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       rolePrincipals.add(new RolePrincipal("A"));
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       rolePrincipals.add(new RolePrincipal("B"));
 
-      Assert.assertEquals("B", targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals("B", keyResolver.resolve(connection, null, null));
    }
 
    @Test
    public void testRoleNameKeyWithoutFilter() throws Exception {
-      TargetKeyResolver targetKeyResolver = new TargetKeyResolver(KeyType.ROLE_NAME, null);
+      KeyResolver keyResolver = new KeyResolver(KeyType.ROLE_NAME, null);
 
       Connection connection = Mockito.mock(Connection.class);
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       RemotingConnection protocolConnection = Mockito.mock(RemotingConnection.class);
       Mockito.when(connection.getProtocolConnection()).thenReturn(protocolConnection);
       Subject subject = Mockito.mock(Subject.class);
       Mockito.when(protocolConnection.getAuditSubject()).thenReturn(subject);
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       Set<RolePrincipal> rolePrincipals = new ListOrderedSet();
       Mockito.when(subject.getPrincipals(RolePrincipal.class)).thenReturn(rolePrincipals);
 
-      Assert.assertEquals(TargetKeyResolver.DEFAULT_KEY_VALUE, targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals(KeyResolver.DEFAULT_KEY_VALUE, keyResolver.resolve(connection, null, null));
 
       final RolePrincipal roleA = new RolePrincipal("A");
       rolePrincipals.add(roleA);
 
-      Assert.assertEquals("A", targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals("A", keyResolver.resolve(connection, null, null));
 
       rolePrincipals.add(new RolePrincipal("B"));
 
-      Assert.assertEquals("A", targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals("A", keyResolver.resolve(connection, null, null));
 
       rolePrincipals.remove(roleA);
       // with no filter, the first entry matches
-      Assert.assertEquals("B", targetKeyResolver.resolve(connection, null, null));
+      Assert.assertEquals("B", keyResolver.resolve(connection, null, null));
    }
 }

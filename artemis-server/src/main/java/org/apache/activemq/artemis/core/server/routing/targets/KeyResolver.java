@@ -26,11 +26,11 @@ import org.jboss.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TargetKeyResolver {
+public class KeyResolver {
    public static final String DEFAULT_KEY_VALUE = "DEFAULT";
 
 
-   private static final Logger logger = Logger.getLogger(TargetKeyResolver.class);
+   private static final Logger logger = Logger.getLogger(KeyResolver.class);
 
    private static final char SOCKET_ADDRESS_DELIMITER = ':';
    private static final String SOCKET_ADDRESS_PREFIX = "/";
@@ -49,7 +49,7 @@ public class TargetKeyResolver {
       return keyFilter != null ? keyFilter.pattern() : null;
    }
 
-   public TargetKeyResolver(KeyType key, String keyFilter) {
+   public KeyResolver(KeyType key, String keyFilter) {
       this.key = key;
       setKeyFilter(keyFilter);
    }

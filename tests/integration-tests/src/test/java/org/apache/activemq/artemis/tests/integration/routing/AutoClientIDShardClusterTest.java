@@ -40,7 +40,7 @@ import org.apache.activemq.artemis.core.config.routing.ConnectionRouterConfigura
 import org.apache.activemq.artemis.core.config.routing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.protocol.openwire.OpenWireProtocolManagerFactory;
 import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
-import org.apache.activemq.artemis.core.server.routing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyResolver;
 import org.apache.activemq.artemis.core.server.routing.transformer.ConsistentHashModulo;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
@@ -226,7 +226,7 @@ public class AutoClientIDShardClusterTest extends RoutingTestBase {
    public void testWithConsistentHashClientIDModTwo() throws Exception {
       setupServers();
 
-      addBalancerWithClientIdConsistentHashMod();
+      addRouterWithClientIdConsistentHashMod();
 
       startServers(0, 1);
 
@@ -270,12 +270,12 @@ public class AutoClientIDShardClusterTest extends RoutingTestBase {
       }
    }
 
-   private void addBalancerWithClientIdConsistentHashMod() {
+   private void addRouterWithClientIdConsistentHashMod() {
       final int numberOfNodes = 2;
       for (int node = 0; node < numberOfNodes; node++) {
          Configuration configuration = servers[node].getConfiguration();
          ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
-         connectionRouterConfiguration.setKeyType(KeyType.CLIENT_ID).setLocalTargetFilter(TargetKeyResolver.DEFAULT_KEY_VALUE + "|" + node);
+         connectionRouterConfiguration.setKeyType(KeyType.CLIENT_ID).setLocalTargetFilter(KeyResolver.DEFAULT_KEY_VALUE + "|" + node);
          NamedPropertyConfiguration transformerConfig = new NamedPropertyConfiguration();
          transformerConfig.setName(ConsistentHashModulo.NAME);
          HashMap<String, String> properties = new HashMap<>();

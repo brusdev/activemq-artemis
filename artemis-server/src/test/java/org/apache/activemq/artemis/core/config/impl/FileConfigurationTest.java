@@ -282,14 +282,14 @@ public class FileConfigurationTest extends ConfigurationImplTest {
             Assert.assertNull(bc.getPolicyConfiguration());
             Assert.assertNotNull(bc.getTransformerConfiguration());
             Assert.assertNotNull(bc.getTransformerConfiguration().getProperties().get(MODULO));
-         } else if (bc.getName().equals("simple-balancer")) {
+         } else if (bc.getName().equals("simple-router")) {
             Assert.assertEquals(bc.getKeyType(), KeyType.USER_NAME);
             Assert.assertNull(bc.getLocalTargetFilter());
             Assert.assertEquals(bc.getPolicyConfiguration().getName(), FirstElementPolicy.NAME);
             Assert.assertEquals(false, bc.getPoolConfiguration().isLocalTargetEnabled());
             Assert.assertEquals("connector1", bc.getPoolConfiguration().getStaticConnectors().get(0));
             Assert.assertEquals(null, bc.getPoolConfiguration().getDiscoveryGroupName());
-         } else if (bc.getName().equals("consistent-hash-balancer")) {
+         } else if (bc.getName().equals("consistent-hash-router")) {
             Assert.assertEquals(bc.getKeyType(), KeyType.SNI_HOST);
             Assert.assertEquals(bc.getKeyFilter(), "^[^.]+");
             Assert.assertEquals(bc.getLocalTargetFilter(), "DEFAULT");
@@ -300,7 +300,7 @@ public class FileConfigurationTest extends ConfigurationImplTest {
             Assert.assertEquals("dg1", bc.getPoolConfiguration().getDiscoveryGroupName());
          } else {
             Assert.assertEquals(bc.getKeyType(), KeyType.SOURCE_IP);
-            Assert.assertEquals("least-connections-balancer", bc.getName());
+            Assert.assertEquals("least-connections-router", bc.getName());
             Assert.assertNotNull(bc.getCacheConfiguration());
             Assert.assertEquals(true, bc.getCacheConfiguration().isPersisted());
             Assert.assertEquals(60000, bc.getCacheConfiguration().getTimeout());

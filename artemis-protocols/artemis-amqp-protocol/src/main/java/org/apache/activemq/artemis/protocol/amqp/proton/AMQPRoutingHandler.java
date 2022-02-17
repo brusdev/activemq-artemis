@@ -26,6 +26,7 @@ import org.apache.qpid.proton.amqp.transport.ConnectionError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,36 +37,36 @@ public class AMQPRoutingHandler extends RoutingHandler<AMQPRoutingContext> {
    }
 
 
-   public boolean redirect(AMQPConnectionContext connectionContext, Connection protonConnection) throws Exception {
-      return redirect(new AMQPRoutingContext(connectionContext, protonConnection));
+   public boolean handle(AMQPConnectionContext connectionContext, Connection protonConnection) throws Exception {
+      return handle(new AMQPRoutingContext(connectionContext, protonConnection));
    }
 
    @Override
-   protected void cannotRedirect(AMQPRoutingContext context) {
+   protected void refuse(AMQPRoutingContext context) {
       ErrorCondition error = new ErrorCondition();
       error.setCondition(ConnectionError.CONNECTION_FORCED);
       switch (context.getResult().getStatus()) {
          case REFUSED_USE_ANOTHER:
-            error.setDescription(String.format("Broker balancer %s, rejected this connection", context.getConnection().getTransportConnection().getRedirectTo()));
+            error.setDescription(String.format("Connection router %s rejected this connection", context.getRouter()));
             break;
          case REFUSED_UNAVAILABLE:
-            error.setDescription(String.format("Broker balancer %s is not ready to redirect", context.getConnection().getTransportConnection().getRedirectTo()));
+            error.setDescription(String.format("Connection router %s is not ready", context.getRouter()));
             break;
       }
 
       Connection protonConnection = context.getProtonConnection();
       protonConnection.setCondition(error);
-      addConnectionOpenFailureHint(protonConnection);
+      protonConnection.setProperties(Collections.singletonMap(AmqpSupport.CONNECTION_OPEN_FAILED, true));
    }
 
    @Override
-   protected void redirectTo(AMQPRoutingContext context) {
+   protected void redirect(AMQPRoutingContext context) {
       String host = ConfigurationHelper.getStringProperty(TransportConstants.HOST_PROP_NAME, TransportConstants.DEFAULT_HOST, context.getTarget().getConnector().getParams());
       int port = ConfigurationHelper.getIntProperty(TransportConstants.PORT_PROP_NAME, TransportConstants.DEFAULT_PORT, context.getTarget().getConnector().getParams());
 
       ErrorCondition error = new ErrorCondition();
       error.setCondition(ConnectionError.REDIRECT);
-      error.setDescription(String.format("Connection redirected to %s:%d by connection router %s", host, port, context.getConnection().getTransportConnection().getRedirectTo()));
+      error.setDescription(String.format("Connection router %s redirected this connection to %s:%d", host, port, context.getRouter()));
       Map<Symbol, Object>  info = new HashMap<>();
       info.put(AmqpSupport.NETWORK_HOST, host);
       info.put(AmqpSupport.PORT, port);
@@ -73,13 +74,6 @@ public class AMQPRoutingHandler extends RoutingHandler<AMQPRoutingContext> {
 
       Connection protonConnection = context.getProtonConnection();
       protonConnection.setCondition(error);
-      addConnectionOpenFailureHint(protonConnection);
-   }
-
-   private void addConnectionOpenFailureHint(Connection connection) {
-      Map<Symbol, Object> connProps = new HashMap<>();
-      connProps.put(AmqpSupport.CONNECTION_OPEN_FAILED, true);
-
-      connection.setProperties(connProps);
+      protonConnection.setProperties(Collections.singletonMap(AmqpSupport.CONNECTION_OPEN_FAILED, true));
    }
 }

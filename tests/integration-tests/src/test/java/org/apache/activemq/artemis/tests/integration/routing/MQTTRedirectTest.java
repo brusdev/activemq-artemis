@@ -66,7 +66,7 @@ public class MQTTRedirectTest extends RoutingTestBase {
 
       setupLiveServerWithDiscovery(0, GROUP_ADDRESS, GROUP_PORT, true, true, false);
       setupLiveServerWithDiscovery(1, GROUP_ADDRESS, GROUP_PORT, true, true, false);
-      setupBalancerServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
+      setupRouterServerWithDiscovery(0, KeyType.USER_NAME, FirstElementPolicy.NAME, null, false, null, 1);
 
       startServers(0, 1);
 
@@ -137,7 +137,7 @@ public class MQTTRedirectTest extends RoutingTestBase {
 
       ActiveMQJAASSecurityManager securityManager = new ActiveMQJAASSecurityManager("PropertiesLogin");
       servers[0] = addServer(ActiveMQServers.newActiveMQServer(createDefaultConfig(true).setSecurityEnabled(true), ManagementFactory.getPlatformMBeanServer(), securityManager, false));
-      setupBalancerServerWithLocalTarget(0, KeyType.ROLE_NAME, "b", "b");
+      setupRouterServerWithLocalTarget(0, KeyType.ROLE_NAME, "b", "b");
 
       startServers(0);
 

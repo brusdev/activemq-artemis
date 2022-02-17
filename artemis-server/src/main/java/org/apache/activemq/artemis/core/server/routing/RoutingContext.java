@@ -20,6 +20,7 @@ package org.apache.activemq.artemis.core.server.routing;
 import org.apache.activemq.artemis.core.server.routing.targets.Target;
 import org.apache.activemq.artemis.core.server.routing.targets.TargetResult;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
+import org.apache.activemq.artemis.spi.core.remoting.Connection;
 
 public class RoutingContext {
    private final RemotingConnection connection;
@@ -32,6 +33,14 @@ public class RoutingContext {
 
    public RemotingConnection getConnection() {
       return connection;
+   }
+
+   public String getRouter() {
+      return connection.getTransportConnection().getRouter();
+   }
+
+   public Connection getTransportConnection() {
+      return connection.getTransportConnection();
    }
 
    public String getClientID() {

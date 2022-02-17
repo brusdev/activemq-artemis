@@ -72,7 +72,7 @@ public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQ
 
    private int maximumPacketSize = MQTTUtil.DEFAULT_MAXIMUM_PACKET_SIZE;
 
-   private final MQTTRoutingHandler redirectHandler;
+   private final MQTTRoutingHandler routingHandler;
 
    MQTTProtocolManager(ActiveMQServer server,
                        List<BaseInterceptor> incomingInterceptors,
@@ -80,7 +80,7 @@ public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQ
       this.server = server;
       this.updateInterceptors(incomingInterceptors, outgoingInterceptors);
       server.getManagementService().addNotificationListener(this);
-      redirectHandler = new MQTTRoutingHandler(server);
+      routingHandler = new MQTTRoutingHandler(server);
    }
 
    public int getDefaultMqttSessionExpiryInterval() {
@@ -315,8 +315,8 @@ public class MQTTProtocolManager extends AbstractProtocolManager<MqttMessage, MQ
    }
 
    @Override
-   public MQTTRoutingHandler getRedirectHandler() {
-      return redirectHandler;
+   public MQTTRoutingHandler getRoutingHandler() {
+      return routingHandler;
    }
 
    public String invokeIncoming(MqttMessage mqttMessage, MQTTConnection connection) {

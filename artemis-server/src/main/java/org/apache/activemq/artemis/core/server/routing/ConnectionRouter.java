@@ -24,7 +24,7 @@ import org.apache.activemq.artemis.core.server.routing.policies.Policy;
 import org.apache.activemq.artemis.core.server.routing.pools.Pool;
 import org.apache.activemq.artemis.core.server.routing.targets.Target;
 import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
-import org.apache.activemq.artemis.core.server.routing.targets.TargetKeyResolver;
+import org.apache.activemq.artemis.core.server.routing.targets.KeyResolver;
 import org.apache.activemq.artemis.core.server.routing.targets.TargetResult;
 import org.apache.activemq.artemis.core.server.routing.transformer.KeyTransformer;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
@@ -43,7 +43,7 @@ public class ConnectionRouter implements ActiveMQComponent {
 
    private final KeyType keyType;
 
-   private final TargetKeyResolver targetKeyResolver;
+   private final KeyResolver keyResolver;
 
    private final TargetResult localTarget;
 
@@ -108,7 +108,7 @@ public class ConnectionRouter implements ActiveMQComponent {
 
       this.transformer = transformer;
 
-      this.targetKeyResolver = new TargetKeyResolver(keyType, targetKeyFilter);
+      this.keyResolver = new KeyResolver(keyType, targetKeyFilter);
 
       this.localTarget = new TargetResult(localTarget);
 
@@ -156,7 +156,7 @@ public class ConnectionRouter implements ActiveMQComponent {
          return localTarget;
       }
 
-      return getTarget(targetKeyResolver.resolve(connection, clientID, username));
+      return getTarget(keyResolver.resolve(connection, clientID, username));
    }
 
    public TargetResult getTarget(String key) {
@@ -227,8 +227,8 @@ public class ConnectionRouter implements ActiveMQComponent {
       }
    }
 
-   public TargetKeyResolver getTargetKeyResolver() {
-      return targetKeyResolver;
+   public KeyResolver getTargetKeyResolver() {
+      return keyResolver;
    }
 
    private String transform(String key) {

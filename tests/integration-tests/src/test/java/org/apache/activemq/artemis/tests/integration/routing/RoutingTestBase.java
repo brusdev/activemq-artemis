@@ -80,7 +80,7 @@ public class RoutingTestBase extends ClusterTestBase {
       return defaultServerConnector;
    }
 
-   protected void setupBalancerServerWithCluster(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, String clusterConnection) {
+   protected void setupRouterServerWithCluster(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, String clusterConnection) {
       Configuration configuration = getServer(node).getConfiguration();
       ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
 
@@ -97,7 +97,7 @@ public class RoutingTestBase extends ClusterTestBase {
       acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
    }
 
-   protected void setupBalancerServerWithDiscovery(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
+   protected void setupRouterServerWithDiscovery(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize) {
       Configuration configuration = getServer(node).getConfiguration();
       ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
 
@@ -114,7 +114,7 @@ public class RoutingTestBase extends ClusterTestBase {
       acceptor.getParams().put("router", CONNECTION_ROUTER_NAME);
    }
 
-   protected void setupBalancerServerWithStaticConnectors(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
+   protected void setupRouterServerWithStaticConnectors(final int node, final KeyType keyType, final String policyName, final Map<String, String> properties, final boolean localTargetEnabled, final String localTargetFilter, final int quorumSize, final int... targetNodes) {
       Configuration configuration = getServer(node).getConfiguration();
       ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
 
@@ -139,7 +139,7 @@ public class RoutingTestBase extends ClusterTestBase {
    }
 
 
-   protected void setupBalancerServerWithLocalTarget(final int node, final KeyType keyType, final String targetKeyFilter, final String localTargetFilter) {
+   protected void setupRouterServerWithLocalTarget(final int node, final KeyType keyType, final String targetKeyFilter, final String localTargetFilter) {
 
       Configuration configuration = getServer(node).getConfiguration();
       ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration().setName(CONNECTION_ROUTER_NAME);
@@ -152,11 +152,11 @@ public class RoutingTestBase extends ClusterTestBase {
 
    }
 
-   protected void setupBalancerLocalCache(final int node, boolean persisted, int timeout) {
+   protected void setupRouterLocalCache(final int node, boolean persisted, int timeout) {
 
       Configuration configuration = getServer(node).getConfiguration();
       ConnectionRouterConfiguration connectionRouterConfiguration = configuration.getConnectionRouters().stream()
-         .filter(brokerBalancerConfiguration1 -> brokerBalancerConfiguration1.getName().equals(CONNECTION_ROUTER_NAME)).findFirst().get();
+         .filter(config -> config.getName().equals(CONNECTION_ROUTER_NAME)).findFirst().get();
 
       connectionRouterConfiguration.setCacheConfiguration(
          new CacheConfiguration().setPersisted(persisted).setTimeout(timeout));

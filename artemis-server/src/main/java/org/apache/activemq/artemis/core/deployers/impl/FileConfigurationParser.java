@@ -633,16 +633,16 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          parseDivertConfiguration(dvNode, config);
       }
 
-      NodeList ccBalancers = e.getElementsByTagName("connection-routers");
+      NodeList ccConnectionRouters = e.getElementsByTagName("connection-routers");
 
-      if (ccBalancers != null) {
-         NodeList ccBalancer = e.getElementsByTagName("connection-router");
+      if (ccConnectionRouters != null) {
+         NodeList ccConnectionRouter = e.getElementsByTagName("connection-router");
 
-         if (ccBalancer != null) {
-            for (int i = 0; i < ccBalancer.getLength(); i++) {
-               Element ccNode = (Element) ccBalancer.item(i);
+         if (ccConnectionRouter != null) {
+            for (int i = 0; i < ccConnectionRouter.getLength(); i++) {
+               Element ccNode = (Element) ccConnectionRouter.item(i);
 
-               parseBalancerConfiguration(ccNode, config);
+               parseConnectionRouterConfiguration(ccNode, config);
             }
          }
       }
@@ -2643,7 +2643,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       mainConfig.getDivertConfigurations().add(config);
    }
 
-   private void parseBalancerConfiguration(final Element e, final Configuration config) throws Exception {
+   private void parseConnectionRouterConfiguration(final Element e, final Configuration config) throws Exception {
       ConnectionRouterConfiguration connectionRouterConfiguration = new ConnectionRouterConfiguration();
 
       connectionRouterConfiguration.setName(e.getAttribute("name"));

@@ -143,7 +143,7 @@ public class OpenWireProtocolManager  extends AbstractProtocolManager<Command, O
    private final List<OpenWireInterceptor> incomingInterceptors = new ArrayList<>();
    private final List<OpenWireInterceptor> outgoingInterceptors = new ArrayList<>();
 
-   private final OpenWireRoutingHandler redirectHandler;
+   private final OpenWireRoutingHandler routingHandler;
 
    protected static class VirtualTopicConfig {
       public int filterPathTerminus;
@@ -195,7 +195,7 @@ public class OpenWireProtocolManager  extends AbstractProtocolManager<Command, O
       //make sure we don't cluster advisories
       clusterManager.addProtocolIgnoredAddress(AdvisorySupport.ADVISORY_TOPIC_PREFIX);
 
-      redirectHandler = new OpenWireRoutingHandler(server, this);
+      routingHandler = new OpenWireRoutingHandler(server, this);
    }
 
    /** Is Duplicate detection enabled when used with failover clients. */
@@ -681,8 +681,8 @@ public class OpenWireProtocolManager  extends AbstractProtocolManager<Command, O
    }
 
    @Override
-   public OpenWireRoutingHandler getRedirectHandler() {
-      return redirectHandler;
+   public OpenWireRoutingHandler getRoutingHandler() {
+      return routingHandler;
    }
 
    @Override

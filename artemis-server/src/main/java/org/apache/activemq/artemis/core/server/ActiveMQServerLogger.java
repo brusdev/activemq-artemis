@@ -454,12 +454,12 @@ public interface ActiveMQServerLogger extends BasicLogger {
    void requestedQuorumVotes(int vote);
 
    @LogMessage(level = Logger.Level.INFO)
-   @Message(id = 221085, value = "Redirect {0} to {1}", format = Message.Format.MESSAGE_FORMAT)
-   void redirectClientConnection(Connection connection, Target target);
+   @Message(id = 221085, value = "Route {0} to {1}", format = Message.Format.MESSAGE_FORMAT)
+   void routeClientConnection(Connection connection, Target target);
 
    @LogMessage(level = Logger.Level.INFO)
-   @Message(id = 221086, value = "Cannot redirect {0}", format = Message.Format.MESSAGE_FORMAT)
-   void cannotRedirectClientConnection(Connection connection);
+   @Message(id = 221086, value = "Cannot route {0}", format = Message.Format.MESSAGE_FORMAT)
+   void cannotRouteClientConnection(Connection connection);
 
    @LogMessage(level = Logger.Level.WARN)
    @Message(id = 222000, value = "ActiveMQServer is being finalized and has not been stopped. Please remember to stop the server before letting it go out of scope",
