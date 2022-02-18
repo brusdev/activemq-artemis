@@ -116,7 +116,7 @@ Let's take a look at a cache example from broker.xml:
 ```
 
 ## Key transformers
-A `local-target-key-transformer` allows key value transformation before matching against any local-target-filter. One use case is
+A `key-transformer` allows key value transformation before matching against any local-target-filter. One use case is
 CLIENT_ID sharding across a cluster of N brokers. With a consistent hash % N transformation, each client id
 can map exclusively to just one of the brokers. The included transformers are:
 * `CONSISTENT_HASH_MODULO` that takes a single `modulo` property to configure the bound.
@@ -127,7 +127,7 @@ A connection router is defined by the `connection-router` element, it includes t
 * the `key-type` element defines what type of key to select a target broker, the supported values are: `CLIENT_ID`, `SNI_HOST`, `SOURCE_IP`, `USER_NAME`, `ROLE_NAME`, default is `SOURCE_IP`, see [Keys](#keys) for further details;
 * the `key-filter` element defines a regular expression to filter the resolved keys;
 * the `local-target-filter` element defines a regular expression to match the keys that have to return a local target;
-* the `local-target-key-transformer` element defines a key transformer, see [key transformers](#key-transformers);
+* the `key-transformer` element defines a key transformer, see [key transformers](#key-transformers);
 * the `pool` element defines the pool to group the target brokers, see [pools](#pools);
 * the `policy` element defines the policy used to select the target brokers from the pool, see [policies](#policies).
 

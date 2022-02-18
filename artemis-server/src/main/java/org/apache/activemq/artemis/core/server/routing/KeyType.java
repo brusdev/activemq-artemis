@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.routing.targets;
+package org.apache.activemq.artemis.core.server.routing;
 
 public enum KeyType {
    CLIENT_ID, SNI_HOST, SOURCE_IP, USER_NAME, ROLE_NAME;

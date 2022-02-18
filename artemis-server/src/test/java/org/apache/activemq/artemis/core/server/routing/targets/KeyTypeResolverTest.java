@@ -22,6 +22,8 @@ import javax.security.auth.Subject;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.activemq.artemis.core.server.routing.KeyResolver;
+import org.apache.activemq.artemis.core.server.routing.KeyType;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;

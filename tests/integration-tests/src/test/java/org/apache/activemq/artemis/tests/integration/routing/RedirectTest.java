@@ -38,7 +38,7 @@ import org.apache.activemq.artemis.core.server.routing.policies.ConsistentHashPo
 import org.apache.activemq.artemis.core.server.routing.policies.FirstElementPolicy;
 import org.apache.activemq.artemis.core.server.routing.policies.LeastConnectionsPolicy;
 import org.apache.activemq.artemis.core.server.routing.policies.RoundRobinPolicy;
-import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.KeyType;
 import org.apache.activemq.artemis.core.server.cluster.impl.MessageLoadBalancingType;
 import org.junit.Assert;
 import org.junit.Test;

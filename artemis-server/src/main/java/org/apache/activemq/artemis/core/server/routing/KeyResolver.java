@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.artemis.core.server.routing.targets;
+package org.apache.activemq.artemis.core.server.routing;
 
 import javax.security.auth.Subject;
 

@@ -514,12 +514,12 @@ public interface ActiveMQMessageBundle {
    @Message(id = 229237, value = "Connection router {0} redirected the connection to {1}", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQRoutingException connectionRedirected(String connectionRouter, TransportConfiguration connector);
 
-   @Message(id = 229238, value = "Connection router {0} not ready")
+   @Message(id = 229238, value = "Connection router {0} not ready", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQRoutingException connectionRouterNotReady(String connectionRouter);
 
    @Message(id = 229239, value = "There is no retention configured. In order to use the replay method you must specify journal-retention-directory element on the broker.xml")
    IllegalArgumentException noRetention();
 
-   @Message(id = 229240, value = "Connection router {0} rejected the connection")
+   @Message(id = 229240, value = "Connection router {0} rejected the connection", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQRemoteDisconnectException connectionRejected(String connectionRouter);
 }

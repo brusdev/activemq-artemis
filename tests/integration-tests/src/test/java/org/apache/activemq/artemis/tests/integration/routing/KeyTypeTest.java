@@ -25,7 +25,7 @@ import org.apache.activemq.artemis.core.server.routing.policies.Policy;
 import org.apache.activemq.artemis.core.server.routing.policies.PolicyFactory;
 import org.apache.activemq.artemis.core.server.routing.policies.PolicyFactoryResolver;
 import org.apache.activemq.artemis.core.server.routing.targets.Target;
-import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.KeyType;
 import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.apache.activemq.artemis.tests.integration.security.SecurityTest;

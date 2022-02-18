@@ -31,7 +31,7 @@ import org.apache.activemq.artemis.core.config.routing.CacheConfiguration;
 import org.apache.activemq.artemis.core.config.routing.NamedPropertyConfiguration;
 import org.apache.activemq.artemis.core.config.routing.PoolConfiguration;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.KeyType;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.cluster.distribution.ClusterTestBase;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;

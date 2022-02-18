@@ -21,7 +21,7 @@ import org.apache.activemq.artemis.api.core.JsonUtil;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.management.ConnectionRouterControl;
 import org.apache.activemq.artemis.core.server.routing.policies.FirstElementPolicy;
-import org.apache.activemq.artemis.core.server.routing.targets.KeyType;
+import org.apache.activemq.artemis.core.server.routing.KeyType;
 import org.apache.activemq.artemis.tests.integration.routing.RoutingTestBase;
 import org.junit.After;
 import org.junit.Assert;
