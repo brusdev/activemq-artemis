@@ -164,7 +164,7 @@ public class ConnectionAbstract extends InputAbstract {
          // if a security exception will get the user and password through an input
          context.err.println("Connection failed::" + e.getMessage());
          userPassword();
-         cf = new JmsConnectionFactory(user, password, brokerURL);
+         cf = new JmsConnectionFactory(this.user, this.password, brokerURL);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
@@ -174,7 +174,7 @@ public class ConnectionAbstract extends InputAbstract {
          context.err.println("Connection failed::" + e.getMessage());
          brokerURL = input("--url", "Type in the broker URL for a retry (e.g. tcp://localhost:61616)", brokerURL);
          userPassword();
-         cf = new JmsConnectionFactory(user, password, brokerURL);
+         cf = new JmsConnectionFactory(this.user, this.password, brokerURL);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
@@ -205,7 +205,7 @@ public class ConnectionAbstract extends InputAbstract {
             context.err.println("Connection failed::" + e.getMessage());
          }
          userPassword();
-         cf = new ActiveMQConnectionFactory(brokerURL, user, password);
+         cf = new ActiveMQConnectionFactory(brokerURL, this.user, this.password);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
@@ -217,7 +217,7 @@ public class ConnectionAbstract extends InputAbstract {
          }
          brokerURL = input("--url", "Type in the broker URL for a retry (e.g. tcp://localhost:61616)", brokerURL);
          userPassword();
-         cf = new ActiveMQConnectionFactory(brokerURL, user, password);
+         cf = new ActiveMQConnectionFactory(brokerURL, this.user, this.password);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
