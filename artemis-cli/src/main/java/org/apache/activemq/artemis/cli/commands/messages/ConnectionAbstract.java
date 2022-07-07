@@ -126,26 +126,22 @@ public class ConnectionAbstract extends InputAbstract {
    }
 
    protected ConnectionFactory createConnectionFactory() throws Exception {
-      return createConnectionFactory(brokerURL, user, password, clientID, protocol);
+      return createConnectionFactory(brokerURL, clientID, protocol);
    }
 
    protected ConnectionFactory createConnectionFactory(String brokerURL,
-                                                       String user,
-                                                       String password,
                                                        String clientID,
                                                        String protocol) throws Exception {
       if (protocol.equals("core")) {
-         return createCoreConnectionFactory(brokerURL, user, password, clientID);
+         return createCoreConnectionFactory(brokerURL, clientID);
       } else if (protocol.equals("amqp")) {
-         return createAMQPConnectionFactory(brokerURL, user, password, clientID);
+         return createAMQPConnectionFactory(brokerURL, clientID);
       } else {
          throw new IllegalStateException("protocol " + protocol + " not supported");
       }
    }
 
    private ConnectionFactory createAMQPConnectionFactory(String brokerURL,
-                                                         String user,
-                                                         String password,
                                                          String clientID) {
       if (brokerURL.startsWith("tcp://")) {
          // replacing tcp:// by amqp://
@@ -164,7 +160,7 @@ public class ConnectionAbstract extends InputAbstract {
          // if a security exception will get the user and password through an input
          context.err.println("Connection failed::" + e.getMessage());
          userPassword();
-         cf = new JmsConnectionFactory(this.user, this.password, brokerURL);
+         cf = new JmsConnectionFactory(user, password, brokerURL);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
@@ -174,7 +170,7 @@ public class ConnectionAbstract extends InputAbstract {
          context.err.println("Connection failed::" + e.getMessage());
          brokerURL = input("--url", "Type in the broker URL for a retry (e.g. tcp://localhost:61616)", brokerURL);
          userPassword();
-         cf = new JmsConnectionFactory(this.user, this.password, brokerURL);
+         cf = new JmsConnectionFactory(user, password, brokerURL);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
@@ -183,12 +179,10 @@ public class ConnectionAbstract extends InputAbstract {
    }
 
    protected ActiveMQConnectionFactory createCoreConnectionFactory() {
-      return createCoreConnectionFactory(brokerURL, user, password, clientID);
+      return createCoreConnectionFactory(brokerURL, clientID);
    }
 
    protected ActiveMQConnectionFactory createCoreConnectionFactory(String brokerURL,
-                                                                   String user,
-                                                                   String password,
                                                                    String clientID) {
       ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerURL, user, password);
       if (clientID != null) {
@@ -205,7 +199,7 @@ public class ConnectionAbstract extends InputAbstract {
             context.err.println("Connection failed::" + e.getMessage());
          }
          userPassword();
-         cf = new ActiveMQConnectionFactory(brokerURL, this.user, this.password);
+         cf = new ActiveMQConnectionFactory(brokerURL, user, password);
          if (clientID != null) {
             cf.setClientID(clientID);
          }
@@ -217,7 +211,7 @@ public class ConnectionAbstract extends InputAbstract {
          }
          brokerURL = input("--url", "Type in the broker URL for a retry (e.g. tcp://localhost:61616)", brokerURL);
          userPassword();
-         cf = new ActiveMQConnectionFactory(brokerURL, this.user, this.password);
+         cf = new ActiveMQConnectionFactory(brokerURL, user, password);
          if (clientID != null) {
             cf.setClientID(clientID);
          }

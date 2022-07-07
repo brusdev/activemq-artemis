@@ -65,7 +65,7 @@ public abstract class PerfCommand extends ConnectionAbstract {
    @Override
    public Object execute(ActionContext context) throws Exception {
       super.execute(context);
-      final ConnectionFactory factory = createConnectionFactory(brokerURL, user, password, null, getProtocol());
+      final ConnectionFactory factory = createConnectionFactory(brokerURL, null, getProtocol());
       final Destination[] jmsDestinations = lookupDestinations(factory, destinations, numDestinations);
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
          onInterruptBenchmark();

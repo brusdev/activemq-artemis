@@ -97,7 +97,7 @@ public class PerfClientCommand extends PerfCommand {
    protected void onExecuteBenchmark(final ConnectionFactory producerConnectionFactory, final Destination[] jmsDestinations, final ActionContext context) throws Exception {
       final String listenerProtocol = this.consumerProtocol != null ? this.consumerProtocol : getProtocol();
       final String listenerUrl = this.consumerUrl != null ? this.consumerUrl : brokerURL;
-      final ConnectionFactory consumerConnectionFactory = createConnectionFactory(listenerUrl, user, password, null, listenerProtocol);
+      final ConnectionFactory consumerConnectionFactory = createConnectionFactory(listenerUrl, null, listenerProtocol);
       if (consumerConnections == 0) {
          if (sharedSubscription > 0) {
             if (getClientID() == null) {
