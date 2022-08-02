@@ -608,9 +608,6 @@ public class ConfigurationImplTest extends ActiveMQTestBase {
 
    @Test
    public void testRootPrimitives() throws Exception {
-      List<String> ignoredSetters = new ArrayList<>();
-      ignoredSetters.add("setEnabledAsyncConnectionExecution");
-      ignoredSetters.add("setNetworCheckNIC");
       ConfigurationImpl configuration = new ConfigurationImpl();
       Properties properties = new Properties();
       Method[] declaredMethods = Configuration.class.getDeclaredMethods();
@@ -619,7 +616,9 @@ public class ConfigurationImplTest extends ActiveMQTestBase {
       long nextLong = 1;
       // add random entries for all root primitive bean properties
       for (Method declaredMethod : declaredMethods) {
-         if (!ignoredSetters.contains(declaredMethod.getName()) && declaredMethod.getName().startsWith("set") && declaredMethod.getParameterCount() == 1 && (ClassUtils.isPrimitiveOrWrapper(declaredMethod.getParameters()[0].getType()) || declaredMethod.getParameters()[0].getType().equals(String.class))) {
+         if (declaredMethod.getName().startsWith("set") && declaredMethod.getAnnotation(Deprecated.class) == null &&
+            declaredMethod.getParameterCount() == 1 && (ClassUtils.isPrimitiveOrWrapper(declaredMethod.getParameters()[0].getType())
+            || declaredMethod.getParameters()[0].getType().equals(String.class))) {
             String prop = declaredMethod.getName().substring(3);
             prop = Character.toLowerCase(prop.charAt(0)) +
                     (prop.length() > 1 ? prop.substring(1) : "");
@@ -654,14 +653,9 @@ public class ConfigurationImplTest extends ActiveMQTestBase {
          } else {
             methodName = "get" + methodName;
          }
-         Method declaredMethod = null;
-         try {
-            declaredMethod = ConfigurationImpl.class.getDeclaredMethod(methodName);
-            Object value = declaredMethod.invoke(configuration);
-            Assert.assertEquals(value, properties.get(entry.getKey()));
-         } catch (Exception e) {
-            System.out.println("no method exists for " + methodName);
-         }
+         Method declaredMethod = ConfigurationImpl.class.getDeclaredMethod(methodName);
+         Object value = declaredMethod.invoke(configuration);
+         Assert.assertEquals(value, properties.get(entry.getKey()));
       }
    }
 
