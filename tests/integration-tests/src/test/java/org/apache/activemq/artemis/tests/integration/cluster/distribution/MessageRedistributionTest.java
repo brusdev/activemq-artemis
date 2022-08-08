@@ -746,7 +746,9 @@ public class MessageRedistributionTest extends ClusterTestBase {
    private void internalTestRedistributionWithFqqn(RoutingType routingType) throws Exception {
       final String ADDRESS = "myAddress";
       final String QUEUE = "myQueue";
+      final String QUEUE_EXTRA = "extra";
       final String FQQN = CompositeAddress.toFullyQualified(ADDRESS, QUEUE);
+      final String FQQN_EXTRA = CompositeAddress.toFullyQualified(ADDRESS, QUEUE_EXTRA);
       AddressSettings as = new AddressSettings().setRedistributionDelay(0);
       getServer(0).getAddressSettingsRepository().addMatch(ADDRESS, as);
       getServer(1).getAddressSettingsRepository().addMatch(ADDRESS, as);
@@ -756,22 +758,28 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
       setupSessionFactory(0, isNetty());
       createQueue(0, ADDRESS, QUEUE, null, false, routingType);
-      createQueue(0, ADDRESS, "extra", null, false, routingType);
+      createQueue(0, ADDRESS, QUEUE_EXTRA, null, false, routingType);
       waitForBindings(0, ADDRESS, 2, 0, true);
       waitForBindings(1, ADDRESS, 2, 0, false);
 
       send(0, FQQN, 20, false, null, routingType, null);
+      send(0, FQQN_EXTRA, 20, false, null, routingType, null);
 
       setupSessionFactory(1, isNetty());
       createQueue(1, ADDRESS, QUEUE, null, false, routingType);
-      waitForBindings(0, ADDRESS, 1, 0, false);
-      waitForBindings(1, ADDRESS, 1, 0, true);
+      createQueue(1, ADDRESS, QUEUE_EXTRA, null, false, routingType);
+      waitForBindings(0, ADDRESS, 2, 0, false);
+      waitForBindings(1, ADDRESS, 2, 0, true);
 
       addConsumer(1, 1, FQQN, null);
-      waitForBindings(1, ADDRESS, 1, 1, true);
+      addConsumer(2, 1, FQQN_EXTRA, null);
+      waitForBindings(1, ADDRESS, 2, 2, true);
 
       verifyReceiveAll(20, 1);
       verifyNotReceive(1);
+
+      verifyReceiveAll(20, 2);
+      verifyNotReceive(2);
    }
 
    @Test

@@ -24,7 +24,6 @@ import org.apache.activemq.artemis.core.postoffice.QueueBinding;
 import org.apache.activemq.artemis.core.server.Bindable;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.RoutingContext;
-import org.apache.activemq.artemis.api.core.RoutingType;
 import org.jboss.logging.Logger;
 
 public class LocalQueueBinding implements QueueBinding {
@@ -81,9 +80,9 @@ public class LocalQueueBinding implements QueueBinding {
 
    @Override
    public SimpleString getRoutingName() {
-      if (queue.getRoutingType() == RoutingType.ANYCAST) {
-         return address;
-      }
+      //if (queue.getRoutingType() == RoutingType.ANYCAST) {
+      //   return address;
+      //}
       return name;
    }
 
