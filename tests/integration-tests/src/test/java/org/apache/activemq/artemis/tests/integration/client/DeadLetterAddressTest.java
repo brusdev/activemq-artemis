@@ -35,6 +35,7 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServers;
 import org.apache.activemq.artemis.core.server.Queue;
@@ -269,6 +270,70 @@ public class DeadLetterAddressTest extends ActiveMQTestBase {
       Assert.assertNotNull(m);
       m.acknowledge();
       Assert.assertEquals(m.getBodyBuffer().readString(), "heyho!");
+      clientConsumer.close();
+   }
+
+   @Test
+   public void testDivertToMultipleQueues() throws Exception {
+      SimpleString dla = new SimpleString("DLA");
+      SimpleString dlq = new SimpleString("DLQ1");
+      SimpleString dlq2 = new SimpleString("DLQ2");
+      SimpleString qName = new SimpleString("q1");
+      SimpleString qName2 = new SimpleString("q2");
+      AddressSettings addressSettings = new AddressSettings().setMaxDeliveryAttempts(1).setDeadLetterAddress(SimpleString.toSimpleString("DLA"));
+      server.getAddressSettingsRepository().addMatch("TEST", addressSettings);
+      server.deployDivert(new DivertConfiguration().setName("DLA1").setAddress("DLA").setExclusive(true).setForwardingAddress("DLA::DLQ1").setFilterString("_AMQ_ORIG_QUEUE = 'q1'"));
+      server.deployDivert(new DivertConfiguration().setName("DLA2").setAddress("DLA").setExclusive(true).setForwardingAddress("DLA::DLQ2").setFilterString("_AMQ_ORIG_QUEUE = 'q2'"));
+      clientSession.createQueue(new QueueConfiguration(dlq).setAddress(dla).setDurable(false));
+      clientSession.createQueue(new QueueConfiguration(dlq2).setAddress(dla).setDurable(false));
+      clientSession.createQueue(new QueueConfiguration(qName).setAddress("TEST").setDurable(false));
+      clientSession.createQueue(new QueueConfiguration(qName2).setAddress("TEST").setDurable(false));
+      ClientProducer producer;
+      producer = clientSession.createProducer("TEST");
+      producer.send(createTextMessage(clientSession, "heyho!"));
+      producer.close();
+      ClientConsumer clientConsumer;
+      ClientMessage m;
+      clientSession.start();
+      clientConsumer = clientSession.createConsumer("TEST::q1");
+      m = clientConsumer.receive(500);
+      m.acknowledge();
+      Assert.assertNotNull(m);
+      Assert.assertEquals(m.getBodyBuffer().readString(), "heyho!");
+      // force a cancel
+      clientSession.rollback();
+      m = clientConsumer.receiveImmediate();
+      Assert.assertNull(m);
+      clientConsumer.close();
+      clientConsumer = clientSession.createConsumer(dlq);
+      m = clientConsumer.receive(500);
+      Assert.assertNotNull(m);
+      m.acknowledge();
+      Assert.assertEquals(m.getBodyBuffer().readString(), "heyho!");
+      m = clientConsumer.receive(500);
+      Assert.assertNull(m);
+      clientConsumer.close();
+      clientConsumer = clientSession.createConsumer(dlq2);
+      m = clientConsumer.receive(500);
+      Assert.assertNull(m);
+      clientConsumer.close();
+      clientConsumer = clientSession.createConsumer("TEST::q2");
+      m = clientConsumer.receive(500);
+      m.acknowledge();
+      Assert.assertNotNull(m);
+      Assert.assertEquals(m.getBodyBuffer().readString(), "heyho!");
+      // force a cancel
+      clientSession.rollback();
+      m = clientConsumer.receiveImmediate();
+      Assert.assertNull(m);
+      clientConsumer.close();
+      clientConsumer = clientSession.createConsumer(dlq2);
+      m = clientConsumer.receive(500);
+      Assert.assertNotNull(m);
+      m.acknowledge();
+      Assert.assertEquals(m.getBodyBuffer().readString(), "heyho!");
+      m = clientConsumer.receive(500);
+      Assert.assertNull(m);
       clientConsumer.close();
    }
 
