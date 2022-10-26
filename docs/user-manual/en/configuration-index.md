@@ -14,6 +14,11 @@ element. The `core` element contains the main server configuration.
 
 XML XInclude support is provided in `broker.xml` so that you can break your configuration out into separate files.
 
+To enable this feature ensure XXE is enabled via system property `artemis.xxe`, e.g.:
+```
+-Dartemis.xxe=true
+```
+
 To do this ensure the following is defined at the root configuration element.
 
 ```

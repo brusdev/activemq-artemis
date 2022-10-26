@@ -16,13 +16,17 @@
  */
 package org.apache.activemq.artemis.core.config.impl;
 
+import org.apache.activemq.artemis.utils.XmlProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class FileXIncludeConfigurationTest extends FileConfigurationTest {
 
+   private static boolean xxeEnabled = XmlProvider.isXxeEnabled();
+
    @BeforeClass
    public static void setupProperties() {
+      XmlProvider.setXxeEnabled(true);
       System.setProperty("xincludePath", "./src/test/resources");
       System.setProperty("a2Prop", "a2");
       System.setProperty("falseProp", "false");
@@ -32,6 +36,7 @@ public class FileXIncludeConfigurationTest extends FileConfigurationTest {
 
    @AfterClass
    public static void clearProperties() {
+      XmlProvider.setXxeEnabled(xxeEnabled);
       System.clearProperty("xincludePath");
       System.clearProperty("a2Prop");
       System.clearProperty("falseProp");
