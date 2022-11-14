@@ -23,11 +23,23 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.management.MBeanServer;
+
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
 
 import com.dsect.jvmti.JVMTIInterface;
+import com.sun.management.HotSpotDiagnosticMXBean;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.protocol.amqp.broker.AMQPSessionCallback;
+import org.apache.activemq.artemis.protocol.amqp.proton.AMQPConnectionContext;
+import org.apache.activemq.artemis.protocol.amqp.proton.AMQPSessionContext;
+import org.apache.activemq.artemis.protocol.amqp.proton.ProtonServerSenderContext;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.qpid.jms.JmsConnectionFactory;
+import org.apache.qpid.proton.engine.Sender;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,6 +91,73 @@ public class MyTest extends ActiveMQTestBase {
       }
       jvmtiInterface.forceGC();
       assertMemoryStats(jvmtiInterface);
+   }
+
+   @Test
+   public void longRunningTest() throws Exception {
+      JVMTIInterface jvmtiInterface = new JVMTIInterface();
+      jvmtiInterface.forceGC();
+      assertMemoryStats(jvmtiInterface);
+
+      ConnectionFactory cf = new JmsConnectionFactory("amqp://localhost:61616");
+
+      try (Connection producerConnection = cf.createConnection(); Connection consumerConnection = cf.createConnection()) {
+
+         for (int s = 0; s < 10; s++) {
+            Session producerSession = producerConnection.createSession();
+            Session consumerSession = consumerConnection.createSession();
+            consumerConnection.start();
+
+            for (int i = 0; i < 10; i++) {
+               {
+                  Destination source = producerSession.createQueue("source" + s + "-" + i);
+                  MessageProducer sourceProducer = producerSession.createProducer(source);
+                  sourceProducer.send(producerSession.createMessage());
+                  //sourceProducer.close();
+               }
+               {
+                  Destination source = consumerSession.createQueue("source" + s + "-" + i);
+                  MessageConsumer sourceConsumer = consumerSession.createConsumer(source);
+                  Message m = sourceConsumer.receive();
+                  Assert.assertNotNull(m);
+                  //sourceConsumer.close(); // this line fixes the leak on org.apache.qpid.proton.engine.impl.CollectorImpl
+               }
+            }
+
+            producerSession.close();
+            consumerSession.close();
+         }
+
+         jvmtiInterface.forceGC();
+
+         Object[] protonServerSenderContexts = jvmtiInterface
+            .getAllObjects("org.apache.activemq.artemis.protocol.amqp.proton.ProtonServerSenderContext");
+
+         if (protonServerSenderContexts.length > 0) {
+            // The session is closed protonServerSenderContexts.length should be zero
+
+            //Maybe they are closed
+            Field closedField = ProtonServerSenderContext.class.getDeclaredField("closed");
+            closedField.setAccessible(true);
+            for (Object protonServerSenderContext : protonServerSenderContexts) {
+               if (closedField.getBoolean(protonServerSenderContext)) {
+                  // The ProtonServerSenderContext is closed it should not be live, who is keeping it alive?
+                  dumpHeap("long-test.hprof", true);
+
+                  //It is reached from org.apache.qpid.proton.engine.impl.CollectorImpl
+               }
+            }
+         }
+
+         assertMemoryStats(jvmtiInterface);
+      }
+   }
+
+   public static void dumpHeap(String filePath, boolean live) throws IOException {
+      MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+      HotSpotDiagnosticMXBean mxBean = ManagementFactory.newPlatformMXBeanProxy(
+         server, "com.sun.management:type=HotSpotDiagnostic", HotSpotDiagnosticMXBean.class);
+      mxBean.dumpHeap(filePath, live);
    }
 
    private void assertMemoryStats(JVMTIInterface jvmtiInterface) {
