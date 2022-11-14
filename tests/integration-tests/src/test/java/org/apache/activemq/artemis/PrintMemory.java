@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis;
 
-import com.dsect.jvmti.JVMTIInterface;
+import com.dsect.jvmti.util.JVMTIReport;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
@@ -31,9 +31,8 @@ public class PrintMemory extends TestWatcher {
 
    private void report(Description description) {
       try {
-         JVMTIInterface jvmtiInterface = new JVMTIInterface();
          System.out.println("Memory report after " + description);
-         System.out.println(jvmtiInterface.inventoryReport(false));
+         System.out.println(JVMTIReport.inventoryReport(false));
       } catch (Exception e) {
          e.printStackTrace(); // this may go out to junit report
       }

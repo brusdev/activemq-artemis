@@ -17,7 +17,7 @@
 
 package org.apache.activemq.artemis;
 
-import com.dsect.jvmti.JVMTIInterface;
+import com.dsect.jvmti.util.JVMTIReport;
 import org.junit.Assert;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -51,7 +51,7 @@ public class NoLeakRule extends TestWatcher {
       if (before) {
 
          try {
-            JVMTIInterface.noLeaks(className, expectedInstances, reportDepth);
+            JVMTIReport.hasLeaks(className, expectedInstances, reportDepth);
          } catch (Exception e) {
             e.printStackTrace(); // this may go out to junit report
             Assert.fail("Test " + description.getClassName() + " is starting while previous tests had leaks -- " + e.getMessage());
@@ -68,7 +68,7 @@ public class NoLeakRule extends TestWatcher {
 
       if (after) {
          try {
-            JVMTIInterface.noLeaks(className, expectedInstances, reportDepth);
+            JVMTIReport.hasLeaks(className, expectedInstances, reportDepth);
          } catch (Exception e) {
             e.printStackTrace(); // this may go out to junit report
             Assert.fail("Test " + description.getClassName() + " is starting while previous tests had leaks -- " + e.getMessage());
