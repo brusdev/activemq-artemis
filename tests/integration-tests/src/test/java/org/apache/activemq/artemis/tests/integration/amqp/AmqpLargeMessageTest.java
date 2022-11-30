@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.artemis.tests.integration.amqp;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -42,6 +44,9 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.cli.commands.ActionContext;
+import org.apache.activemq.artemis.cli.commands.messages.Consumer;
+import org.apache.activemq.artemis.cli.commands.messages.Producer;
 import org.apache.activemq.artemis.core.message.LargeBodyReader;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
@@ -124,6 +129,69 @@ public class AmqpLargeMessageTest extends AmqpClientTestSupport {
    @Override
    protected void addAdditionalAcceptors(ActiveMQServer server) throws Exception {
       server.getConfiguration().addAcceptorConfiguration("tcp", "tcp://localhost:61616");
+   }
+
+   class TestActionContext extends ActionContext {
+
+      public ByteArrayOutputStream stdout;
+      public ByteArrayOutputStream stderr;
+      private int bufferSize;
+
+      public TestActionContext(int bufferSize) {
+         this.bufferSize = bufferSize;
+         this.stdout = new ByteArrayOutputStream(bufferSize);
+         this.stderr = new ByteArrayOutputStream(bufferSize);
+         this.in = System.in;
+         this.out = new PrintStream(stdout);
+         this.err = new PrintStream(stderr);
+      }
+
+      public TestActionContext() {
+         this(4096);
+      }
+
+      public String getStdout() {
+         return stdout.toString();
+      }
+
+      public byte[] getStdoutBytes() {
+         return stdout.toByteArray();
+      }
+
+      public String getStderr() {
+         return stderr.toString();
+      }
+
+      public byte[] getStdErrBytes() {
+         return stderr.toByteArray();
+      }
+   }
+   @Test
+   public void testSendReceiveAMQP() throws Exception {
+      new Thread(() -> {
+         try {
+            Consumer consumer = (Consumer) new Consumer()
+               .setThreads(30)
+               .setMessageCount(100)
+               .setDestination("TEST")
+               .setUser("admin")
+               .setPassword("admin");
+            consumer.setProtocol("amqp");
+            consumer.execute(new TestActionContext());
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }).start();
+
+      Producer producer  = (Producer)new Producer()
+         .setTextMessageSize(10000000)
+         .setThreads(30)
+         .setMessageCount(100)
+         .setDestination("TEST")
+         .setUser("admin")
+         .setPassword("admin");
+      producer.setProtocol("amqp");
+      producer.execute(new TestActionContext());
    }
 
    @Test(timeout = 60000)
