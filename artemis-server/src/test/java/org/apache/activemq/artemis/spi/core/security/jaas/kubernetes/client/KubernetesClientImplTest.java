@@ -31,10 +31,12 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 
 import org.apache.activemq.artemis.spi.core.security.jaas.kubernetes.model.TokenReview;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -42,8 +44,12 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KubernetesClientImplTest {
+
+   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
    private static final String API_PATH = "/apis/authentication.k8s.io/v1/tokenreviews";
    private static ClientAndServer mockServer;
@@ -67,46 +73,16 @@ public class KubernetesClientImplTest {
       port = Integer.toString(mockServer.getPort());
 
       assertNotNull(mockServer);
-      assertTrue(mockServer.isRunning());
+      assertTrue(mockServer.hasStarted());
       System.setProperty("KUBERNETES_SERVICE_HOST", host);
       System.setProperty("KUBERNETES_SERVICE_PORT", port);
       System.setProperty("KUBERNETES_TOKEN_PATH",
             KubernetesClientImplTest.class.getClassLoader().getResource("client_token").getPath());
 
-      mockServer.when(
-            request()
-                  .withMethod("POST")
-                  .withPath(API_PATH)
-                  .withBody(json(BOB_REQUEST, MatchType.STRICT)))
-            .respond(
-                  response()
-                        .withStatusCode(HTTP_CREATED)
-                        .withBody(UNAUTH_JSON));
-
-      mockServer.when(
-            request()
-                  .withMethod("POST")
-                  .withPath(API_PATH)
-                  .withBody(json(KERMIT_REQUEST, MatchType.STRICT)))
-            .respond(
-                  response()
-                        .withStatusCode(HTTP_CREATED)
-                        .withBody(AUTH_JSON));
-
-      mockServer.when(
-            request()
-                  .withMethod("POST")
-                  .withPath(API_PATH))
-            .respond(
-                  response()
-                        .withStatusCode(HTTP_INTERNAL_ERROR));
-
-
-      // proactivelyInitialiseTLS to dynamicallyCreateCertificateAuthorityCertificate
-      // only kicks in when the client is created to support the mock responses
       URL caPath = KubernetesClientImplTest.class.getClassLoader()
          .getResource("CertificateAuthorityCertificate.pem");
       assertNotNull(caPath);
+      logger.info("Setting KUBERNETES_CA_PATH {}", caPath.getPath());
       System.setProperty("KUBERNETES_CA_PATH", caPath.getPath());
    }
 
@@ -119,8 +95,41 @@ public class KubernetesClientImplTest {
       mockServer.stop();
    }
 
+   @Before
+   public void reset() {
+      mockServer.reset();
+   }
+
    @Test
    public void testGetTokenReview() {
+
+      mockServer.when(
+            request()
+               .withMethod("POST")
+               .withPath(API_PATH)
+               .withBody(json(BOB_REQUEST, MatchType.STRICT)))
+         .respond(
+            response()
+               .withStatusCode(HTTP_CREATED)
+               .withBody(UNAUTH_JSON));
+
+      mockServer.when(
+            request()
+               .withMethod("POST")
+               .withPath(API_PATH)
+               .withBody(json(KERMIT_REQUEST, MatchType.STRICT)))
+         .respond(
+            response()
+               .withStatusCode(HTTP_CREATED)
+               .withBody(AUTH_JSON));
+
+      mockServer.when(
+            request()
+               .withMethod("POST")
+               .withPath(API_PATH))
+         .respond(
+            response()
+               .withStatusCode(HTTP_INTERNAL_ERROR));
 
       KubernetesClient client = new KubernetesClientImpl();
 

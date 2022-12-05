@@ -153,7 +153,7 @@ public class KubernetesClientImpl implements KubernetesClient {
       SSLContext ctx = SSLContext.getInstance("SSL");
       File certFile = new File(caPath);
       if (!certFile.exists()) {
-         logger.debug("Kubernetes CA certificate not found at: {}. Truststore not configured", caPath);
+         logger.error("Kubernetes CA certificate not found at: {}. Truststore not configured", caPath);
          return ctx;
       }
       try (InputStream fis = new FileInputStream(certFile)) {
