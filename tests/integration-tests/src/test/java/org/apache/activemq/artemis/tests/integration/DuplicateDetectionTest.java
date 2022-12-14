@@ -137,6 +137,84 @@ public class DuplicateDetectionTest extends ActiveMQTestBase {
    }
 
    @Test
+   public void testNoDuplicateDetecion() throws Exception {
+      server.stop();
+
+      config = createDefaultInVMConfig().setIDCacheSize(0);
+
+      server = createServer(config);
+
+      server.start();
+
+      sf = createSessionFactory(locator);
+
+      ClientSession session = sf.createSession(false, true, true);
+
+      session.start();
+
+      final SimpleString queueName = new SimpleString("DuplicateDetectionTestQueue");
+
+      session.createQueue(new QueueConfiguration(queueName).setDurable(false));
+
+      ClientProducer producer = session.createProducer(queueName);
+
+      ClientConsumer consumer = session.createConsumer(queueName);
+
+      ClientMessage message = createMessage(session, 0);
+      producer.send(message);
+      ClientMessage message2 = consumer.receive(1000);
+      Assert.assertEquals(0, message2.getObjectProperty(propKey));
+
+      message = createMessage(session, 1);
+      SimpleString dupID = new SimpleString("abcdefg");
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID.getData());
+      producer.send(message);
+      message2 = consumer.receive(1000);
+      Assert.assertEquals(1, message2.getObjectProperty(propKey));
+
+      /*
+      message = createMessage(session, 1);
+      SimpleString dupID1 = new SimpleString("abcdefg1");
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID1.getData());
+      producer.send(message);
+      message2 = consumer.receive(1000);
+      Assert.assertEquals(1, message2.getObjectProperty(propKey));
+*/
+      message = createMessage(session, 2);
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID.getData());
+      producer.send(message);
+      message2 = consumer.receiveImmediate();
+      Assert.assertEquals(2, message2.getObjectProperty(propKey));
+
+      message = createMessage(session, 3);
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID.getData());
+      producer.send(message);
+      message2 = consumer.receiveImmediate();
+      Assert.assertEquals(3, message2.getObjectProperty(propKey));
+
+      // Now try with a different id
+
+      message = createMessage(session, 4);
+      SimpleString dupID2 = new SimpleString("hijklmnop");
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID2.getData());
+      producer.send(message);
+      message2 = consumer.receive(1000);
+      Assert.assertEquals(4, message2.getObjectProperty(propKey));
+
+      message = createMessage(session, 5);
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID2.getData());
+      producer.send(message);
+      message2 = consumer.receiveImmediate();
+      Assert.assertEquals(4, message2.getObjectProperty(propKey));
+
+      message = createMessage(session, 6);
+      message.putBytesProperty(Message.HDR_DUPLICATE_DETECTION_ID, dupID.getData());
+      producer.send(message);
+      message2 = consumer.receiveImmediate();
+      Assert.assertEquals(4, message2.getObjectProperty(propKey));
+   }
+
+   @Test
    public void testDuplicateIDCacheMemoryRetentionForNonTemporaryQueues() throws Exception {
       testDuplicateIDCacheMemoryRetention(false);
    }
