@@ -24,8 +24,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import org.apache.activemq.artemis.utils.XmlProvider;
+
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,7 +40,6 @@ import org.xml.sax.SAXException;
 public class CreateTest {
 
   private final String testName;
-  private final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
   private String httpHost;
   private boolean relaxJolokia;
 
@@ -108,7 +108,7 @@ public class CreateTest {
     try {
       var xmlStream = new ByteArrayInputStream(xml.getBytes());
 
-      DocumentBuilder dbuilder = dbFactory.newDocumentBuilder();
+      DocumentBuilder dbuilder = XmlProvider.newDocumentBuilder();
       Document doc = dbuilder.parse(xmlStream);
 
     } catch (ParserConfigurationException e) {
