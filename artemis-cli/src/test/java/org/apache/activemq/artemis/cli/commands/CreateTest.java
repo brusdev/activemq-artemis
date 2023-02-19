@@ -16,28 +16,20 @@
  */
 package org.apache.activemq.artemis.cli.commands;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 import org.apache.activemq.artemis.utils.XmlProvider;
+import org.apache.activemq.cli.test.CliTestBase;
+import org.apache.activemq.cli.test.TestActionContext;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 @RunWith(Parameterized.class)
-public class CreateTest {
+public class CreateTest extends CliTestBase {
 
    private final String testName;
    private String httpHost;
@@ -49,7 +41,7 @@ public class CreateTest {
       this.relaxJolokia = relaxJolokia;
    }
 
-   @Parameters
+   @Parameterized.Parameters(name = "{0}")
    public static Collection<Object[]> testData() {
       return Arrays.asList(new Object[][]{
          {"Happy path + relaxJolokia", "sampledomain.com", true},
@@ -67,53 +59,20 @@ public class CreateTest {
 
    @Test
    public void testWriteJolokiaAccessXmlCreatesValidXml() throws Exception {
+      TestActionContext context = new TestActionContext();
+      File testInstance = new File(temporaryFolder.getRoot(), "test-instance");
+
       Create c = new Create();
-      String source = Create.ETC_JOLOKIA_ACCESS_XML;
-      HashMap<String, String> filters = new LinkedHashMap<>();
+      c.setNoAutoTune(true);
+      c.setInstance(testInstance);
+      c.setHttpHost(httpHost);
+      c.setRelaxJolokia(relaxJolokia);
+      c.execute(context);
 
-      filters.put("${http.host}", this.httpHost);
-
-      // This is duplicated from Create.java, but it's embedded into the middle of the class.
-      // TODO: Refactor that code to it's own method.
-      if (this.relaxJolokia) {
-         filters.put("${jolokia.options}", "<!-- option relax-jolokia used, so strict-checking will be removed here -->");
-      } else {
-         filters.put("${jolokia.options}", "<!-- Check for the proper origin on the server side, too -->\n" + "        <strict-checking/>");
-      }
-
-      Path temp = Files.createTempFile("jolokia-access-", ".xml");
       try {
-         c.write("etc/" + source, temp.toFile(), filters, false, true);
-
-         String xml = Files.readString(temp);
-         Assert.assertTrue(testName + " - should be valid, but isn't", isXmlValid(xml));
-      } finally {
-         Files.delete(temp);
+         XmlProvider.newDocumentBuilder().parse(new File(testInstance, "etc/" + Create.ETC_JOLOKIA_ACCESS_XML));
+      } catch (Exception e) {
+         Assert.fail(testName + " should be valid, but " + e.toString());
       }
-   }
-
-   /**
-    * IsXmlValid will check if a given xml string is valid by parsing the xml to create a Document.
-    * <p>
-    * If it parses, the xml is assumed to be valid. If any exceptions occur, the xml is not valid.
-    *
-    * @param xml The xml string to check for validity.
-    * @return whether the xml string represents a valid xml document.
-    */
-   private boolean isXmlValid(String xml) {
-      try {
-         var xmlStream = new ByteArrayInputStream(xml.getBytes());
-
-         DocumentBuilder dbuilder = XmlProvider.newDocumentBuilder();
-         Document doc = dbuilder.parse(xmlStream);
-
-      } catch (ParserConfigurationException e) {
-         return false;
-      } catch (IOException e) {
-         return false;
-      } catch (SAXException e) {
-         return false;
-      }
-      return true;
    }
 }

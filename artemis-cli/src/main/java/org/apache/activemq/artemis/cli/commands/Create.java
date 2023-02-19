@@ -496,6 +496,30 @@ public class Create extends InstallAbstract {
       return disablePersistence;
    }
 
+   public String getHttpHost() {
+      return httpHost;
+   }
+
+   public void setHttpHost(String httpHost) {
+      this.httpHost = httpHost;
+   }
+
+   public boolean isRelaxJolokia() {
+      return relaxJolokia;
+   }
+
+   public void setRelaxJolokia(boolean relaxJolokia) {
+      this.relaxJolokia = relaxJolokia;
+   }
+
+   public boolean isNoAutoTune() {
+      return noAutoTune;
+   }
+
+   public void setNoAutoTune(boolean noAutoTune) {
+      this.noAutoTune = noAutoTune;
+   }
+
    @Override
    public Object execute(ActionContext context) throws Exception {
       this.checkDirectory();
