@@ -19,6 +19,8 @@ package org.apache.activemq.artemis.logs.annotation.processor;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.security.Provider;
+import java.security.Security;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -29,6 +31,17 @@ public class SimpleBundleTest {
 
    @Test
    public void testSimple() {
+      System.out.println("FIPS-tester");
+      System.out.println();
+
+      System.out.println("com.redhat.fips: " + System.getProperty("com.redhat.fips", "null"));
+
+      System.out.println("Security Providers:");
+      Provider[] providers = Security.getProviders();
+      for (int i = 0; i < providers.length; i++) {
+         System.out.println("  " + providers[i].getName());
+      }
+
       Assert.assertEquals("TST1: Test", SimpleBundle.MESSAGES.simpleTest());
       System.out.println(SimpleBundle.MESSAGES.simpleTest());
    }
