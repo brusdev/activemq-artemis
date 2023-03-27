@@ -265,7 +265,13 @@
                      <allowAnonymous>false</allowAnonymous>
                      <noWeb>false</noWeb>
                      <instance>${basedir}/target/console</instance>
-                     <configuration>${basedir}/target/classes/servers/console</configuration>
+                     <args>
+                        <arg>--http-host</arg>
+                        <arg>0.0.0.0</arg>
+                        <arg>--http-port</arg>
+                        <arg>8161</arg>
+                        <arg>--relax-jolokia</arg>
+                     </args>
                   </configuration>
                </execution>
                <execution>

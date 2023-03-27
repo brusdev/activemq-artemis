@@ -48,12 +48,12 @@ public abstract class ConsoleTest extends SmokeTestBase {
    protected static final String SERVER_ADMIN_PASSWORD = "admin";
 
    protected static final int DEFAULT_TIMEOUT = 10000;
-   protected static final String DEFAULT_SERVER_URL = "http://localhost:8161";
-   protected static final String DEFAULT_CONTAINER_SERVER_URL = "http://host.testcontainers.internal:8161";
+   protected static final String DEFAULT_WEB_SERVER_URL = "http://localhost:8161";
+   protected static final String DEFAULT_CONTAINER_WEB_SERVER_URL = "http://host.testcontainers.internal:8161";
 
    protected WebDriver driver;
    protected MutableCapabilities browserOptions;
-   protected String serverUrl = DEFAULT_SERVER_URL;
+   protected String webServerUrl;
    private BrowserWebDriverContainer browserWebDriverContainer;
 
    @Parameterized.Parameters(name = "browserOptions={0}")
@@ -63,6 +63,7 @@ public abstract class ConsoleTest extends SmokeTestBase {
 
    public ConsoleTest(MutableCapabilities browserOptions) {
       this.browserOptions = browserOptions;
+      this.webServerUrl = System.getProperty("webserver.url");
    }
 
    @Before
@@ -127,11 +128,17 @@ public abstract class ConsoleTest extends SmokeTestBase {
          } else if (webdriverLocation != null) {
             driver = webDriverConstructor.apply(browserOptions);
          } else {
-            serverUrl = DEFAULT_CONTAINER_SERVER_URL;
+            if (webServerUrl == null) {
+               webServerUrl = DEFAULT_CONTAINER_WEB_SERVER_URL;
+            }
             Testcontainers.exposeHostPorts(8161);
             browserWebDriverContainer = new BrowserWebDriverContainer().withCapabilities(this.browserOptions);
             browserWebDriverContainer.start();
             driver = browserWebDriverContainer.getWebDriver();
+         }
+
+         if (webServerUrl == null) {
+            webServerUrl = DEFAULT_WEB_SERVER_URL;
          }
       } catch (Exception e) {
          Assume.assumeNoException("Error on loading the web driver", e);
@@ -143,7 +150,7 @@ public abstract class ConsoleTest extends SmokeTestBase {
 
       loadWebDriverWait.until((Function<WebDriver, Object>) webDriver -> {
          try {
-            webDriver.get(serverUrl);
+            webDriver.get(webServerUrl);
             return true;
          } catch (Exception ignore) {
             return false;
