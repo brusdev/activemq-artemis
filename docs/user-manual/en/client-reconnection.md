@@ -89,9 +89,20 @@ Client reconnection is configured using the following parameters:
   ridiculously large values. By setting this parameter you can set an upper limit
   on that value. The default value is `2000` milliseconds.
 
+- `ha`. This optional parameter determines weather the client will try to
+  reconnect to the backup node when the live node is not reachable.
+  The default value is `false`.
+  For more information on HA, please see [High Availability and Failover](ha.md).
+
 - `reconnectAttempts`. This optional parameter determines the total number of
-  reconnect attempts to make before giving up and shutting down. A value of
-  `-1` signifies an unlimited number of attempts. The default value is `0`.
+  reconnect attempts to make to the current live/backup pair before giving up.
+  A value of `-1` signifies an unlimited number of attempts.
+  The default value is `0`.
+
+- `failoverAttempts`. This optional parameter determines the total number of
+  failover attempts to make after a reconnection failure before giving up and
+  shutting down. A value of `-1` signifies an unlimited number of attempts.
+  The default value is `0`.
 
 All of these parameters are set on the URL used to connect to the broker.
 

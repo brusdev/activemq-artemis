@@ -128,6 +128,8 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
    private int reconnectAttempts;
 
+   private int failoverAttempts;
+
    private final Set<SessionFailureListener> listeners = new ConcurrentHashSet<>();
 
    private final Set<FailoverEventListener> failoverListeners = new ConcurrentHashSet<>();
@@ -234,6 +236,8 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       this.maxRetryInterval = locatorConfig.maxRetryInterval;
 
       this.reconnectAttempts = reconnectAttempts;
+
+      this.failoverAttempts = locatorConfig.failoverAttempts;
 
       this.scheduledThreadPool = scheduledThreadPool;
 
@@ -631,7 +635,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
          // failoverLock
          // until failover is complete
 
-         if (reconnectAttempts != 0) {
+         if (reconnectAttempts != 0 || failoverAttempts != 0) {
 
             if (clientProtocolManager.cleanupBeforeFailover(me)) {
 
@@ -668,29 +672,36 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                   session.preHandleFailover(connection);
                }
 
-               boolean allSessionReconnected = false;
-               int failedReconnectSessionsCounter = 0;
-               do {
-                  allSessionReconnected = reconnectSessions(sessionsToFailover, oldConnection, reconnectAttempts, me);
-                  if (oldConnection != null) {
-                     oldConnection.destroy();
-                  }
+               int reconnectRetries = 0;
+               boolean sessionsReconnected = false;
+               while (clientProtocolManager.isAlive() && connection == null && !sessionsReconnected &&
+                  (reconnectAttempts == -1 || reconnectRetries < reconnectAttempts)) {
 
-                  if (!allSessionReconnected) {
-                     failedReconnectSessionsCounter++;
-                     oldConnection = connection;
-                     connection = null;
+                  reconnectRetries += getConnectionWithRetry(reconnectAttempts - reconnectRetries, oldConnection);
 
-                     // Wait for retry when the connection is established but not all session are reconnected.
-                     if ((reconnectAttempts == -1 || failedReconnectSessionsCounter < reconnectAttempts) && oldConnection != null) {
+                  if (clientProtocolManager.isAlive() && connection != null) {
+                     sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, me);
+
+                     if (!sessionsReconnected) {
+                        if (oldConnection != null) {
+                           oldConnection.destroy();
+                        }
+
+                        reconnectRetries++;
+                        oldConnection = connection;
+                        connection = null;
+
                         waitForRetry(retryInterval);
                      }
                   }
                }
-               while ((reconnectAttempts == -1 || failedReconnectSessionsCounter < reconnectAttempts) && !allSessionReconnected);
+
+               if (clientProtocolManager.isAlive() && connection == null) {
+                  sessionsReconnected = failoverSessions(sessionsToFailover, oldConnection, me);
+               }
 
                for (ClientSessionInternal session : sessionsToFailover) {
-                  session.postHandleFailover(connection, allSessionReconnected);
+                  session.postHandleFailover(connection, sessionsReconnected);
                }
 
                if (oldConnection != null) {
@@ -736,6 +747,40 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
             }
          }
       }
+   }
+
+
+   private boolean failoverSessions(
+      final Set<ClientSessionInternal> sessionsToFailover,
+      final RemotingConnection oldConnection,
+      final ActiveMQException cause) {
+
+      int failoverReties = 0;
+      boolean sessionsReconnected = false;
+      Pair<TransportConfiguration, TransportConfiguration> connectorPair;
+
+      while (clientProtocolManager.isAlive() && connection == null &&
+         (failoverAttempts == -1 || failoverReties < failoverAttempts)) {
+
+         connectorPair = serverLocator.selectNextConnectorPair();
+         connectorConfig = connectorPair.getA();
+         currentConnectorConfig = connectorPair.getA();
+         if (connectorPair.getB() != null) {
+            backupConnectorConfig = connectorPair.getB();
+         }
+
+         getConnection();
+
+         if (connection != null) {
+            sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, cause);
+         } else {
+            failoverReties++;
+
+            waitForRetry(retryInterval);
+         }
+      }
+
+      return  sessionsReconnected;
    }
 
    private ClientSession createSessionInternal(final String username,
@@ -812,15 +857,12 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
     */
    private boolean reconnectSessions(final Set<ClientSessionInternal> sessionsToFailover,
                                      final RemotingConnection oldConnection,
-                                     final int reconnectAttempts,
                                      final ActiveMQException cause) {
-      getConnectionWithRetry(reconnectAttempts, oldConnection);
-
       if (connection == null) {
          if (!clientProtocolManager.isAlive())
             ActiveMQClientLogger.LOGGER.failedToConnectToServer();
 
-         return true;
+         return false;
       }
 
       List<FailureListener> oldListeners = oldConnection.getFailureListeners();
@@ -856,9 +898,9 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       return !sessionFailoverError;
    }
 
-   private void getConnectionWithRetry(final int reconnectAttempts, RemotingConnection oldConnection) {
+   private int getConnectionWithRetry(final int reconnectAttempts, RemotingConnection oldConnection) {
       if (!clientProtocolManager.isAlive())
-         return;
+         return 0;
       if (logger.isTraceEnabled()) {
          logger.trace("getConnectionWithRetry::{} with retryInterval = {} multiplier = {}",
                       reconnectAttempts, retryInterval, retryIntervalMultiplier, new Exception("trace"));
@@ -879,7 +921,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                ((CoreRemotingConnection)connection).setChannelVersion(((CoreRemotingConnection)oldConnection).getChannelVersion());
             }
             logger.debug("Reconnection successful");
-            return;
+            return count;
          } else {
             // Failed to get connection
 
@@ -891,7 +933,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                      ActiveMQClientLogger.LOGGER.failedToConnectToServer(reconnectAttempts);
                   }
 
-                  return;
+                  return count;
                }
 
                if (logger.isTraceEnabled()) {
@@ -899,7 +941,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                }
 
                if (waitForRetry(interval))
-                  return;
+                  return count;
 
                // Exponential back-off
                long newInterval = (long) (interval * retryIntervalMultiplier);
@@ -911,11 +953,15 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                interval = newInterval;
             } else {
                logger.debug("Could not connect to any server. Didn't have reconnection configured on the ClientSessionFactory");
-               return;
+               return count;
             }
          }
       }
+
+      return count;
    }
+
+
 
    @Override
    public boolean waitForRetry(long interval) {

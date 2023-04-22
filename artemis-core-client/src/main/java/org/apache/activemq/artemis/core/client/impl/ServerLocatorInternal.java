@@ -87,4 +87,6 @@ public interface ServerLocatorInternal extends ServerLocator {
    ClientProtocolManager newProtocolManager();
 
    boolean isConnectable();
+
+   Pair<TransportConfiguration, TransportConfiguration> selectNextConnectorPair();
 }
