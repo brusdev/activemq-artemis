@@ -28,10 +28,8 @@ import org.apache.activemq.artemis.core.config.ha.ReplicaPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.ReplicatedPolicyConfiguration;
 import org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
-import org.apache.activemq.artemis.core.server.cluster.impl.ClusterConnectionImpl;
 import org.apache.activemq.artemis.core.server.impl.SharedNothingLiveActivation;
 import org.apache.activemq.artemis.tests.integration.cluster.util.BackupSyncDelay;
-import org.apache.activemq.artemis.tests.util.Wait;
 import org.apache.activemq.artemis.utils.RetryRule;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -68,12 +66,8 @@ public class QuorumFailOverTest extends StaticClusterWithBackupFailoverTest {
       startServers(3, 4, 5);
 
       for (int i : liveServerIDs) {
+         waitForBridges(servers[i], 2);
          waitForTopology(servers[i], 3, 3);
-
-         ClusterConnectionImpl clusterConnection = (ClusterConnectionImpl)servers[i]
-            .getClusterManager().getClusterConnections().stream().findFirst().get();
-         Wait.waitFor(() -> clusterConnection.getRecords().size() == 2 && clusterConnection.getRecords().entrySet().stream()
-            .allMatch(stringMessageFlowRecordEntry -> stringMessageFlowRecordEntry.getValue().getBridge().isConnected()));
       }
 
       waitForFailoverTopology(3, 0, 1, 2);
@@ -129,6 +123,7 @@ public class QuorumFailOverTest extends StaticClusterWithBackupFailoverTest {
       }
 
       for (int i : liveServerIDs) {
+         waitForBridges(servers[i], 2);
          waitForTopology(servers[i], 3, 3);
       }
 
