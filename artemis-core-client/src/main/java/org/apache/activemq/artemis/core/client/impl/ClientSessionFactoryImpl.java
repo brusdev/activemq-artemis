@@ -677,12 +677,13 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                while (clientProtocolManager.isAlive() && connection == null && !sessionsReconnected &&
                   (reconnectAttempts == -1 || reconnectRetries < reconnectAttempts)) {
 
-                  reconnectRetries += getConnectionWithRetry(reconnectAttempts - reconnectRetries, oldConnection);
+                  int remainingReconnectRetries = reconnectAttempts == -1 ? -1 : reconnectAttempts - reconnectRetries;
+                  reconnectRetries += getConnectionWithRetry(remainingReconnectRetries, oldConnection);
 
                   if (clientProtocolManager.isAlive() && connection != null) {
                      sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, me);
 
-                     if (!sessionsReconnected) {
+                     if (!sessionsReconnected &&  (reconnectAttempts == -1 || reconnectRetries < reconnectAttempts)) {
                         if (oldConnection != null) {
                            oldConnection.destroy();
                         }
@@ -696,7 +697,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
                   }
                }
 
-               if (clientProtocolManager.isAlive() && connection == null) {
+               if (clientProtocolManager.isAlive() && connection == null && failoverAttempts != 0) {
                   sessionsReconnected = failoverSessions(sessionsToFailover, oldConnection, me);
                }
 
@@ -773,7 +774,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
          if (connection != null) {
             sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, cause);
-         } else {
+         } else if (failoverAttempts == -1 || failoverReties < failoverAttempts) {
             failoverReties++;
 
             waitForRetry(retryInterval);
