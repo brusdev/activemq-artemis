@@ -73,6 +73,8 @@ import org.apache.activemq.artemis.utils.collections.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
+import java.util.function.BiPredicate;
+import java.util.function.IntPredicate;
 
 public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, ClientConnectionLifeCycleListener {
 
@@ -674,31 +676,33 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
                int reconnectRetries = 0;
                boolean sessionsReconnected = false;
-               while (clientProtocolManager.isAlive() && connection == null && !sessionsReconnected &&
-                  (reconnectAttempts == -1 || reconnectRetries < reconnectAttempts)) {
+               BiPredicate<Boolean, Integer> reconnectRetryPredicate =
+                  (reconnected, retries) -> clientProtocolManager.isAlive() &&
+                     !reconnected && (reconnectAttempts == -1 || retries < reconnectAttempts);
+               while (reconnectRetryPredicate.test(sessionsReconnected, reconnectRetries)) {
 
                   int remainingReconnectRetries = reconnectAttempts == -1 ? -1 : reconnectAttempts - reconnectRetries;
                   reconnectRetries += getConnectionWithRetry(remainingReconnectRetries, oldConnection);
 
-                  if (clientProtocolManager.isAlive() && connection != null) {
-                     sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, me);
+                  sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, me);
 
-                     if (!sessionsReconnected &&  (reconnectAttempts == -1 || reconnectRetries < reconnectAttempts)) {
-                        if (oldConnection != null) {
-                           oldConnection.destroy();
-                        }
-
-                        reconnectRetries++;
-                        oldConnection = connection;
-                        connection = null;
-
-                        waitForRetry(retryInterval);
+                  reconnectRetries++;
+                  if (reconnectRetryPredicate.test(sessionsReconnected, reconnectRetries)) {
+                     if (oldConnection != null) {
+                        oldConnection.destroy();
                      }
+
+                     oldConnection = connection;
+                     connection = null;
+
+                     waitForRetry(retryInterval);
                   }
                }
 
                if (clientProtocolManager.isAlive() && connection == null && failoverAttempts != 0) {
-                  sessionsReconnected = failoverSessions(sessionsToFailover, oldConnection, me);
+                  failoverConnectionWithRetry();
+
+                  sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, me);
                }
 
                for (ClientSessionInternal session : sessionsToFailover) {
@@ -750,18 +754,12 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       }
    }
 
-
-   private boolean failoverSessions(
-      final Set<ClientSessionInternal> sessionsToFailover,
-      final RemotingConnection oldConnection,
-      final ActiveMQException cause) {
-
+   private void failoverConnectionWithRetry() {
       int failoverReties = 0;
-      boolean sessionsReconnected = false;
       Pair<TransportConfiguration, TransportConfiguration> connectorPair;
-
-      while (clientProtocolManager.isAlive() && connection == null &&
-         (failoverAttempts == -1 || failoverReties < failoverAttempts)) {
+      IntPredicate failoverRetryPredicate = retries -> clientProtocolManager.isAlive() &&
+         connection == null && (failoverAttempts == -1 || retries < failoverAttempts);
+      while (failoverRetryPredicate.test(failoverReties)) {
 
          connectorPair = serverLocator.selectNextConnectorPair();
          connectorConfig = connectorPair.getA();
@@ -772,16 +770,11 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
          getConnection();
 
-         if (connection != null) {
-            sessionsReconnected = reconnectSessions(sessionsToFailover, oldConnection, cause);
-         } else if (failoverAttempts == -1 || failoverReties < failoverAttempts) {
-            failoverReties++;
-
+         failoverReties++;
+         if (failoverRetryPredicate.test(failoverReties)) {
             waitForRetry(retryInterval);
          }
       }
-
-      return  sessionsReconnected;
    }
 
    private ClientSession createSessionInternal(final String username,

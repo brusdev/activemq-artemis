@@ -41,6 +41,7 @@ import org.apache.activemq.artemis.jms.client.ActiveMQConnection;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQSession;
 import org.apache.activemq.artemis.tests.util.Wait;
+import org.bouncycastle.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -125,9 +126,9 @@ public class ClientConnectorFailoverTest extends StaticClusterWithBackupFailover
    public void testConsumerAfterFailoverWithoutHA() throws Exception {
       setupCluster();
 
-      AddressSettings as = new AddressSettings().setRedistributionDelay(0);
+      AddressSettings testAddressSettings = new AddressSettings().setRedistributionDelay(0);
       for (int i : getServerIDs()) {
-         getServer(i).getAddressSettingsRepository().addMatch(QUEUES_TESTADDRESS, as);
+         getServer(i).getAddressSettingsRepository().addMatch(QUEUES_TESTADDRESS, testAddressSettings);
       }
 
       startServers(getLiveServerIDs());
@@ -147,7 +148,7 @@ public class ClientConnectorFailoverTest extends StaticClusterWithBackupFailover
       }
 
       List<TransportConfiguration> transportConfigList = new ArrayList<>();
-      for (int i : getServerIDs()) {
+      for (int i : getLiveServerIDs()) {
          Map<String, Object> params = generateParams(i, isNetty());
          TransportConfiguration serverToTC = createTransportConfiguration("node" + i, isNetty(), false, params);
          serverToTC.getExtraParams().put(TEST_PARAM, TEST_PARAM);
@@ -156,12 +157,17 @@ public class ClientConnectorFailoverTest extends StaticClusterWithBackupFailover
       TransportConfiguration[] transportConfigs = transportConfigList.toArray(new TransportConfiguration[transportConfigList.size()]);
 
       try (ServerLocator serverLocator = new ServerLocatorImpl(false, transportConfigs)) {
-         serverLocator.setReconnectAttempts(3);
          serverLocator.setFailoverAttempts(3);
+         serverLocator.setReconnectAttempts(0);
+         serverLocator.setUseTopologyForLoadBalancing(false);
 
          try (ClientSessionFactory sessionFactory = serverLocator.createSessionFactory()) {
             try (ClientSession clientSession = sessionFactory.createSession()) {
                clientSession.start();
+
+               TransportConfiguration backupConnector = (TransportConfiguration)
+                  ((ClientSessionFactoryImpl)sessionFactory).getBackupConnector();
+               Assert.assertNull(backupConnector);
 
                int serverIdBeforeCrash = Integer.parseInt(sessionFactory.
                   getConnectorConfiguration().getName().substring(4));
@@ -170,15 +176,18 @@ public class ClientConnectorFailoverTest extends StaticClusterWithBackupFailover
                   clientProducer.send(clientSession.createMessage(true));
                }
 
-               crashAndWaitForFailure(getServer(serverIdBeforeCrash));
+               crashAndWaitForFailure(getServer(serverIdBeforeCrash), clientSession);
 
-               try (ClientConsumer clientConsumer = clientSession.createConsumer(QUEUE_NAME)) {
-                  Assert.assertNotNull(clientConsumer.receive(3000));
-               }
+               Assert.assertEquals(TEST_PARAM, sessionFactory.getConnectorConfiguration().getExtraParams().get(TEST_PARAM));
 
                int serverIdAfterCrash = Integer.parseInt(sessionFactory.
                   getConnectorConfiguration().getName().substring(4));
                Assert.assertNotEquals(serverIdBeforeCrash, serverIdAfterCrash);
+               Assert.assertTrue(Arrays.contains(getLiveServerIDs(), serverIdAfterCrash));
+
+               try (ClientConsumer clientConsumer = clientSession.createConsumer(QUEUE_NAME)) {
+                  Assert.assertNotNull(clientConsumer.receive(3000));
+               }
 
                QueueControl testQueueControlAfterCrash = (QueueControl)getServer(serverIdAfterCrash).
                   getManagementService().getResource(ResourceNames.QUEUE + QUEUE_NAME);
