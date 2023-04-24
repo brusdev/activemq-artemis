@@ -366,7 +366,7 @@ public class ReconnectTest extends ActiveMQTestBase {
       ClientSessionFactoryInternal sf = (ClientSessionFactoryInternal) createSessionFactory(locator);
       final CountDownLatch latch = new CountDownLatch(1);
       sf.addFailoverListener(eventType -> {
-         if (eventType == FailoverEventType.FAILOVER_FAILED) {
+         if (eventType == FailoverEventType.FAILOVER_COMPLETED) {
             latch.countDown();
          }
       });
@@ -376,7 +376,7 @@ public class ReconnectTest extends ActiveMQTestBase {
       conn.fail(new ActiveMQNotConnectedException());
 
       assertTrue(latch.await(1000, TimeUnit.MILLISECONDS));
-      assertTrue(session.isClosed());
+      assertFalse(session.isClosed());
 
       session.close();
       sf.close();
