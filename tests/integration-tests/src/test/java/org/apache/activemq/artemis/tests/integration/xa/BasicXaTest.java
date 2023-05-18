@@ -27,6 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.Interceptor;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
@@ -39,12 +40,17 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.StoreConfiguration;
 import org.apache.activemq.artemis.core.persistence.StorageManager;
+import org.apache.activemq.artemis.core.protocol.core.Packet;
+import org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.core.server.Queue;
+import org.apache.activemq.artemis.core.server.ServerSession;
+import org.apache.activemq.artemis.core.server.impl.ServerSessionImpl;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.transaction.impl.XidImpl;
 import org.apache.activemq.artemis.ra.ActiveMQRAXAResource;
+import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.apache.activemq.artemis.utils.Wait;
@@ -415,9 +421,36 @@ public class BasicXaTest extends ActiveMQTestBase {
       Assert.assertEquals(m.getBodyBuffer().readString(), "m4");
       clientSession.end(xid, XAResource.TMSUCCESS);
 
-      StorageManager journalStorageManager = messagingService.getStorageManager();
+      messagingService.getRemotingService().addIncomingInterceptor((Interceptor) (packet, connection) -> {
+         if (packet.getType() == PacketImpl.SESS_XA_PREPARE) {
+            new Thread(new Runnable() {
+               @Override
+               public void run() {
+                  try {
+                     Thread.sleep(3000);
+                  } catch (InterruptedException e) {
+                     throw new RuntimeException(e);
+                  }
+                  connection.fail(new ActiveMQException("TEST"));
+               }
+            }).start();
+
+            //connection.fail(new ActiveMQException("TEST"));
+         }
+         return true;
+      });
 
       clientSession.prepare(xid);
+
+      /*
+      for(RemotingConnection remotingConnection : messagingService.getRemotingService().getConnections()) {
+         remotingConnection.fail(new ActiveMQException("TEST"));
+      }
+      */
+
+      StorageManager journalStorageManager = messagingService.getStorageManager();
+
+      Thread.sleep(3000000);
 
       journalStorageManager.getMessageJournal().stop();
       try {

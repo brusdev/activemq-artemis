@@ -28,6 +28,9 @@ import org.apache.activemq.artemis.core.journal.impl.SimpleWaitIOCallback;
 import org.apache.activemq.artemis.core.persistence.OperationContext;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.utils.ExecutorFactory;
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.BufferUtils;
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
 
 /**
  * Each instance of OperationContextImpl is associated with an executor (usually an ordered Executor).
@@ -104,6 +107,9 @@ public class OperationContextImpl implements OperationContext {
 
    private final Executor executor;
 
+   private static int maxStoreTrackers = Integer.parseInt(System.getProperty("MAX_STORE_TRACKERS","32"));
+   private Buffer storeTrackers = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(maxStoreTrackers));
+
    public OperationContextImpl(final Executor executor) {
       super();
       this.executor = executor;
@@ -122,7 +128,8 @@ public class OperationContextImpl implements OperationContext {
 
    @Override
    public void storeLineUp() {
-      STORE_LINEUP_UPDATER.incrementAndGet(this);
+      long storeLineUpValue = STORE_LINEUP_UPDATER.incrementAndGet(this);
+      storeTrackers.add(new Exception(">" + storeLineUpValue));
    }
 
    @Override
@@ -213,7 +220,8 @@ public class OperationContextImpl implements OperationContext {
    @Override
    public synchronized void done() {
       stored++;
-      checkTasks();
+      storeTrackers.add(new Exception("<" + stored));
+     checkTasks();
    }
 
    private void checkStoreTasks() {
