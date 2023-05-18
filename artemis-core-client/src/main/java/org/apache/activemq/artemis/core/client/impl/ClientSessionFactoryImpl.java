@@ -505,6 +505,9 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       interruptConnectAndCloseAllSessions(true);
 
       serverLocator.factoryClosed(this);
+
+      //release all threads waiting for topology
+      latchFinalTopology.countDown();
    }
 
    @Override
@@ -519,7 +522,8 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
    @Override
    public boolean waitForTopology(long timeout, TimeUnit unit) {
       try {
-         return latchFinalTopology.await(timeout, unit);
+         //latchFinalTopology is decremented on close
+         return latchFinalTopology.await(timeout, unit) && !closed;
       } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
          ActiveMQClientLogger.LOGGER.unableToReceiveClusterTopology(e);
