@@ -684,6 +684,8 @@ public final class ServerLocatorImpl implements ServerLocatorInternal, Discovery
                   // We always try to connect here with only one attempt,
                   // as we will perform the initial retry here, looking for all possible connectors
                   factory.connect(1, false);
+
+                  addFactory(factory);
                } finally {
                   removeFromConnecting(factory);
                }
@@ -737,11 +739,12 @@ public final class ServerLocatorImpl implements ServerLocatorInternal, Discovery
       // how the sendSubscription happens.
       // in case this ever changes.
       if (topology != null && !factory.waitForTopology(config.callTimeout, TimeUnit.MILLISECONDS)) {
+         synchronized (factories) {
+            factories.remove(factory);
+         }
          factory.cleanup();
          throw ActiveMQClientMessageBundle.BUNDLE.connectionTimedOutOnReceiveTopology(discoveryGroup);
       }
-
-      addFactory(factory);
 
       return factory;
    }

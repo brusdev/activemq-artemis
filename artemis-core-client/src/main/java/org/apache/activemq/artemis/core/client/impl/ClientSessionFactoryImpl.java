@@ -472,6 +472,9 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
          closeCleanSessions(close);
          closed = true;
       }
+
+      //release all threads waiting for topology
+      latchFinalTopology.countDown();
    }
 
    /**
@@ -505,9 +508,6 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       interruptConnectAndCloseAllSessions(true);
 
       serverLocator.factoryClosed(this);
-
-      //release all threads waiting for topology
-      latchFinalTopology.countDown();
    }
 
    @Override

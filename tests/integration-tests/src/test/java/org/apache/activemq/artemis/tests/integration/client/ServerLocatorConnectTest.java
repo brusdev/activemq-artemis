@@ -20,17 +20,23 @@ import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.artemis.api.core.ActiveMQConnectionTimedOutException;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQNotConnectedException;
+import org.apache.activemq.artemis.api.core.Interceptor;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.client.impl.ClientSessionFactoryInternal;
 import org.apache.activemq.artemis.core.client.impl.ServerLocatorInternal;
 import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.protocol.core.Packet;
+import org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.activemq.artemis.uri.ServerLocatorParser;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,6 +51,41 @@ public class ServerLocatorConnectTest extends ActiveMQTestBase {
       Configuration configuration = createDefaultConfig(isNetty());
       server = createServer(false, configuration);
       server.start();
+   }
+
+   @Test
+   public void testConnectOnClosing() throws Exception {
+      ServerLocator locator = createNonHALocator(isNetty()).setCallTimeout(30000);
+      try (ClientSessionFactory csf = locator.createSessionFactory()) {
+         Assert.assertFalse(csf.isClosed());
+      }
+
+      CountDownLatch subscribeLatch = new CountDownLatch(1);
+      CountDownLatch connectLatch = new CountDownLatch(1);
+      server.getRemotingService().addIncomingInterceptor(new Interceptor() {
+         @Override
+         public boolean intercept(final Packet packet, final RemotingConnection connection) throws ActiveMQException {
+            if (packet.getType() == PacketImpl.SUBSCRIBE_TOPOLOGY_V2) {
+               subscribeLatch.countDown();
+               return false;
+            }
+            return true;
+         }
+      });
+
+      new Thread(() -> {
+         try {
+            locator.createSessionFactory();
+            fail("ActiveMQConnectionTimedOutException expected");
+         } catch (Exception e) {
+            Assert.assertEquals(ActiveMQConnectionTimedOutException.class, e.getClass());
+         }
+         connectLatch.countDown();
+      }).start();
+
+      subscribeLatch.await();
+      locator.close();
+      Assert.assertTrue(connectLatch.await(3000, TimeUnit.MILLISECONDS));
    }
 
    @Test
