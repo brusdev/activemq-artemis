@@ -33,7 +33,24 @@
       <its-surefire-extra-args />
    </properties>
 
+   <dependencyManagement>
+      <dependencies>
+      </dependencies>
+   </dependencyManagement>
+
    <dependencies>
+      <dependency>
+         <groupId>org.apache.directory.server</groupId>
+         <artifactId>apacheds-protocol-ldap</artifactId>
+         <version>${directory-version}</version>
+         <scope>test</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>org.bouncycastle</groupId>
+               <artifactId>bcprov-jdk15on</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
       <dependency>
          <groupId>org.apache.activemq</groupId>
          <artifactId>artemis-quorum-ri</artifactId>
