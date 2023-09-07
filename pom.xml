@@ -1593,6 +1593,12 @@
             </plugins>
          </build>
       </profile>
+      <profile>
+         <id>fips</id>
+         <properties>
+            <fips>true</fips>
+         </properties>
+      </profile>
    </profiles>
 
    <build>
