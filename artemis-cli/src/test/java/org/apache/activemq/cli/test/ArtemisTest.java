@@ -101,6 +101,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Assume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
@@ -110,6 +111,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -599,6 +601,8 @@ public class ArtemisTest extends CliTestBase {
 
    @Test(timeout = 60_000)
    public void testUserCommandViaManagementHashedJAAS() throws Exception {
+      Assume.assumeThat(System.getProperty("fips"), not("true"));
+
       internalTestUserCommandViaManagement(false, false);
    }
 
@@ -609,6 +613,8 @@ public class ArtemisTest extends CliTestBase {
 
    @Test(timeout = 60_000)
    public void testUserCommandViaManagementHashedBasic() throws Exception {
+      Assume.assumeThat(System.getProperty("fips"), not("true"));
+
       internalTestUserCommandViaManagement(false, true);
    }
 
@@ -1128,6 +1134,8 @@ public class ArtemisTest extends CliTestBase {
 
    @Test(timeout = 60_000)
    public void testUserCommandResetViaManagementHashed() throws Exception {
+      Assume.assumeThat(System.getProperty("fips"), not("true"));
+
       internalTestUserCommandResetViaManagement(false);
    }
 
@@ -1202,6 +1210,7 @@ public class ArtemisTest extends CliTestBase {
 
    @Test(timeout = 60_000)
    public void testMaskCommand() throws Exception {
+      Assume.assumeThat(System.getProperty("fips"), not("true"));
 
       String password1 = "password";
       String encrypt1 = "3a34fd21b82bf2a822fa49a8d8fa115d";
@@ -1238,6 +1247,8 @@ public class ArtemisTest extends CliTestBase {
 
    @Test(timeout = 60_000)
    public void testMaskCommandWithPasswordCodec() throws Exception {
+      Assume.assumeThat(System.getProperty("fips"), not("true"));
+
       File instanceWithPasswordCodec = new File(temporaryFolder.getRoot(), "instance_with_password_codec");
       Files.createDirectories(Paths.get(instanceWithPasswordCodec.getAbsolutePath(), "etc"));
       Files.copy(Paths.get(ArtemisTest.class.getClassLoader().getResource("broker-with-password-codec.xml").toURI()),
