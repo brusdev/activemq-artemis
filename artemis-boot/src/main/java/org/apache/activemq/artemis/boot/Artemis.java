@@ -128,6 +128,13 @@ public class Artemis {
          }
       }
 
+      String javaClasspathAppend = System.getenv("JAVA_CLASSPATH_APPEND");
+      if (javaClasspathAppend != null) {
+         for (String classpath: javaClasspathAppend.split(System.getProperty("path.separator"))) {
+            urls.add(new File(classpath).toURI().toURL());
+         }
+      }
+
       if (System.getProperty("java.io.tmpdir") == null && fileInstance != null) {
          System.setProperty("java.io.tmpdir", new File(fileInstance, "tmp").getCanonicalPath());
       }
