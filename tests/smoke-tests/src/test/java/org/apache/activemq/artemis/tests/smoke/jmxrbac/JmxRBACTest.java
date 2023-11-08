@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.artemis.tests.smoke.jmxrbac;
 
+import javax.jms.JMSSecurityException;
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
@@ -32,6 +33,8 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.ActiveMQServerControl;
 import org.apache.activemq.artemis.api.core.management.AddressControl;
 import org.apache.activemq.artemis.api.core.management.ObjectNameBuilder;
+import org.apache.activemq.artemis.cli.commands.ActionContext;
+import org.apache.activemq.artemis.cli.commands.messages.Producer;
 import org.apache.activemq.artemis.tests.smoke.common.SmokeTestBase;
 import org.apache.activemq.artemis.util.ServerUtil;
 import org.junit.Assert;
@@ -171,6 +174,20 @@ public class JmxRBACTest extends SmokeTestBase {
 
          testAddressControl.sendMessage(null, Message.TEXT_TYPE, ADDRESS_TEST, true, null, null);
 
+         Producer producer = (Producer)new Producer().setMessageSize(1).setMessageCount(1).setTxBatchSize(500);
+         producer.setProtocol("core");
+         producer.setSilentInput(true);
+         try {
+            producer.execute(new ActionContext());
+         } catch (Exception e) {
+            Assert.assertEquals(JMSSecurityException.class, e.getClass());
+         }
+
+         try {
+            testAddressControl.sendMessage(null, Message.TEXT_TYPE, ADDRESS_TEST, true, null, null);
+         } catch (Exception e) {
+            Assert.assertEquals(IllegalStateException.class, e.getClass());
+         }
 
          try {
             activeMQServerControl.removeUser(SERVER_USER);
