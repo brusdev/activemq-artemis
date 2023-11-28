@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.component;
 import org.apache.activemq.artemis.logs.AuditLogger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.Session;
 
 import javax.security.auth.Subject;
 import javax.servlet.Filter;
@@ -27,7 +28,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /*
@@ -47,7 +47,7 @@ public class AuthenticationFilter implements Filter {
             //Successful responses (200 – 299)
             //the user has been authenticated if the session isn't empty
             //the hawtio logout servlet cleans the session and redirects to the login servlet
-            HttpSession session = ((Request) servletRequest).getSession(false);
+            Session session = ((Request) servletRequest).getSession(false);
             if (session != null) {
                AuditLogger.userSuccesfullyAuthenticatedInAudit(session != null ? (Subject) session.getAttribute("subject") : null);
             }

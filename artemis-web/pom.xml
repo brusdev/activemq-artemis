@@ -73,12 +73,14 @@
          <artifactId>jetty-server</artifactId>
       </dependency>
       <dependency>
-         <groupId>org.eclipse.jetty</groupId>
-         <artifactId>jetty-servlet</artifactId>
+         <groupId>org.eclipse.jetty.ee8</groupId>
+         <artifactId>jetty-ee8-servlet</artifactId>
+         <version>12.0.3</version>
       </dependency>
       <dependency>
-         <groupId>org.eclipse.jetty</groupId>
-         <artifactId>jetty-webapp</artifactId>
+         <groupId>org.eclipse.jetty.ee8</groupId>
+         <artifactId>jetty-ee8-webapp</artifactId>
+         <version>12.0.3</version>
       </dependency>
       <dependency>
          <groupId>org.eclipse.jetty</groupId>
