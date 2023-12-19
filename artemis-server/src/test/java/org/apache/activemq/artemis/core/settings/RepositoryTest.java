@@ -85,6 +85,7 @@ public class RepositoryTest extends ActiveMQTestBase {
       repo.addMatch("(a.#)", new DummyMergeable(1));
       repo.addMatch("a.#", new DummyMergeable(2));
       repo.addMatch("a.b", new DummyMergeable(3));
+      repo.addMatch("a.*", new DummyMergeable(4));
 
       repo.getMatch("a.b");
       assertTrue(DummyMergeable.contains(0));
