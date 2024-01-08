@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +38,6 @@ import org.apache.activemq.artemis.dto.BindingDTO;
 import org.apache.activemq.artemis.dto.ComponentDTO;
 import org.apache.activemq.artemis.dto.WebServerDTO;
 import org.apache.activemq.artemis.marker.WebServerComponentMarker;
-import org.eclipse.jetty.ee8.nested.HandlerList;
 import org.eclipse.jetty.ee8.security.DefaultAuthenticatorFactory;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.CustomRequestLog;
@@ -53,7 +53,6 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
-import org.eclipse.jetty.util.resource.PathResourceFactory;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -146,6 +145,13 @@ public class WebServerComponent implements ExternalComponent, WebServerComponent
                webContext.getSessionHandler().getSessionCookieConfig().setComment("__SAME_SITE_STRICT__");
                webContextData.add(new Pair(webContext, binding.uri));
             }
+         }
+
+         {
+            org.eclipse.jetty.ee10.webapp.WebAppContext webContext = createEE10WebAppContext("hawtio", "hawtio-war-4.0-beta-1.war", homeWarDir, virtualHosts[i]);
+            handlers.addHandler(webContext);
+            webContext.setInitParameter(DIR_ALLOWED, "false");
+            webContext.getSessionHandler().getSessionCookieConfig().setComment("__SAME_SITE_STRICT__");
          }
       }
 
@@ -391,6 +397,32 @@ public class WebServerComponent implements ExternalComponent, WebServerComponent
       webapp.getSecurityHandler().setAuthenticatorFactory(new DefaultAuthenticatorFactory());
 
       webapp.setVirtualHosts(new String[]{virtualHost});
+
+      return webapp;
+   }
+
+   protected org.eclipse.jetty.ee10.webapp.WebAppContext createEE10WebAppContext(String url, String warFile, Path warDirectory, String virtualHost) {
+      org.eclipse.jetty.ee10.webapp.WebAppContext webapp = new org.eclipse.jetty.ee10.webapp.WebAppContext();
+      if (url.startsWith("/")) {
+         webapp.setContextPath(url);
+      } else {
+         webapp.setContextPath("/" + url);
+      }
+      //add the filters needed for audit logging
+      //webapp.addFilter(new FilterHolder(JolokiaFilter.class), "/*", EnumSet.of(DispatcherType.INCLUDE, DispatcherType.REQUEST));
+      //webapp.addFilter(new FilterHolder(AuthenticationFilter.class), "/auth/login/*", EnumSet.of(DispatcherType.REQUEST));
+
+      webapp.setWar(warDirectory.resolve(warFile).toString());
+
+      String baseTempDir = temporaryWarDir.toFile().getAbsolutePath();
+      webapp.setAttribute("org.eclipse.jetty.webapp.basetempdir", baseTempDir);
+      webapp.setTempDirectory(new File(baseTempDir + File.separator + warFile));
+
+      // Set the default authenticator factory to avoid NPE due to the following commit:
+      // https://github.com/eclipse/jetty.project/commit/7e91d34177a880ecbe70009e8f200d02e3a0c5dd
+      //webapp.getSecurityHandler().setAuthenticatorFactory(new DefaultAuthenticatorFactory());
+
+      webapp.setVirtualHosts(Collections.singletonList(virtualHost));
 
       return webapp;
    }
