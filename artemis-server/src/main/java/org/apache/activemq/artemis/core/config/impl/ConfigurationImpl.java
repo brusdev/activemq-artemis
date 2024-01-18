@@ -626,10 +626,27 @@ public class ConfigurationImpl implements Configuration, Serializable {
                final Resolver resolver = getPropertyUtils().getResolver();
                while (resolver.hasNested(name)) {
                   try {
-                     target = getPropertyUtils().getProperty(target, resolver.next(name));
-                     if (target == null) {
-                        throw new InvocationTargetException(null, "Resolved nested property for:" + name + ", on: " + bean + " was null");
+                     String nextName = resolver.next(name);
+                     Object nextTarget = getPropertyUtils().getProperty(target, resolver.next(name));
+                     if (nextTarget == null) {
+                        PropertyDescriptor descriptor = getPropertyUtils().getPropertyDescriptor(target, nextName);
+                        if (descriptor == null) {
+                           throw new InvocationTargetException(null, "No accessor method descriptor for: " + nextName + " on: " + target.getClass());
+                        }
+
+                        if (descriptor.getWriteMethod() == null) {
+                           throw new InvocationTargetException(null, "No Write method for: " + nextName + " on: " + target.getClass());
+                        }
+
+                        try {
+                           nextTarget = descriptor.getPropertyType().getDeclaredConstructor().newInstance();
+                        } catch (InstantiationException e) {
+                           throw new InvocationTargetException(e);
+                        }
+
+                        descriptor.getWriteMethod().invoke(target, nextTarget);
                      }
+                     target = nextTarget;
                      name = resolver.remove(name);
                   } catch (final NoSuchMethodException e) {
                      throw new InvocationTargetException(e, "No getter for property:" + name + ", on: " + bean);
