@@ -117,9 +117,9 @@ public class AmqpFullyQualifiedNameTest extends JMSClientTestSupport {
          Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
          Topic topic = session.createTopic(CompositeAddress.toFullyQualified(multicastAddress, anycastQ1).toString());
 
-         MessageConsumer consumer1 = session.createConsumer(topic);
-         MessageConsumer consumer2 = session.createConsumer(topic);
-         MessageConsumer consumer3 = session.createConsumer(topic);
+         MessageConsumer consumer1 = session.createDurableConsumer(topic, "c1");
+         MessageConsumer consumer2 = session.createDurableConsumer(topic, "c2");
+         MessageConsumer consumer3 = session.createDurableConsumer(topic, "c3");
 
          MessageProducer producer = session.createProducer(topic);
 

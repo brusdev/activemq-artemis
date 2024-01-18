@@ -410,6 +410,7 @@ public class DefaultSenderController implements SenderController {
       source.setFilter(supportedFilters.isEmpty() ? null : supportedFilters);
 
       boolean browseOnly = !multicast && source.getDistributionMode() != null && source.getDistributionMode().equals(COPY);
+      //browseOnly = false when createDurableConsumer because source.getDistributionMode().equals(COPY)
 
       return (Consumer) sessionSPI.createSender(senderContext, queue, multicast ? null : selector, browseOnly);
    }
