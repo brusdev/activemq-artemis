@@ -23,11 +23,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
@@ -52,6 +56,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
@@ -115,6 +121,7 @@ import org.apache.activemq.artemis.core.settings.impl.ResourceLimitSettings;
 import org.apache.activemq.artemis.json.JsonArrayBuilder;
 import org.apache.activemq.artemis.json.JsonObject;
 import org.apache.activemq.artemis.json.JsonObjectBuilder;
+import org.apache.activemq.artemis.json.JsonValue;
 import org.apache.activemq.artemis.utils.ByteUtil;
 import org.apache.activemq.artemis.utils.Env;
 import org.apache.activemq.artemis.utils.JsonLoader;
@@ -551,7 +558,7 @@ public class ConfigurationImpl implements Configuration, Serializable {
       fileUrlToProperties = resolvePropertiesSources(fileUrlToProperties);
       if (fileUrlToProperties != null) {
          for (String fileUrl : fileUrlToProperties.split(",")) {
-            Properties brokerProperties = new InsertionOrderedProperties();
+            InsertionOrderedProperties brokerProperties = new InsertionOrderedProperties();
             if (fileUrl.endsWith("/")) {
                // treat as a directory and parse every property file in alphabetical order
                File dir = new File(fileUrl);
@@ -565,10 +572,11 @@ public class ConfigurationImpl implements Configuration, Serializable {
                   if (files != null && files.length > 0) {
                      Arrays.sort(files);
                      for (String fileName : files) {
-                        try (FileInputStream fileInputStream = new FileInputStream(new File(dir, fileName));
-                             BufferedInputStream reader = new BufferedInputStream(fileInputStream)) {
+                        try (FileReader reader = new FileReader(new File(dir, fileName))) {
                            brokerProperties.clear();
-                           brokerProperties.load(reader);
+                           if (!brokerProperties.tryLoadJson(reader)) {
+                              brokerProperties.load(reader);
+                           }
                            parsePrefixedProperties(this, fileName, brokerProperties, null);
                         }
                      }
@@ -576,9 +584,10 @@ public class ConfigurationImpl implements Configuration, Serializable {
                }
             } else {
                File file = new File(fileUrl);
-               try (FileInputStream fileInputStream = new FileInputStream(file);
-                    BufferedInputStream reader = new BufferedInputStream(fileInputStream)) {
-                  brokerProperties.load(reader);
+               try (FileReader reader = new FileReader(file)) {
+                  if (!brokerProperties.tryLoadJson(reader)) {
+                     brokerProperties.load(reader);
+                  }
                   parsePrefixedProperties(this, file.getName(), brokerProperties, null);
                }
             }
@@ -3615,6 +3624,29 @@ public class ConfigurationImpl implements Configuration, Serializable {
       @Override
       public void clear() {
          orderedMap.clear();
+      }
+
+      public synchronized boolean tryLoadJson(Reader reader) throws IOException {
+         JsonObject jsonObject;
+         try {
+            jsonObject = JsonLoader.readObject(reader);
+         } catch (Exception e) {
+            return false;
+         }
+
+         load("", jsonObject);
+
+         return true;
+      }
+
+      private synchronized void load(String parentKey, JsonObject jsonObject) {
+         jsonObject.forEach((key, jsonValue) -> {
+            if (JsonValue.ValueType.OBJECT.equals(jsonValue.getValueType())) {
+               load(parentKey + key + ".", jsonValue.asJsonObject());
+            } else {
+               put(parentKey + key, JsonUtil.convertJsonValue(jsonValue, String.class));
+            }
+        });
       }
    }
 }
