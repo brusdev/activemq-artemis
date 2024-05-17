@@ -94,6 +94,11 @@ import org.apache.activemq.artemis.core.settings.impl.DeletionPolicy;
 import org.apache.activemq.artemis.core.settings.impl.ResourceLimitSettings;
 import org.apache.activemq.artemis.core.settings.impl.SlowConsumerThresholdMeasurementUnit;
 import org.apache.activemq.artemis.logs.AssertionLoggerHandler;
+import org.apache.activemq.artemis.json.JsonObjectBuilder;
+import org.apache.activemq.artemis.logs.AssertionLoggerHandler;
+import org.apache.activemq.artemis.core.settings.impl.SlowConsumerThresholdMeasurementUnit;
+import org.apache.activemq.artemis.tests.util.ServerTestBase;
+import org.apache.activemq.artemis.utils.JsonLoader;
 import org.apache.activemq.artemis.utils.RandomUtil;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzerPolicy;
 import org.apache.commons.lang3.ClassUtils;
@@ -1910,6 +1915,50 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
       assertEquals("cc", configuration.getClusterConfigurations().get(0).getName());
       assertEquals(MessageLoadBalancingType.OFF_WITH_REDISTRIBUTION, configuration.getClusterConfigurations().get(0).getMessageLoadBalancingType());
       assertEquals(CriticalAnalyzerPolicy.SHUTDOWN, configuration.getCriticalAnalyzerPolicy());
+   }
+
+   @Test
+   public void testJsonPropertiesReaderFromFile() throws Exception {
+
+      File tmpFile = File.createTempFile("json-props-test", "", temporaryFolder.getRoot());
+
+      JsonObjectBuilder configObjectBuilder = JsonLoader.createObjectBuilder();
+      {
+         configObjectBuilder.add("globalMaxSize", "25K");
+         configObjectBuilder.add("gracefulShutdownEnabled", true);
+         configObjectBuilder.add("securityEnabled", false);
+         configObjectBuilder.add("maxRedeliveryRecords", 123);
+
+         JsonObjectBuilder clusterConfigObjectBuilder = JsonLoader.createObjectBuilder();
+         {
+            JsonObjectBuilder ccObjectBuilder = JsonLoader.createObjectBuilder();
+            {
+               ccObjectBuilder.add("name", "cc");
+               ccObjectBuilder.add("messageLoadBalancingType", "OFF_WITH_REDISTRIBUTION");
+            }
+            clusterConfigObjectBuilder.add("cc", ccObjectBuilder.build());
+         }
+         configObjectBuilder.add("clusterConfigurations", clusterConfigObjectBuilder.build());
+
+         configObjectBuilder.add("criticalAnalyzerPolicy", "SHUTDOWN");
+      }
+
+      try (FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+           PrintWriter printWriter = new PrintWriter(fileOutputStream)) {
+         printWriter.write(configObjectBuilder.build().toString());
+      }
+
+      ConfigurationImpl configuration = new ConfigurationImpl();
+      configuration.parseProperties(tmpFile.getAbsolutePath());
+
+      Assert.assertEquals(25 * 1024, configuration.getGlobalMaxSize());
+      Assert.assertEquals(true, configuration.isGracefulShutdownEnabled());
+      Assert.assertEquals(false, configuration.isSecurityEnabled());
+      Assert.assertEquals(123, configuration.getMaxRedeliveryRecords());
+
+      Assert.assertEquals("cc", configuration.getClusterConfigurations().get(0).getName());
+      Assert.assertEquals(MessageLoadBalancingType.OFF_WITH_REDISTRIBUTION, configuration.getClusterConfigurations().get(0).getMessageLoadBalancingType());
+      Assert.assertEquals(CriticalAnalyzerPolicy.SHUTDOWN, configuration.getCriticalAnalyzerPolicy());
    }
 
    @Test
