@@ -1929,6 +1929,25 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
          configObjectBuilder.add("securityEnabled", false);
          configObjectBuilder.add("maxRedeliveryRecords", 123);
 
+         JsonObjectBuilder addressConfigObjectBuilder = JsonLoader.createObjectBuilder();
+         {
+            JsonObjectBuilder lbaObjectBuilder = JsonLoader.createObjectBuilder();
+            {
+               JsonObjectBuilder queueConfigBuilder = JsonLoader.createObjectBuilder();
+               {
+                  JsonObjectBuilder lbqObjectBuilder = JsonLoader.createObjectBuilder();
+                  {
+                     lbqObjectBuilder.add("routingType", "ANYCAST");
+                     lbqObjectBuilder.add("durable", false);
+                  }
+                  queueConfigBuilder.add("LB.TEST", lbqObjectBuilder.build());
+               }
+               lbaObjectBuilder.add("queueConfigs", queueConfigBuilder.build());
+            }
+            addressConfigObjectBuilder.add("LB.TEST", lbaObjectBuilder.build());
+         }
+         configObjectBuilder.add("addressConfigurations", addressConfigObjectBuilder.build());
+
          JsonObjectBuilder clusterConfigObjectBuilder = JsonLoader.createObjectBuilder();
          {
             JsonObjectBuilder ccObjectBuilder = JsonLoader.createObjectBuilder();
@@ -1955,6 +1974,11 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
       Assert.assertEquals(true, configuration.isGracefulShutdownEnabled());
       Assert.assertEquals(false, configuration.isSecurityEnabled());
       Assert.assertEquals(123, configuration.getMaxRedeliveryRecords());
+
+      Assert.assertEquals(1, configuration.getAddressConfigurations().size());
+      Assert.assertEquals(1, configuration.getAddressConfigurations().get(0).getQueueConfigs().size());
+      Assert.assertEquals(SimpleString.toSimpleString("LB.TEST"), configuration.getAddressConfigurations().get(0).getQueueConfigs().get(0).getAddress());
+      Assert.assertEquals(false, configuration.getAddressConfigurations().get(0).getQueueConfigs().get(0).isDurable());
 
       Assert.assertEquals("cc", configuration.getClusterConfigurations().get(0).getName());
       Assert.assertEquals(MessageLoadBalancingType.OFF_WITH_REDISTRIBUTION, configuration.getClusterConfigurations().get(0).getMessageLoadBalancingType());

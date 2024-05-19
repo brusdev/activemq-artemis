@@ -40,9 +40,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,6 +56,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
@@ -3708,26 +3711,32 @@ public class ConfigurationImpl implements Configuration, Serializable {
             return false;
          }
 
-         load("", jsonObject);
+         List<Map.Entry<String, String>> pairs = new ArrayList<>();
+         load("", jsonObject, pairs);
+         pairs.sort(Map.Entry.comparingByKey());
+         pairs.forEach(stringStringEntry -> put(stringStringEntry.getKey(), stringStringEntry.getValue()));
 
          return true;
       }
 
-      private synchronized void load(String parentKey, JsonObject jsonObject) {
+      private synchronized void load(String parentKey, JsonObject jsonObject, List<Map.Entry<String, String>> pairs) {
          jsonObject.forEach((jsonKey, jsonValue) -> {
             JsonValue.ValueType jsonValueType = jsonValue.getValueType();
+            if (jsonKey.contains(".")) {
+               jsonKey = "\"" + jsonKey + "\"";
+            }
             String propertyKey = parentKey + jsonKey;
             switch (jsonValueType){
                case OBJECT:
-                  load(propertyKey + ".", jsonValue.asJsonObject());
+                  load(propertyKey + ".", jsonValue.asJsonObject(), pairs);
                   break;
                case STRING:
-                  put(propertyKey, jsonObject.getString(jsonKey));
+                  pairs.add(new AbstractMap.SimpleEntry<>(propertyKey, jsonObject.getString(jsonKey)));
                   break;
                case NUMBER:
                case TRUE:
                case FALSE:
-                  put(propertyKey, jsonValue.toString());
+                  pairs.add(new AbstractMap.SimpleEntry<>(propertyKey, jsonValue.toString()));
                   break;
                default:
                   throw new IllegalStateException("JSON value type not supported: " + jsonValueType);
