@@ -1248,6 +1248,8 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
 
       Properties properties = new Properties();
 
+      properties.put("acceptorConfigurations.artemis.params.host", "my-host");
+      properties.put("acceptorConfigurations.artemis.params.port", "61656");
       properties.put("acceptorConfigurations.artemis.extraParams.supportAdvisory", "true");
       properties.put("acceptorConfigurations.new.extraParams.supportAdvisory", "true");
 

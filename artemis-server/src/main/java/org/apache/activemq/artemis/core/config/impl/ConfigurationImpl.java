@@ -25,11 +25,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
@@ -3703,7 +3705,7 @@ public class ConfigurationImpl implements Configuration, Serializable {
          orderedMap.clear();
       }
 
-      public synchronized boolean tryLoadJson(Reader reader) {
+      public synchronized boolean tryLoadJson(Reader reader) throws IOException {
          JsonObject jsonObject;
          try {
             jsonObject = JsonLoader.readObject(reader);
@@ -3711,15 +3713,21 @@ public class ConfigurationImpl implements Configuration, Serializable {
             return false;
          }
 
-         List<Map.Entry<String, String>> pairs = new ArrayList<>();
+         List<String> pairs = new ArrayList<>();
          load("", jsonObject, pairs);
-         pairs.sort(Map.Entry.comparingByKey());
-         pairs.forEach(stringStringEntry -> put(stringStringEntry.getKey(), stringStringEntry.getValue()));
+
+         pairs.sort(Comparator.naturalOrder());
+         StringBuilder stringBuilder = new StringBuilder();
+         String lineSeparator = System.getProperty("line.separator");
+         pairs.forEach(pair -> stringBuilder.append(pair).append(lineSeparator));
+         StringReader stringReader = new StringReader(stringBuilder.toString());
+
+         load(stringReader);
 
          return true;
       }
 
-      private synchronized void load(String parentKey, JsonObject jsonObject, List<Map.Entry<String, String>> pairs) {
+      private synchronized void load(String parentKey, JsonObject jsonObject, List<String> pairs) {
          jsonObject.forEach((jsonKey, jsonValue) -> {
             JsonValue.ValueType jsonValueType = jsonValue.getValueType();
             if (jsonKey.contains(".")) {
@@ -3731,12 +3739,12 @@ public class ConfigurationImpl implements Configuration, Serializable {
                   load(propertyKey + ".", jsonValue.asJsonObject(), pairs);
                   break;
                case STRING:
-                  pairs.add(new AbstractMap.SimpleEntry<>(propertyKey, jsonObject.getString(jsonKey)));
+                  pairs.add(propertyKey + "=" + jsonObject.getString(jsonKey));
                   break;
                case NUMBER:
                case TRUE:
                case FALSE:
-                  pairs.add(new AbstractMap.SimpleEntry<>(propertyKey, jsonValue.toString()));
+                  pairs.add(propertyKey + "=" + jsonValue.toString());
                   break;
                default:
                   throw new IllegalStateException("JSON value type not supported: " + jsonValueType);
