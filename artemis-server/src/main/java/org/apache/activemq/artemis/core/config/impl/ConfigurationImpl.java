@@ -22,9 +22,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -42,7 +40,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +55,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
@@ -3707,27 +3703,19 @@ public class ConfigurationImpl implements Configuration, Serializable {
 
       public synchronized boolean tryLoadJson(Reader reader) throws IOException {
          JsonObject jsonObject;
+
          try {
             jsonObject = JsonLoader.readObject(reader);
          } catch (Exception e) {
             return false;
          }
 
-         List<String> pairs = new ArrayList<>();
-         load("", jsonObject, pairs);
-
-         pairs.sort(Comparator.naturalOrder());
-         StringBuilder stringBuilder = new StringBuilder();
-         String lineSeparator = System.getProperty("line.separator");
-         pairs.forEach(pair -> stringBuilder.append(pair).append(lineSeparator));
-         StringReader stringReader = new StringReader(stringBuilder.toString());
-
-         load(stringReader);
+         loadJsonObject("", jsonObject);
 
          return true;
       }
 
-      private synchronized void load(String parentKey, JsonObject jsonObject, List<String> pairs) {
+      private synchronized void loadJsonObject(String parentKey, JsonObject jsonObject) {
          jsonObject.forEach((jsonKey, jsonValue) -> {
             JsonValue.ValueType jsonValueType = jsonValue.getValueType();
             if (jsonKey.contains(".")) {
@@ -3736,15 +3724,15 @@ public class ConfigurationImpl implements Configuration, Serializable {
             String propertyKey = parentKey + jsonKey;
             switch (jsonValueType){
                case OBJECT:
-                  load(propertyKey + ".", jsonValue.asJsonObject(), pairs);
+                  loadJsonObject(propertyKey + ".", jsonValue.asJsonObject());
                   break;
                case STRING:
-                  pairs.add(propertyKey + "=" + jsonObject.getString(jsonKey));
+                  put(propertyKey,jsonObject.getString(jsonKey));
                   break;
                case NUMBER:
                case TRUE:
                case FALSE:
-                  pairs.add(propertyKey + "=" + jsonValue.toString());
+                  put(propertyKey,jsonValue.toString());
                   break;
                default:
                   throw new IllegalStateException("JSON value type not supported: " + jsonValueType);

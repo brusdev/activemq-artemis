@@ -1922,7 +1922,7 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
    @Test
    public void testJsonPropertiesReaderFromFile() throws Exception {
 
-      File tmpFile = File.createTempFile("json-props-test", "", temporaryFolder.getRoot());
+      File tmpFile = File.createTempFile("json-props-test", "", temporaryFolder);
 
       JsonObjectBuilder configObjectBuilder = JsonLoader.createObjectBuilder();
       {
@@ -1943,6 +1943,13 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
                      lbqObjectBuilder.add("durable", false);
                   }
                   queueConfigBuilder.add("LB.TEST", lbqObjectBuilder.build());
+
+                  JsonObjectBuilder myqObjectBuilder = JsonLoader.createObjectBuilder();
+                  {
+                     myqObjectBuilder.add("routingType", "ANYCAST");
+                     myqObjectBuilder.add("durable", false);
+                  }
+                  queueConfigBuilder.add("my queue", myqObjectBuilder.build());
                }
                lbaObjectBuilder.add("queueConfigs", queueConfigBuilder.build());
             }
@@ -1972,19 +1979,21 @@ public class ConfigurationImplTest extends AbstractConfigurationTestBase {
       ConfigurationImpl configuration = new ConfigurationImpl();
       configuration.parseProperties(tmpFile.getAbsolutePath());
 
-      Assert.assertEquals(25 * 1024, configuration.getGlobalMaxSize());
-      Assert.assertEquals(true, configuration.isGracefulShutdownEnabled());
-      Assert.assertEquals(false, configuration.isSecurityEnabled());
-      Assert.assertEquals(123, configuration.getMaxRedeliveryRecords());
+      assertEquals(25 * 1024, configuration.getGlobalMaxSize());
+      assertEquals(true, configuration.isGracefulShutdownEnabled());
+      assertEquals(false, configuration.isSecurityEnabled());
+      assertEquals(123, configuration.getMaxRedeliveryRecords());
 
-      Assert.assertEquals(1, configuration.getAddressConfigurations().size());
-      Assert.assertEquals(1, configuration.getAddressConfigurations().get(0).getQueueConfigs().size());
-      Assert.assertEquals(SimpleString.toSimpleString("LB.TEST"), configuration.getAddressConfigurations().get(0).getQueueConfigs().get(0).getAddress());
-      Assert.assertEquals(false, configuration.getAddressConfigurations().get(0).getQueueConfigs().get(0).isDurable());
+      assertEquals(1, configuration.getAddressConfigurations().size());
+      assertEquals(2, configuration.getAddressConfigurations().get(0).getQueueConfigs().size());
+      assertEquals(SimpleString.of("LB.TEST"), configuration.getAddressConfigurations().get(0).getQueueConfigs().get(0).getAddress());
+      assertEquals(false, configuration.getAddressConfigurations().get(0).getQueueConfigs().get(0).isDurable());
+      assertEquals(SimpleString.of("my queue"), configuration.getAddressConfigurations().get(0).getQueueConfigs().get(1).getAddress());
+      assertEquals(false, configuration.getAddressConfigurations().get(0).getQueueConfigs().get(1).isDurable());
 
-      Assert.assertEquals("cc", configuration.getClusterConfigurations().get(0).getName());
-      Assert.assertEquals(MessageLoadBalancingType.OFF_WITH_REDISTRIBUTION, configuration.getClusterConfigurations().get(0).getMessageLoadBalancingType());
-      Assert.assertEquals(CriticalAnalyzerPolicy.SHUTDOWN, configuration.getCriticalAnalyzerPolicy());
+      assertEquals("cc", configuration.getClusterConfigurations().get(0).getName());
+      assertEquals(MessageLoadBalancingType.OFF_WITH_REDISTRIBUTION, configuration.getClusterConfigurations().get(0).getMessageLoadBalancingType());
+      assertEquals(CriticalAnalyzerPolicy.SHUTDOWN, configuration.getCriticalAnalyzerPolicy());
    }
 
    @Test
