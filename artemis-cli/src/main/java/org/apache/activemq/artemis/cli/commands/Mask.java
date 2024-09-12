@@ -56,7 +56,7 @@ public class Mask extends ActionAbstract {
          if (hash) {
             context.out.println("Option --key ignored in case of hashing");
          } else {
-            params.put(DefaultSensitiveStringCodec.BLOWFISH_KEY, key);
+            params.put(DefaultSensitiveStringCodec.KEY_PARAM, key);
          }
       }
 

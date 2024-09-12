@@ -17,7 +17,9 @@
 package org.apache.activemq.artemis.utils;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -25,6 +27,7 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,12 +57,12 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
    public static final String ALGORITHM = "algorithm";
-   public static final String BLOWFISH_KEY = "key";
    public static final String ONE_WAY = "one-way";
    public static final String TWO_WAY = "two-way";
+   public static final String KEY_PARAM = "key";
    public static final String KEY_SYSTEM_PROPERTY = "artemis.default.sensitive.string.codec.key";
 
-   private CodecAlgorithm algorithm = new BlowfishAlgorithm(Collections.EMPTY_MAP);
+   private CodecAlgorithm algorithm = new TwoWayAlgorithm(Collections.EMPTY_MAP);
 
    @Override
    public String decode(Object secret) throws Exception {
@@ -76,7 +79,7 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
       String algorithm = params.get(ALGORITHM);
       if (algorithm == null || algorithm.equals(TWO_WAY)) {
          //two way
-         this.algorithm = new BlowfishAlgorithm(params);
+         this.algorithm = new TwoWayAlgorithm(params);
       } else if (algorithm.equals(ONE_WAY)) {
          this.algorithm = new PBKDF2Algorithm(params);
       } else {
@@ -105,7 +108,7 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
          }
       }
       codec.init(params);
-      Object encode = codec.encode(args[0]);
+      Object encode = codec.decode(args[0]);
 
       System.out.println("Encoded password (without quotes): \"" + encode + "\"");
    }
@@ -116,6 +119,7 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
    }
 
    private abstract static class CodecAlgorithm {
+      protected static final String SEPARATOR = ":";
 
       protected Map<String, String> params;
 
@@ -131,30 +135,164 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
       }
    }
 
+   private class TwoWayAlgorithm  extends CodecAlgorithm {
+
+      private BlowfishAlgorithm blowfishAlgorithm;
+      private AESAlgorithm aesAlgorithm;
+
+      TwoWayAlgorithm(Map<String, String> params) {
+         super(params);
+
+         logger.trace("Loading key from params {}", KEY_PARAM);
+         String key = params.get(KEY_PARAM);
+         if (key == null) {
+            logger.trace("Loading key from system property {}", KEY_SYSTEM_PROPERTY);
+            key = System.getProperty(KEY_SYSTEM_PROPERTY);
+            if (key == null || key.trim().length() == 0) {
+               final String matchingEnvVarName = envVarNameFromSystemPropertyName(KEY_SYSTEM_PROPERTY);
+               logger.trace("Loading key from env var {}", matchingEnvVarName);
+               key = getFromEnv(matchingEnvVarName);
+            }
+         }
+
+         blowfishAlgorithm = new BlowfishAlgorithm(key, params);
+         aesAlgorithm = new AESAlgorithm(key, params);
+      }
+
+      @Override
+      public String decode(String secret) throws Exception {
+         if (secret.contains(SEPARATOR)) {
+            return aesAlgorithm.decode(secret);
+         } else {
+            return blowfishAlgorithm.decode(secret);
+         }
+      }
+
+      @Override
+      public String encode(String secret) throws Exception {
+         return aesAlgorithm.encode(secret);
+      }
+
+      @Override
+      public boolean verify(char[] inputValue, String storedValue) {
+         try {
+            if (storedValue.contains(SEPARATOR)) {
+               return Objects.equals(String.valueOf(inputValue), aesAlgorithm.decode(storedValue));
+            } else {
+               return Objects.equals(storedValue, blowfishAlgorithm.encode(String.valueOf(inputValue)));
+            }
+         } catch (Exception e) {
+            logger.debug("Exception on verifying:", e);
+            return false;
+         }
+      }
+   }
+
+   private class AESAlgorithm extends CodecAlgorithm {
+
+      private static final String securityKeyFactoryAlgorithm = "PBKDF2WithHmacSHA256";
+      private static final String securityKeyAlgorithm = "AES";
+      private static final int securityKeyIterationCount = 1024;
+      private static final int securityKeyLength = 256;
+      private static final String cipherTransformation = "AES/CBC/PKCS5Padding";
+
+      private char[] key;
+
+      private SecureRandom secureRandom;
+
+      AESAlgorithm(String key, Map<String, String> params) {
+         super(params);
+
+         secureRandom = new SecureRandom();
+
+         if (key != null && !key.isEmpty()) {
+            this.key = key.toCharArray();
+         }
+      }
+
+      @Override
+      public String decode(String secret) throws Exception {
+         if (key == null) {
+            throw new IllegalArgumentException("Invalid key");
+         }
+
+         String[] secretTokens = secret.split(SEPARATOR);
+
+         if (secretTokens.length != 4) {
+            throw new IllegalArgumentException("Invalid number of secret tokens");
+         }
+
+         if (!"0".equals(secretTokens[0])) {
+            throw new IllegalArgumentException("Invalid secret prefix: " + secretTokens[0]);
+         }
+
+         byte[] salt = ByteUtil.hexToBytes(secretTokens[1]);
+
+         KeySpec keySpec = new PBEKeySpec(key, salt, securityKeyIterationCount, securityKeyLength);
+         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(securityKeyFactoryAlgorithm);
+         SecretKey secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec)
+            .getEncoded(), securityKeyAlgorithm);
+
+         byte[] iv = ByteUtil.hexToBytes(secretTokens[2]);
+
+         Cipher cipher = Cipher.getInstance(cipherTransformation);
+         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+         byte[] decryptedBytes = cipher.doFinal(ByteUtil.hexToBytes(secretTokens[3]));
+
+         return new String(decryptedBytes);
+      }
+
+      @Override
+      public String encode(String secret) throws Exception {
+         if (key == null) {
+            throw new IllegalArgumentException("Invalid key");
+         }
+
+         byte[] salt = new byte[32];
+         secureRandom.nextBytes(salt);
+
+         KeySpec keySpec = new PBEKeySpec(key, salt, securityKeyIterationCount, securityKeyLength);
+         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(securityKeyFactoryAlgorithm);
+         SecretKey secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec)
+            .getEncoded(), securityKeyAlgorithm);
+
+         byte[] iv = new byte[16];
+         secureRandom.nextBytes(iv);
+
+         Cipher cipher = Cipher.getInstance(cipherTransformation);
+         cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+         byte[] encryptedBytes = cipher.doFinal(secret.getBytes());
+
+         StringBuilder builder = new StringBuilder();
+         builder.append(0).append(SEPARATOR).append(ByteUtil.bytesToHex(salt))
+            .append(SEPARATOR).append(ByteUtil.bytesToHex(iv))
+            .append(SEPARATOR).append(ByteUtil.bytesToHex(encryptedBytes));
+
+         return builder.toString();
+      }
+
+      @Override
+      public boolean verify(char[] inputValue, String storedValue) {
+         try {
+            return Objects.equals(storedValue, encode(String.valueOf(inputValue)));
+         } catch (Exception e) {
+            logger.debug("Exception on verifying:", e);
+            return false;
+         }
+      }
+   }
+
+
    private class BlowfishAlgorithm extends CodecAlgorithm {
 
       private byte[] internalKey = "clusterpassword".getBytes();
 
 
-      BlowfishAlgorithm(Map<String, String> params) {
+      BlowfishAlgorithm(String key, Map<String, String> params) {
          super(params);
-         String key = params.get(BLOWFISH_KEY);
+
          if (key != null) {
-            updateKey(key);
-         } else {
-            key = System.getProperty(KEY_SYSTEM_PROPERTY);
-            if (key != null && key.trim().length() > 0) {
-               logger.trace("Set key from system property {}", KEY_SYSTEM_PROPERTY);
-               updateKey(key);
-            }
-            if (key == null) {
-               final String matchingEnvVarName = envVarNameFromSystemPropertyName(KEY_SYSTEM_PROPERTY);
-               key = getFromEnv(matchingEnvVarName);
-               if (key != null) {
-                  logger.trace("Set key from env var {}", matchingEnvVarName);
-                  updateKey(key);
-               }
-            }
+            internalKey = key.getBytes();
          }
       }
 
@@ -223,7 +361,6 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
    }
 
    private static class PBKDF2Algorithm extends CodecAlgorithm {
-      private static final String SEPARATOR = ":";
       private String sceretKeyAlgorithm = "PBKDF2WithHmacSHA1";
       private String randomScheme = "SHA1PRNG";
       private int keyLength = 64 * 8;
