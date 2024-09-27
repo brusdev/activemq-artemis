@@ -17,9 +17,13 @@
 package org.apache.activemq.artemis.cli.commands;
 
 import java.io.File;
+import java.security.Provider;
+import java.security.Security;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.Pair;
@@ -75,6 +79,11 @@ public class Run extends LockAbstract {
    @Override
    public Object execute(ActionContext context) throws Exception {
       super.execute(context);
+
+      System.out.println("FIPS-tester");
+      System.out.println("com.redhat.fips: " + System.getProperty("com.redhat.fips", "null"));
+      System.out.println("Security Providers:");
+      Arrays.stream(Security.getProviders()).forEach(provider -> System.out.println("  " + provider.getName()));
 
       verifyOlderLogging(new File(getBrokerEtc()));
 
