@@ -362,7 +362,6 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
 
    private static class PBKDF2Algorithm extends CodecAlgorithm {
       private String sceretKeyAlgorithm = "PBKDF2WithHmacSHA1";
-      private String randomScheme = "SHA1PRNG";
       private int keyLength = 64 * 8;
       private int saltLength = 32;
       private int iterations = 1024;
@@ -373,7 +372,7 @@ public class DefaultSensitiveStringCodec implements SensitiveDataCodec<String> {
          super(params);
          skf = SecretKeyFactory.getInstance(sceretKeyAlgorithm);
          if (sr == null) {
-            sr = SecureRandom.getInstance(randomScheme);
+            sr = new SecureRandom();
          }
       }
 
