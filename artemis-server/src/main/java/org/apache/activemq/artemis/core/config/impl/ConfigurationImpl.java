@@ -2220,6 +2220,7 @@ public class ConfigurationImpl implements Configuration, Serializable {
    }
 
    // to provide type information to creation from properties
+   @Override
    public ConfigurationImpl addSecurityRole(String match, RoleSet roles) {
       securitySettings.put(match, roles);
       return this;

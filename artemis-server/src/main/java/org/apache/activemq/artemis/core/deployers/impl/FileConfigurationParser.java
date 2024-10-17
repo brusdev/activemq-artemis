@@ -80,6 +80,7 @@ import org.apache.activemq.artemis.core.config.ha.ReplicationPrimaryPolicyConfig
 import org.apache.activemq.artemis.core.config.ha.SharedStoreBackupPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.ha.SharedStorePrimaryPolicyConfiguration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
+import org.apache.activemq.artemis.core.config.impl.RoleSet;
 import org.apache.activemq.artemis.core.config.routing.CacheConfiguration;
 import org.apache.activemq.artemis.core.config.routing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.config.routing.NamedPropertyConfiguration;
@@ -962,8 +963,8 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          }
          list = node.getElementsByTagName(SECURITY_ELEMENT_NAME);
          for (int i = 0; i < list.getLength(); i++) {
-            Pair<String, Set<Role>> securityItem = parseSecurityRoles(list.item(i), config.getSecurityRoleNameMappings());
-            config.putSecurityRoles(securityItem.getA(), securityItem.getB());
+            Pair<String, RoleSet> securityItem = parseSecurityRoles(list.item(i), config.getSecurityRoleNameMappings());
+            config.addSecurityRole(securityItem.getA(), securityItem.getB());
          }
          list = node.getElementsByTagName(SECURITY_PLUGIN_ELEMENT_NAME);
          for (int i = 0; i < list.getLength(); i++) {
@@ -1158,12 +1159,15 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
     * @param node
     * @return
     */
-   protected Pair<String, Set<Role>> parseSecurityRoles(final Node node, final Map<String, Set<String>> roleMappings) {
+   protected Pair<String, RoleSet> parseSecurityRoles(final Node node, final Map<String, Set<String>> roleMappings) {
       final String match = node.getAttributes().getNamedItem("match").getNodeValue();
+      final Node applyToAllMatchesAttribute = node.getAttributes().getNamedItem("applyToAllMatches");
+      final boolean applyToAllMatches = applyToAllMatchesAttribute != null &&
+         Boolean.parseBoolean(applyToAllMatchesAttribute.getNodeValue());
 
-      Set<Role> securityRoles = new HashSet<>();
+      RoleSet securityRoles = new RoleSet(match, applyToAllMatches);
 
-      Pair<String, Set<Role>> securityMatch = new Pair<>(match, securityRoles);
+      Pair<String, RoleSet> securityMatch = new Pair<>(match, securityRoles);
 
       ArrayList<String> send = new ArrayList<>();
       ArrayList<String> consume = new ArrayList<>();

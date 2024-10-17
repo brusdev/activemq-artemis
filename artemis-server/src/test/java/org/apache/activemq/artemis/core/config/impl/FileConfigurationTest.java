@@ -78,6 +78,7 @@ import org.apache.activemq.artemis.core.server.metrics.plugins.SimpleMetricsPlug
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerBasePlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
+import org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository;
 import org.apache.activemq.artemis.core.settings.impl.SlowConsumerPolicy;
 import org.apache.activemq.artemis.core.settings.impl.SlowConsumerThresholdMeasurementUnit;
 import org.apache.activemq.artemis.tests.extensions.parameterized.ParameterizedTestExtension;
@@ -86,6 +87,7 @@ import org.apache.activemq.artemis.logs.AssertionLoggerHandler;
 import org.apache.activemq.artemis.utils.RandomUtil;
 import org.apache.activemq.artemis.utils.XmlProvider;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzerPolicy;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -831,6 +833,37 @@ public class FileConfigurationTest extends AbstractConfigurationTestBase {
       assertTrue(roles.contains(testRole11));
       assertTrue(roles.contains(testRole12));
       assertTrue(roles.contains(testRole13));
+   }
+
+   @TestTemplate
+   public void testSecuritySettingsAppliedToAllChildren() throws Exception {
+      FileConfiguration configuration = new FileConfiguration();
+      FileDeploymentManager deploymentManager = new FileDeploymentManager("securitySettingHierarchy.xml");
+      deploymentManager.addDeployable(configuration);
+      deploymentManager.readConfiguration();
+
+      HierarchicalObjectRepository<Set<Role>> securityRepository = new HierarchicalObjectRepository<>(configuration.getWildcardConfiguration());
+      for (Map.Entry<String, Set<Role>> entry : configuration.getSecurityRoles().entrySet()) {
+         securityRepository.addMatch(entry.getKey(), entry.getValue(), true);
+      }
+
+      Set<Role> fooTestRoleSet = securityRepository.getMatch("foo.test");
+      Assert.assertTrue(fooTestRoleSet.stream().filter(role -> "root".equals(role.getName())).findFirst().isPresent());
+      Assert.assertTrue(fooTestRoleSet.stream().filter(role -> "foo".equals(role.getName())).findFirst().isPresent());
+
+      Set<Role> fooBarTestRoleSet = securityRepository.getMatch("foo.bar.test");
+      Assert.assertTrue(fooBarTestRoleSet.stream().filter(role -> "root".equals(role.getName())).findFirst().isPresent());
+      Assert.assertTrue(fooBarTestRoleSet.stream().filter(role -> "foo".equals(role.getName())).findFirst().isPresent());
+      Assert.assertTrue(fooBarTestRoleSet.stream().filter(role -> "foo.bar".equals(role.getName())).findFirst().isPresent());
+
+      Set<Role> tooTestRoleSet = securityRepository.getMatch("too.test");
+      Assert.assertTrue(tooTestRoleSet.stream().filter(role -> "root".equals(role.getName())).findFirst().isPresent());
+      Assert.assertTrue(tooTestRoleSet.stream().filter(role -> "too".equals(role.getName())).findFirst().isPresent());
+
+      Set<Role> tooBarTestRoleSet = securityRepository.getMatch("too.bar.test");
+      Assert.assertTrue(tooBarTestRoleSet.stream().filter(role -> "root".equals(role.getName())).findFirst().isPresent());
+      Assert.assertFalse(tooBarTestRoleSet.stream().filter(role -> "too".equals(role.getName())).findFirst().isPresent());
+      Assert.assertTrue(tooBarTestRoleSet.stream().filter(role -> "too.bar".equals(role.getName())).findFirst().isPresent());
    }
 
    @TestTemplate

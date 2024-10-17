@@ -28,6 +28,7 @@ import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPBrokerConnectConfiguration;
 import org.apache.activemq.artemis.core.config.amqpBrokerConnectivity.AMQPFederationBrokerPlugin;
+import org.apache.activemq.artemis.core.config.impl.RoleSet;
 import org.apache.activemq.artemis.core.config.routing.ConnectionRouterConfiguration;
 import org.apache.activemq.artemis.core.server.metrics.ActiveMQMetricsPlugin;
 import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerFederationPlugin;
@@ -1163,6 +1164,8 @@ public interface Configuration {
    Map<String, Set<String>> getSecurityRoleNameMappings();
 
    Configuration putSecurityRoles(String match, Set<Role> roles);
+
+   Configuration addSecurityRole(String match, RoleSet roles);
 
    Configuration setConnectorServiceConfigurations(List<ConnectorServiceConfiguration> configs);
 

@@ -17,16 +17,24 @@
 package org.apache.activemq.artemis.core.config.impl;
 
 import org.apache.activemq.artemis.core.security.Role;
+import org.apache.activemq.artemis.core.settings.Mergeable;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class RoleSet extends HashSet<Role> {
+public class RoleSet extends HashSet<Role> implements Mergeable<RoleSet> {
 
    private String name;
 
+   private boolean mergeable;
+
    public RoleSet() {
       super();
+   }
+
+   public RoleSet(String key, boolean mergeEnabled) {
+      setName(key);
+      setMergeable(mergeEnabled);
    }
 
    public RoleSet(String key, Set<Role> value) {
@@ -47,5 +55,63 @@ public class RoleSet extends HashSet<Role> {
 
    public void setName(String name) {
       this.name = name;
+   }
+
+   public boolean isMergeable() {
+      return mergeable;
+   }
+
+   public void setMergeable(boolean mergeable) {
+      this.mergeable = mergeable;
+   }
+
+   @Override
+   public void merge(RoleSet merged) {
+      if (merged.mergeable) {
+         for (Role mergedRole : merged) {
+            Role mergingRole = this.stream().filter(role -> role.getName().equals(mergedRole.getName())).findFirst().orElse(null);
+            if (mergingRole == null) {
+               this.add(mergedRole);
+            } else {
+               mergingRole.merge(mergedRole);
+            }
+         }
+      }
+   }
+
+   @Override
+   public RoleSet mergeCopy(RoleSet merged) {
+      if (!merged.mergeable) {
+         return this;
+      }
+
+      RoleSet result = new RoleSet(this.name, mergeable);
+      result.addAll(this);
+
+      for (Role mergedRole : merged) {
+         Role resultRole = new Role(mergedRole.getName(),
+            mergedRole.isSend(),
+            mergedRole.isConsume(),
+            mergedRole.isCreateDurableQueue(),
+            mergedRole.isDeleteDurableQueue(),
+            mergedRole.isCreateNonDurableQueue(),
+            mergedRole.isDeleteNonDurableQueue(),
+            mergedRole.isManage(),
+            mergedRole.isBrowse(),
+            mergedRole.isCreateAddress(),
+            mergedRole.isDeleteAddress(),
+            mergedRole.isView(),
+            mergedRole.isEdit());
+         resultRole.setName(mergedRole.getName());
+
+         Role mergingRole = result.stream().filter(role -> role.getName().equals(mergedRole.getName())).findFirst().orElse(null);
+         if (mergingRole != null) {
+            resultRole.merge(mergingRole);
+         }
+
+         result.add(resultRole);
+      }
+
+      return result;
    }
 }

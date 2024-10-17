@@ -1,0 +1,85 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration
+        xmlns="urn:activemq"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:activemq ../../../../activemq-server/src/main/resources/schema/artemis-server.xsd">
+   <core xmlns="urn:activemq:core">
+      <security-settings>
+         <security-setting match="#" applyToAllMatches="true">
+            <permission type="createNonDurableQueue" roles="root"/>
+            <permission type="deleteNonDurableQueue" roles="root"/>
+            <permission type="createDurableQueue" roles="root"/>
+            <permission type="deleteDurableQueue" roles="root"/>
+            <permission type="createAddress" roles="root"/>
+            <permission type="deleteAddress" roles="root"/>
+            <permission type="consume" roles="root"/>
+            <permission type="browse" roles="root"/>
+            <permission type="send" roles="root"/>
+            <permission type="manage" roles="root"/>
+         </security-setting>
+         <security-setting match="foo.#" applyToAllMatches="true">
+            <permission type="createNonDurableQueue" roles="foo"/>
+            <permission type="deleteNonDurableQueue" roles="foo"/>
+            <permission type="createDurableQueue" roles="foo"/>
+            <permission type="deleteDurableQueue" roles="foo"/>
+            <permission type="createAddress" roles="foo"/>
+            <permission type="deleteAddress" roles="foo"/>
+            <permission type="consume" roles="foo"/>
+            <permission type="browse" roles="foo"/>
+            <permission type="send" roles="foo"/>
+            <permission type="manage" roles="foo"/>
+         </security-setting>
+         <security-setting match="foo.bar.#">
+            <permission type="createNonDurableQueue" roles="foo.bar"/>
+            <permission type="deleteNonDurableQueue" roles="foo.bar"/>
+            <permission type="createDurableQueue" roles="foo.bar"/>
+            <permission type="deleteDurableQueue" roles="foo.bar"/>
+            <permission type="createAddress" roles="foo.bar"/>
+            <permission type="deleteAddress" roles="foo.bar"/>
+            <permission type="consume" roles="foo.bar"/>
+            <permission type="browse" roles="foo.bar"/>
+            <permission type="send" roles="foo.bar"/>
+            <permission type="manage" roles="foo.bar"/>
+         </security-setting>
+         <security-setting match="too.#">
+            <permission type="createNonDurableQueue" roles="too"/>
+            <permission type="deleteNonDurableQueue" roles="too"/>
+            <permission type="createDurableQueue" roles="too"/>
+            <permission type="deleteDurableQueue" roles="too"/>
+            <permission type="createAddress" roles="too"/>
+            <permission type="deleteAddress" roles="too"/>
+            <permission type="consume" roles="too"/>
+            <permission type="browse" roles="too"/>
+            <permission type="send" roles="too"/>
+            <permission type="manage" roles="too"/>
+         </security-setting>
+         <security-setting match="too.bar.#">
+            <permission type="createNonDurableQueue" roles="too.bar"/>
+            <permission type="deleteNonDurableQueue" roles="too.bar"/>
+            <permission type="createDurableQueue" roles="too.bar"/>
+            <permission type="deleteDurableQueue" roles="too.bar"/>
+            <permission type="createAddress" roles="too.bar"/>
+            <permission type="deleteAddress" roles="too.bar"/>
+            <permission type="consume" roles="too.bar"/>
+            <permission type="browse" roles="too.bar"/>
+            <permission type="send" roles="too.bar"/>
+            <permission type="manage" roles="too.bar"/>
+         </security-setting>
+      </security-settings>
+   </core>
+</configuration>
