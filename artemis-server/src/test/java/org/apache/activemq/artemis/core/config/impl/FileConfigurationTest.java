@@ -857,7 +857,7 @@ public class FileConfigurationTest extends AbstractConfigurationTestBase {
       Assert.assertTrue(fooBarTestRoleSet.stream().filter(role -> "foo.bar".equals(role.getName())).findFirst().isPresent());
 
       Set<Role> tooTestRoleSet = securityRepository.getMatch("too.test");
-      Assert.assertTrue(tooTestRoleSet.stream().filter(role -> "root".equals(role.getName())).findFirst().isPresent());
+      Assert.assertFalse(tooTestRoleSet.stream().filter(role -> "root".equals(role.getName())).findFirst().isPresent());
       Assert.assertTrue(tooTestRoleSet.stream().filter(role -> "too".equals(role.getName())).findFirst().isPresent());
 
       Set<Role> tooBarTestRoleSet = securityRepository.getMatch("too.bar.test");

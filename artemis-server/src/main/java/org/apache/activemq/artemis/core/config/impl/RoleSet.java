@@ -26,15 +26,15 @@ public class RoleSet extends HashSet<Role> implements Mergeable<RoleSet> {
 
    private String name;
 
-   private boolean mergeable;
+   private boolean exclusive;
 
    public RoleSet() {
       super();
    }
 
-   public RoleSet(String key, boolean mergeEnabled) {
+   public RoleSet(String key, boolean exclusive) {
       setName(key);
-      setMergeable(mergeEnabled);
+      setExclusive(exclusive);
    }
 
    public RoleSet(String key, Set<Role> value) {
@@ -57,17 +57,17 @@ public class RoleSet extends HashSet<Role> implements Mergeable<RoleSet> {
       this.name = name;
    }
 
-   public boolean isMergeable() {
-      return mergeable;
+   public boolean isExclusive() {
+      return exclusive;
    }
 
-   public void setMergeable(boolean mergeable) {
-      this.mergeable = mergeable;
+   public void setExclusive(boolean exclusive) {
+      this.exclusive = exclusive;
    }
 
    @Override
    public void merge(RoleSet merged) {
-      if (merged.mergeable) {
+      if (this.exclusive && merged.exclusive) {
          for (Role mergedRole : merged) {
             Role mergingRole = this.stream().filter(role -> role.getName().equals(mergedRole.getName())).findFirst().orElse(null);
             if (mergingRole == null) {
@@ -81,11 +81,11 @@ public class RoleSet extends HashSet<Role> implements Mergeable<RoleSet> {
 
    @Override
    public RoleSet mergeCopy(RoleSet merged) {
-      if (!merged.mergeable) {
+      if (!this.exclusive || !merged.exclusive) {
          return this;
       }
 
-      RoleSet result = new RoleSet(this.name, mergeable);
+      RoleSet result = new RoleSet(this.name, true);
       result.addAll(this);
 
       for (Role mergedRole : merged) {

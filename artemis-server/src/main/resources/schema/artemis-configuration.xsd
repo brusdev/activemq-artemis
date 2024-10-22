@@ -4783,10 +4783,10 @@
                            </xsd:documentation>
                         </xsd:annotation>
                      </xsd:attribute>
-                     <xsd:attribute name="applyToAllMatches" type="xsd:boolean">
+                     <xsd:attribute name="exclusive" type="xsd:boolean">
                         <xsd:annotation>
                            <xsd:documentation>
-                              whether or not to apply to all matches, also the ones with one more specific
+                              whether or not to merge with other non-exclusive matches
                            </xsd:documentation>
                         </xsd:annotation>
                      </xsd:attribute>
@@ -4852,6 +4852,13 @@
                </xsd:complexType>
             </xsd:element>
          </xsd:sequence>
+         <xsd:attribute name="exclusive" type="xsd:boolean">
+            <xsd:annotation>
+               <xsd:documentation>
+                  whether or not to merge with other non-exclusive matches
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:attribute>
          <xsd:attributeGroup ref="xml:specialAttrs"/>
       </xsd:complexType>
    </xsd:element>

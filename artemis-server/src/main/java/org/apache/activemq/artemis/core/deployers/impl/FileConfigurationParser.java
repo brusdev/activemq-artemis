@@ -954,6 +954,10 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       NodeList elements = e.getElementsByTagName("security-settings");
       if (elements.getLength() != 0) {
          Element node = (Element) elements.item(0);
+         final Node exclusiveAttribute = node.getAttributes().getNamedItem("exclusive");
+         final boolean exclusive = exclusiveAttribute == null ||
+            Boolean.parseBoolean(exclusiveAttribute.getNodeValue());
+
          NodeList list = node.getElementsByTagName(SECURITY_ROLE_MAPPING_NAME);
          for (int i = 0; i < list.getLength(); i++) {
             Map<String, Set<String>> roleMappings = parseSecurityRoleMapping(list.item(i));
@@ -963,7 +967,7 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
          }
          list = node.getElementsByTagName(SECURITY_ELEMENT_NAME);
          for (int i = 0; i < list.getLength(); i++) {
-            Pair<String, RoleSet> securityItem = parseSecurityRoles(list.item(i), config.getSecurityRoleNameMappings());
+            Pair<String, RoleSet> securityItem = parseSecurityRoles(list.item(i), config.getSecurityRoleNameMappings(), exclusive);
             config.addSecurityRole(securityItem.getA(), securityItem.getB());
          }
          list = node.getElementsByTagName(SECURITY_PLUGIN_ELEMENT_NAME);
@@ -1155,17 +1159,13 @@ public final class FileConfigurationParser extends XMLConfigurationUtil {
       }
    }
 
-   /**
-    * @param node
-    * @return
-    */
-   protected Pair<String, RoleSet> parseSecurityRoles(final Node node, final Map<String, Set<String>> roleMappings) {
+   protected Pair<String, RoleSet> parseSecurityRoles(final Node node, final Map<String, Set<String>> roleMappings, boolean defaultExclusive) {
       final String match = node.getAttributes().getNamedItem("match").getNodeValue();
-      final Node applyToAllMatchesAttribute = node.getAttributes().getNamedItem("applyToAllMatches");
-      final boolean applyToAllMatches = applyToAllMatchesAttribute != null &&
-         Boolean.parseBoolean(applyToAllMatchesAttribute.getNodeValue());
+      final Node exclusiveAttribute = node.getAttributes().getNamedItem("exclusive");
+      final boolean exclusive = exclusiveAttribute == null ? defaultExclusive :
+         Boolean.parseBoolean(exclusiveAttribute.getNodeValue());
 
-      RoleSet securityRoles = new RoleSet(match, applyToAllMatches);
+      RoleSet securityRoles = new RoleSet(match, !exclusive);
 
       Pair<String, RoleSet> securityMatch = new Pair<>(match, securityRoles);
 

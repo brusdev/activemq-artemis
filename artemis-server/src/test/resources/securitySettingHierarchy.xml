@@ -19,8 +19,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="urn:activemq ../../../../activemq-server/src/main/resources/schema/artemis-server.xsd">
    <core xmlns="urn:activemq:core">
-      <security-settings>
-         <security-setting match="#" applyToAllMatches="true">
+      <security-settings exclusive="false">
+         <security-setting match="#">
             <permission type="createNonDurableQueue" roles="root"/>
             <permission type="deleteNonDurableQueue" roles="root"/>
             <permission type="createDurableQueue" roles="root"/>
@@ -32,7 +32,7 @@
             <permission type="send" roles="root"/>
             <permission type="manage" roles="root"/>
          </security-setting>
-         <security-setting match="foo.#" applyToAllMatches="true">
+         <security-setting match="foo.#">
             <permission type="createNonDurableQueue" roles="foo"/>
             <permission type="deleteNonDurableQueue" roles="foo"/>
             <permission type="createDurableQueue" roles="foo"/>
@@ -56,7 +56,7 @@
             <permission type="send" roles="foo.bar"/>
             <permission type="manage" roles="foo.bar"/>
          </security-setting>
-         <security-setting match="too.#">
+         <security-setting match="too.#" exclusive="true">
             <permission type="createNonDurableQueue" roles="too"/>
             <permission type="deleteNonDurableQueue" roles="too"/>
             <permission type="createDurableQueue" roles="too"/>
