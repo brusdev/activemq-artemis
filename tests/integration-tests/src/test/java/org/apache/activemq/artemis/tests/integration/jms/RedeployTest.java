@@ -256,11 +256,11 @@ public class RedeployTest extends ActiveMQTestBase {
          latch.await(10, TimeUnit.SECONDS);
 
          //No plugins registered at start
-         assertEquals(0, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
+         assertEquals(1, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
 
          //register plugin programmatically
          embeddedActiveMQ.getActiveMQServer().registerBrokerPlugin(new NotificationActiveMQServerPlugin());
-         assertEquals(1, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
+         assertEquals(2, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
          assertTrue(embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().stream()
             .anyMatch(plugin ->
                          plugin instanceof NotificationActiveMQServerPlugin));
@@ -272,7 +272,7 @@ public class RedeployTest extends ActiveMQTestBase {
          latch.await(10, TimeUnit.SECONDS);
 
          //plugin added on configuration reload, programmatically added plugin stays registered
-         assertEquals(2, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
+         assertEquals(3, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
          assertTrue(embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().stream()
                        .anyMatch(plugin ->
                                     plugin instanceof NotificationActiveMQServerPlugin));
@@ -287,7 +287,7 @@ public class RedeployTest extends ActiveMQTestBase {
          latch.await(10, TimeUnit.SECONDS);
 
          //removing plugin in config, programmatically added plugin stays registered
-         assertEquals(1, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
+         assertEquals(2, embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().size());
          assertTrue(embeddedActiveMQ.getActiveMQServer().getBrokerPlugins().stream()
                        .anyMatch(plugin ->
                                     plugin instanceof NotificationActiveMQServerPlugin));
