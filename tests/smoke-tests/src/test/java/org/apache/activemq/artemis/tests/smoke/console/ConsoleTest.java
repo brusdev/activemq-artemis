@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.activemq.artemis.cli.commands.Create;
 import org.apache.activemq.artemis.tests.extensions.parameterized.ParameterizedTestExtension;
@@ -60,20 +61,28 @@ public abstract class ConsoleTest extends SmokeTestBase {
    protected static final String SERVER_ADMIN_USERNAME = "admin";
    protected static final String SERVER_ADMIN_PASSWORD = "admin";
 
+   protected static final String BROWSER_CHROME = "chrome";
+   protected static final String BROWSER_FIREFOX = "firefox";
+
    protected static final int DEFAULT_TIMEOUT = 10000;
 
+   protected String browser;
    protected WebDriver driver;
-   protected MutableCapabilities browserOptions;
    protected String webServerUrl;
    private BrowserWebDriverContainer browserWebDriverContainer;
 
-   @Parameters(name = "browserOptions={0}")
+   @Parameters(name = "browser={0}")
    public static Collection getParameters() {
-      return Arrays.asList(new Object[][]{{new ChromeOptions()}, {new FirefoxOptions()}});
+      String webdriverBrowsers = System.getProperty("webdriver.browsers");
+      if (webdriverBrowsers == null) {
+         webdriverBrowsers = BROWSER_CHROME + "," + BROWSER_FIREFOX;
+      }
+      return Arrays.stream(webdriverBrowsers.split(",")).
+          map(browser -> new Object[]{browser}).collect(Collectors.toList());
    }
 
-   public ConsoleTest(MutableCapabilities browserOptions) {
-      this.browserOptions = browserOptions;
+   public ConsoleTest(String browser) {
+      this.browser = browser;
       this.webServerUrl = String.format("%s://%s:%d", "http", System.getProperty("sts-http-host", "localhost"), 8161);
    }
 
@@ -115,19 +124,22 @@ public abstract class ConsoleTest extends SmokeTestBase {
          String webdriverLocation;
          String webdriverArguments;
          String webdriverRemoteServer;
+         MutableCapabilities browserOptions;
          Function<MutableCapabilities, WebDriver> webDriverConstructor;
          BiConsumer<MutableCapabilities, String[]> webdriverArgumentsSetter;
 
-         if (browserOptions instanceof ChromeOptions) {
+         if (BROWSER_CHROME.equals(browser)) {
             webdriverName = "chrome";
-            webDriverConstructor = browserOptions -> new ChromeDriver((ChromeOptions)browserOptions);
-            webdriverArgumentsSetter = (browserOptions, arguments) -> ((ChromeOptions) browserOptions).addArguments(arguments);
-         } else if (browserOptions instanceof FirefoxOptions) {
+            browserOptions = new ChromeOptions();
+            webDriverConstructor = browserOpts -> new ChromeDriver((ChromeOptions)browserOpts);
+            webdriverArgumentsSetter = (browserOpts, arguments) -> ((ChromeOptions) browserOpts).addArguments(arguments);
+         } else if (BROWSER_FIREFOX.equals(browser)) {
             webdriverName = "gecko";
-            webDriverConstructor = browserOptions -> new FirefoxDriver((FirefoxOptions)browserOptions);
-            webdriverArgumentsSetter = (browserOptions, arguments) -> ((FirefoxOptions) browserOptions).addArguments(arguments);
+            browserOptions = new FirefoxOptions();
+            webDriverConstructor = browserOpts -> new FirefoxDriver((FirefoxOptions)browserOpts);
+            webdriverArgumentsSetter = (browserOpts, arguments) -> ((FirefoxOptions) browserOpts).addArguments(arguments);
          } else {
-            throw new IllegalStateException("Unexpected browserOptions: " + browserOptions);
+            throw new IllegalStateException("Unexpected browser: " + browser);
          }
 
          webdriverArguments = System.getProperty("webdriver." + webdriverName + ".driver.args");
@@ -149,7 +161,7 @@ public abstract class ConsoleTest extends SmokeTestBase {
          } else {
             Testcontainers.exposeHostPorts(8161);
             webServerUrl = webServerUrl.replace("localhost", "host.testcontainers.internal");
-            browserWebDriverContainer = new BrowserWebDriverContainer().withCapabilities(this.browserOptions);
+            browserWebDriverContainer = new BrowserWebDriverContainer().withCapabilities(browserOptions);
             browserWebDriverContainer.start();
             driver = browserWebDriverContainer.getWebDriver();
          }
