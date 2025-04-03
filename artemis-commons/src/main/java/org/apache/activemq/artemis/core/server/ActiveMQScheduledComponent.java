@@ -352,4 +352,8 @@ public abstract class ActiveMQScheduledComponent implements ActiveMQComponent, R
       bookedRunForScheduler(booked);
    }
 
+   public boolean isBooked() {
+      return bookedForRunning.get();
+   }
+
 }
