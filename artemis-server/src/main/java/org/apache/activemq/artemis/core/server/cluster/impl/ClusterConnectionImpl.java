@@ -82,7 +82,6 @@ import org.apache.activemq.artemis.utils.collections.TypedProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ClusterConnectionImpl implements ClusterConnection, AfterConnectInternalListener, TopologyManager, DiscoveryListener {
@@ -466,6 +465,7 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
 
       if (serverLocator != null) {
          serverLocator.removeClusterTopologyListener(this);
+         serverLocator.setDiscoveryListener(null);
       }
 
       if (topologyScanner != null) {
@@ -635,7 +635,7 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
    }
 
    private synchronized void startTopologyScanner() {
-      if (topologyScannerAttempts != 0) {
+      if (topologyScannerAttempts != 0 && !stopping) {
          if (topologyScanner == null) {
             topologyScanner = new TopologyScanner(scheduledExecutor, executor, retryInterval, TimeUnit.MILLISECONDS, true);
          }
@@ -651,10 +651,10 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
    }
 
    public final class TopologyScanner extends ActiveMQScheduledComponent {
-      private AtomicBoolean running = new AtomicBoolean(false);
+      private volatile boolean running = false;
 
       public boolean isRunning() {
-         return running.get();
+         return running;
       }
 
       TopologyScanner(ScheduledExecutorService scheduledExecutorService, Executor executor, long checkPeriod, TimeUnit timeUnit, boolean onDemand) {
@@ -663,7 +663,7 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
 
       @Override
       public boolean delay() {
-         running.set(true);
+         running = true;
 
          return super.delay();
       }
@@ -693,10 +693,10 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
 
          int topologyScannerCount = topologyScannerCounter.incrementAndGet();
 
-         if (!topologyUpdated && (topologyScannerAttempts == -1 || topologyScannerCount < topologyScannerAttempts)) {
+         if (!topologyUpdated && !stopping && (topologyScannerAttempts == -1 || topologyScannerCount < topologyScannerAttempts)) {
             delay();
          } else {
-            running.set(false);
+            running = false;
          }
       }
 
