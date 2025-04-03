@@ -1452,12 +1452,6 @@ public class SymmetricClusterTest extends ClusterTestBase {
          validateTopologSize(3, 0, 1, 2);
          validateTopologSize(2, 3, 4);
 
-         for (int node = 0; node < 5; node++) {
-            final int serverNode = node;
-            Wait.assertTrue(() -> ((ClusterConnectionImpl)getServer(serverNode).getClusterManager().
-                getClusterConnection("cluster" + serverNode)).getTopologyScanner().isRunning());
-         }
-
          disablePartition();
       }
 

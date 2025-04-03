@@ -693,10 +693,14 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
 
          int topologyScannerCount = topologyScannerCounter.incrementAndGet();
 
-         if (!topologyUpdated && !stopping && (topologyScannerAttempts == -1 || topologyScannerCount < topologyScannerAttempts)) {
+         boolean retry = (topologyScannerAttempts == -1 || topologyScannerCount < topologyScannerAttempts);
+
+         if (!topologyUpdated && !stopping && retry) {
             delay();
          } else {
             running = false;
+
+            ActiveMQServerLogger.LOGGER.incompleteClusterTopology(name.toString(), topology, topology.getMembers().toString());
          }
       }
 
@@ -715,7 +719,7 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
                   targetLocator.setCallTimeout(serverLocator.getCallTimeout());
                   targetLocator.setNodeID(serverLocator.getNodeID());
                   targetLocator.setClusterTransportConfiguration(serverLocator.getClusterTransportConfiguration());
-                  targetLocator.setIdentity("(Cluster-topology-updater::" + server.toString() + ")");
+                  targetLocator.setIdentity("(Cluster-topology-scanner::" + server.toString() + ")");
 
                   try {
                      try (ClientSessionFactoryInternal targetClientSessionFactory = targetLocator.connect()) {
@@ -725,7 +729,7 @@ public final class ClusterConnectionImpl implements ClusterConnection, AfterConn
                      result = false;
 
                      if (logger.isDebugEnabled()) {
-                        logger.debug("Cluster topology updater failed to connect to {}: {}", transportConfiguration, e);
+                        logger.debug("Cluster topology scanner failed to connect to {}: {}", transportConfiguration, e);
                      }
                   }
                }
