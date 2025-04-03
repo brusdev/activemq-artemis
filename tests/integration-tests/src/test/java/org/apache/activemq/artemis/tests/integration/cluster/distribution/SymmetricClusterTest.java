@@ -2081,15 +2081,15 @@ public class SymmetricClusterTest extends ClusterTestBase {
       ProxyConnectorFactory.interceptor = (nodeId, configuration) -> {
          boolean connectionAllowed = false;
 
-         int partitionId = nodeId / 3;
+         int partitionId = (nodeId % 5) / 3;
          int targetPartitionId;
 
          if (isNetty()) {
             int port = (int)configuration.get(org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.PORT_PROP_NAME);
-            targetPartitionId = (port - org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT) / 3;
+            targetPartitionId = ((port - org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.DEFAULT_PORT) % 5) / 3;
          } else {
             int serverId = (int)configuration.get(org.apache.activemq.artemis.core.remoting.impl.invm.TransportConstants.SERVER_ID_PROP_NAME);
-            targetPartitionId = serverId / 3;
+            targetPartitionId = (serverId % 5) / 3;
          }
 
          if (partitionId == targetPartitionId) {
