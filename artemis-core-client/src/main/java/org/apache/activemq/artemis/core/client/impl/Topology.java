@@ -125,6 +125,8 @@ public final class Topology {
       }
    }
 
+   public static volatile String selectedNodeId;
+
    /**
     * This is called by the server when the node is activated from backup state. It will always succeed
     */
@@ -259,6 +261,15 @@ public final class Topology {
 
    private void sendMemberUp(final String nodeId, final TopologyMemberImpl memberToSend) {
       final List<ClusterTopologyListener> copy = copyListeners();
+
+      if (nodeId.equals(selectedNodeId)) {
+         System.err.println("TOP-SMU.selectedNodeId: " + selectedNodeId);
+         try {
+            throw new Exception("TOP-SMU.selectedNodeId: " + selectedNodeId);
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }
 
       if (logger.isTraceEnabled()) {
          logger.trace("{}::prepare to send {} to {} elements", this, nodeId, copy.size());

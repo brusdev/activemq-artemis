@@ -19,12 +19,16 @@ package org.apache.activemq.artemis.tests.integration.cluster.distribution;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.core.client.impl.Topology;
+import org.apache.activemq.artemis.core.client.impl.TopologyMemberImpl;
 import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnectorFactory;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
@@ -1423,7 +1427,11 @@ public class SymmetricClusterTest extends ClusterTestBase {
          assertNotNull(servers[s], "Server[" + s + "] is null");
 
          for (ClusterConnection c : servers[s].getClusterManager().getClusterConnections()) {
-            Wait.assertEquals(expectedSize, () -> c.getTopology().getMembers().size(), 5000);
+            Wait.assertEquals(expectedSize, () -> c.getTopology().getMembers().size(), 5000, Wait.SLEEP_MILLIS, () -> {
+               Collection<TopologyMemberImpl> members = c.getTopology().getMembers();
+               return "Server[" + s + "] has " + members.size() + "/" + expectedSize + " members:\n" +
+                   String.join("\n", members.stream().map(topologyMember -> topologyMember.toString()).collect(Collectors.toList()));
+            });
          }
       }
    }
@@ -1574,11 +1582,31 @@ public class SymmetricClusterTest extends ClusterTestBase {
       closeSessionFactory(0);
       closeSessionFactory(3);
 
+      for (int node = 0; node < 5; node++) {
+         System.err.println("SRV0-" + node + ": " + getServer(node).getNodeID());
+      }
+
+      String node0Id = getServer(0).getNodeID().toString();
+
       stopServers(0, 3);
 
       validateTopologSize(3, 1, 2, 4);
 
+      Topology.selectedNodeId = node0Id;
+
+      for (int s : new int[]{1, 2, 4}) {
+         for (ClusterConnection c : servers[s].getClusterManager().getClusterConnections()) {
+            Collection<TopologyMemberImpl> members = c.getTopology().getMembers();
+            System.err.println("SRV-TOP[" + s + "] has " + members.size() + " members:\n" +
+                String.join("\n", members.stream().map(topologyMember -> topologyMember.toString()).collect(Collectors.toList())));
+         }
+      }
+
       startServers(3, 0);
+
+      for (int node = 0; node < 5; node++) {
+         System.err.println("SRV1-" + node + ": " + getServer(node).getNodeID());
+      }
 
       validateTopologSize(5, 0, 1, 2, 3, 4);
 

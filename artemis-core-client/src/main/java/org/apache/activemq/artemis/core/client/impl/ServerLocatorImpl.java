@@ -1643,11 +1643,13 @@ public final class ServerLocatorImpl implements ServerLocatorInternal, Discovery
       final List<TransportConfiguration> newInitialconnectors = new ArrayList<>(newConnectors.size());
 
       for (DiscoveryEntry entry : newConnectors) {
+         /*
          if (ha && topology.getMember(entry.getNodeID()) == null) {
             TopologyMemberImpl member = new TopologyMemberImpl(entry.getNodeID(), null, null, entry.getConnector(), null);
             // on this case we set it as zero as any update coming from server should be accepted
             topology.updateMember(0, entry.getNodeID(), member);
          }
+         */
          // ignore its own transport connector
          if (!entry.getConnector().equals(clusterTransportConfiguration)) {
             newInitialconnectors.add(entry.getConnector());

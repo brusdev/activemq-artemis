@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.artemis.tests.integration.cluster.distribution;
 
+import org.junit.jupiter.api.Test;
+
 public class NettySymmetricClusterWithDiscoveryTest extends SymmetricClusterWithDiscoveryTest {
 
    @Override
@@ -23,4 +25,9 @@ public class NettySymmetricClusterWithDiscoveryTest extends SymmetricClusterWith
       return true;
    }
 
+   @Test
+   @Override
+   public void testStartStopServers() throws Exception {
+      super.testStartStopServers();
+   }
 }
