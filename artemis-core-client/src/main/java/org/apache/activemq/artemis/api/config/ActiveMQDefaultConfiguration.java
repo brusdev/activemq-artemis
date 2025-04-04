@@ -712,7 +712,7 @@ public final class ActiveMQDefaultConfiguration {
    private static final boolean DEFAULT_MIRROR_PAGE_TRANSACTION = false;
 
 
-   private static final int DEFAULT_CLUSTER_TOPOLOGY_SCANNER_ATTEMPTS = 0;
+   private static final int DEFAULT_CLUSTER_TOPOLOGY_SCANNER_ATTEMPTS = -1;
 
 
    /**
