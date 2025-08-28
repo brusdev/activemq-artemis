@@ -35,6 +35,7 @@ public abstract class PolicyTestBase {
    @Test
    public void testPolicyWithNoTarget() {
       AbstractPolicy policy = createPolicy();
+      policy.init(Collections.emptyMap());
 
       Target selectedTarget = policy.selectTarget(Collections.emptyList(), "test");
 
@@ -44,6 +45,7 @@ public abstract class PolicyTestBase {
    @Test
    public void testPolicyWithSingleTarget() {
       AbstractPolicy policy = createPolicy();
+      policy.init(Collections.emptyMap());
 
       List<Target> targets = new ArrayList<>();
       targets.add(new MockTarget());

@@ -38,7 +38,7 @@ public class MockTarget extends AbstractTarget {
 
    @Override
    public boolean isLocal() {
-      return false;
+      return local;
    }
 
    public MockTarget setLocal(boolean local) {
