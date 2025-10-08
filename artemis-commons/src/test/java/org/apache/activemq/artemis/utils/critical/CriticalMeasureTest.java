@@ -41,7 +41,7 @@ public class CriticalMeasureTest {
    @Test
    public void testCriticalMeasureTakingLongButSucceeding() throws Exception {
       CriticalAnalyzer analyzer = new CriticalAnalyzerImpl();
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 5);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 5);
       CriticalMeasure measure = new CriticalMeasure(component, 1);
       long time = System.nanoTime();
       measure.enterCritical();
@@ -53,7 +53,7 @@ public class CriticalMeasureTest {
    @Test
    public void testCriticalFailure() throws Exception {
       CriticalAnalyzer analyzer = new CriticalAnalyzerImpl();
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 5);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 5);
       CriticalMeasure measure = new CriticalMeasure(component, 1);
       long time = System.nanoTime();
       AutoCloseable closeable = measure.measure();
@@ -69,7 +69,7 @@ public class CriticalMeasureTest {
    @Test
    public void testWithCloseable() throws Exception {
       CriticalAnalyzer analyzer = new CriticalAnalyzerImpl();
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 5);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 5);
       try (AutoCloseable theMeasure = component.measureCritical(0)) {
          LockSupport.parkNanos(1000);
          assertTrue(component.checkExpiration(100, false));
@@ -80,7 +80,7 @@ public class CriticalMeasureTest {
    @Test
    public void testRace() throws Exception {
       CriticalAnalyzer analyzer = new CriticalAnalyzerImpl();
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 5);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 5);
 
       AtomicInteger errors = new AtomicInteger(0);
       AtomicBoolean running = new AtomicBoolean(true);

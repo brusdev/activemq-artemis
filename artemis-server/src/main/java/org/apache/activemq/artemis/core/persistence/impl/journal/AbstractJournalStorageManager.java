@@ -123,7 +123,7 @@ import org.apache.activemq.artemis.utils.collections.ConcurrentLongHashMap;
 import org.apache.activemq.artemis.utils.collections.SparseArrayLinkedList;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzer;
 import org.apache.activemq.artemis.utils.critical.CriticalCloseable;
-import org.apache.activemq.artemis.utils.critical.CriticalComponentImpl;
+import org.apache.activemq.artemis.utils.critical.MeasurableCriticalComponentImpl;
 import org.apache.activemq.artemis.utils.critical.CriticalMeasure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,7 +143,7 @@ import static org.apache.activemq.artemis.core.persistence.impl.journal.JournalR
  * <p>
  * Using this class also ensures that locks are acquired in the right order, avoiding dead-locks.
  */
-public abstract class AbstractJournalStorageManager extends CriticalComponentImpl implements StorageManager {
+public abstract class AbstractJournalStorageManager extends MeasurableCriticalComponentImpl implements StorageManager {
 
    protected static final int CRITICAL_PATHS = 3;
    protected static final int CRITICAL_STORE = 0;

@@ -25,7 +25,7 @@ import org.apache.activemq.artemis.logs.AssertionLoggerHandler;
 import org.apache.activemq.artemis.tests.util.ServerTestBase;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzerAccessor;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzerPolicy;
-import org.apache.activemq.artemis.utils.critical.CriticalComponentImpl;
+import org.apache.activemq.artemis.utils.critical.MeasurableCriticalComponentImpl;
 import org.junit.jupiter.api.Test;
 
 public class ActiveMQServerStartupTest extends ServerTestBase {
@@ -58,7 +58,7 @@ public class ActiveMQServerStartupTest extends ServerTestBase {
          server.start();
          // this will be faking a condition
          server.setState(ActiveMQServer.SERVER_STATE.STARTING);
-         CriticalAnalyzerAccessor.fireActions(server.getCriticalAnalyzer(), new CriticalComponentImpl(server.getCriticalAnalyzer(), 2));
+         CriticalAnalyzerAccessor.fireActions(server.getCriticalAnalyzer(), new MeasurableCriticalComponentImpl(server.getCriticalAnalyzer(), 2));
          assertTrue(loggerHandler.findText("AMQ224116"));
          assertEquals(ActiveMQServer.SERVER_STATE.STARTING, server.getState()); // should not be changed
          server.stop();

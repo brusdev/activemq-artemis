@@ -20,7 +20,7 @@ package org.apache.activemq.artemis.utils.critical;
  * This is not abstract as it could be used through aggregations or extensions. This is only good for cases where you
  * call leave within the same thread as you called enter.
  */
-public class CriticalComponentImpl implements CriticalComponent {
+public class MeasurableCriticalComponentImpl implements MeasurableCriticalComponent {
 
    private final CriticalMeasure[] measures;
    private final CriticalAnalyzer analyzer;
@@ -30,7 +30,7 @@ public class CriticalComponentImpl implements CriticalComponent {
       return analyzer;
    }
 
-   public CriticalComponentImpl(CriticalAnalyzer analyzer, int numberOfPaths) {
+   public MeasurableCriticalComponentImpl(CriticalAnalyzer analyzer, int numberOfPaths) {
       if (analyzer == null) {
          analyzer = EmptyCriticalAnalyzer.getInstance();
       }

@@ -64,7 +64,7 @@ import org.apache.activemq.artemis.utils.ReferenceCounter;
 import org.apache.activemq.artemis.utils.UUID;
 import org.apache.activemq.artemis.utils.collections.LinkedListIterator;
 import org.apache.activemq.artemis.utils.collections.NodeStoreFactory;
-import org.apache.activemq.artemis.utils.critical.CriticalComponentImpl;
+import org.apache.activemq.artemis.utils.critical.MeasurableCriticalComponentImpl;
 import org.apache.activemq.artemis.utils.critical.EmptyCriticalAnalyzer;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -844,7 +844,7 @@ public class ScheduledDeliveryHandlerTest {
 
    }
 
-   public class FakeQueueForScheduleUnitTest extends CriticalComponentImpl implements Queue {
+   public class FakeQueueForScheduleUnitTest extends MeasurableCriticalComponentImpl implements Queue {
 
       @Override
       public void setPurgeOnNoConsumers(boolean value) {

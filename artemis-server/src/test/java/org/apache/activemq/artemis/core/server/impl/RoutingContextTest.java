@@ -45,8 +45,6 @@ import org.apache.activemq.artemis.core.transaction.impl.TransactionImpl;
 import org.apache.activemq.artemis.utils.ReferenceCounter;
 import org.apache.activemq.artemis.utils.collections.LinkedListIterator;
 import org.apache.activemq.artemis.utils.collections.NodeStoreFactory;
-import org.apache.activemq.artemis.utils.critical.CriticalAnalyzer;
-import org.apache.activemq.artemis.utils.critical.CriticalCloseable;
 import org.junit.jupiter.api.Test;
 
 public class RoutingContextTest {
@@ -61,16 +59,6 @@ public class RoutingContextTest {
          this.name = name;
          this.isInternal = isInternal;
          this.durable = durable;
-      }
-
-      @Override
-      public CriticalAnalyzer getCriticalAnalyzer() {
-         return null;
-      }
-
-      @Override
-      public CriticalCloseable measureCritical(int path) {
-         return null;
       }
 
       @Override

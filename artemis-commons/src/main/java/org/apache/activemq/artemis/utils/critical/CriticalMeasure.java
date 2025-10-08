@@ -73,9 +73,9 @@ public class CriticalMeasure {
    protected volatile long timeEnter;
 
    private final int id;
-   private final CriticalComponent component;
+   private final MeasurableCriticalComponent component;
 
-   public CriticalMeasure(CriticalComponent component, int id) {
+   public CriticalMeasure(MeasurableCriticalComponent component, int id) {
       this.id = id;
       this.component = component;
       this.timeEnter = 0;

@@ -42,10 +42,10 @@ import org.apache.activemq.artemis.core.transaction.Transaction;
 import org.apache.activemq.artemis.utils.ReferenceCounter;
 import org.apache.activemq.artemis.utils.collections.LinkedListIterator;
 import org.apache.activemq.artemis.utils.collections.NodeStoreFactory;
-import org.apache.activemq.artemis.utils.critical.CriticalComponentImpl;
+import org.apache.activemq.artemis.utils.critical.MeasurableCriticalComponentImpl;
 import org.apache.activemq.artemis.utils.critical.EmptyCriticalAnalyzer;
 
-public class FakeQueue extends CriticalComponentImpl implements Queue {
+public class FakeQueue extends MeasurableCriticalComponentImpl implements Queue {
 
    @Override
    public void setPurgeOnNoConsumers(boolean value) {

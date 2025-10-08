@@ -34,12 +34,12 @@ import org.apache.activemq.artemis.core.journal.EncodingSupport;
 import org.apache.activemq.artemis.journal.ActiveMQJournalLogger;
 import org.apache.activemq.artemis.utils.ArtemisCloseable;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzer;
-import org.apache.activemq.artemis.utils.critical.CriticalComponentImpl;
+import org.apache.activemq.artemis.utils.critical.MeasurableCriticalComponentImpl;
 import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import org.slf4j.Logger;
 
-public final class TimedBuffer extends CriticalComponentImpl {
+public final class TimedBuffer extends MeasurableCriticalComponentImpl {
 
    protected static final int CRITICAL_PATHS = 6;
    protected static final int CRITICAL_PATH_FLUSH = 0;

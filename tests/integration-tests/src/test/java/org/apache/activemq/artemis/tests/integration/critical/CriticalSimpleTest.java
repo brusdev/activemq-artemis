@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.artemis.utils.critical.CriticalAnalyzer;
 import org.apache.activemq.artemis.utils.critical.CriticalAnalyzerPolicy;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.core.config.Configuration;
@@ -31,7 +30,6 @@ import org.apache.activemq.artemis.core.server.plugin.ActiveMQServerPlugin;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.apache.activemq.artemis.tests.util.Wait;
-import org.apache.activemq.artemis.utils.critical.CriticalCloseable;
 import org.apache.activemq.artemis.utils.critical.CriticalComponent;
 import org.junit.jupiter.api.Test;
 
@@ -56,16 +54,6 @@ public class CriticalSimpleTest extends ActiveMQTestBase {
          });
 
          server.getCriticalAnalyzer().add(new CriticalComponent() {
-
-            @Override
-            public CriticalAnalyzer getCriticalAnalyzer() {
-               return null;
-            }
-
-            @Override
-            public CriticalCloseable measureCritical(int path) {
-               return null;
-            }
 
             @Override
             public boolean checkExpiration(long timeout, boolean reset) {
@@ -96,16 +84,6 @@ public class CriticalSimpleTest extends ActiveMQTestBase {
 
       try {
          server.getCriticalAnalyzer().add(new CriticalComponent() {
-
-            @Override
-            public CriticalAnalyzer getCriticalAnalyzer() {
-               return null;
-            }
-
-            @Override
-            public CriticalCloseable measureCritical(int path) {
-               return null;
-            }
 
             @Override
             public boolean checkExpiration(long timeout, boolean reset) {

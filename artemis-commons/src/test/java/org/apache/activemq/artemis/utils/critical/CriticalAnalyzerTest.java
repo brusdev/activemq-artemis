@@ -45,7 +45,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
    public void testDummy() {
 
       analyzer = new CriticalAnalyzerImpl().setTimeout(100, TimeUnit.MILLISECONDS).setCheckTime(50, TimeUnit.MILLISECONDS);
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 2);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 2);
       analyzer.add(component);
 
       CriticalCloseable closeable1 = component.measureCritical(0);
@@ -67,7 +67,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
    public void testCall() {
 
       analyzer = new CriticalAnalyzerImpl().setTimeout(100, TimeUnit.MILLISECONDS).setCheckTime(50, TimeUnit.MILLISECONDS);
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 2);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 2);
       analyzer.add(component);
 
       CriticalCloseable closeable = component.measureCritical(0);
@@ -101,16 +101,6 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
       analyzer = new CriticalAnalyzerImpl().setTimeout(100, TimeUnit.MILLISECONDS).setCheckTime(50, TimeUnit.MILLISECONDS);
       analyzer.add(new CriticalComponent() {
          @Override
-         public CriticalAnalyzer getCriticalAnalyzer() {
-            return null;
-         }
-
-         @Override
-         public CriticalCloseable measureCritical(int path) {
-            return null;
-         }
-
-         @Override
          public boolean checkExpiration(long timeout, boolean reset) {
             return true;
          }
@@ -139,7 +129,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
          latch.countDown();
       });
 
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 2);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 2);
       analyzer.add(component);
 
       component.measureCritical(0).close();
@@ -156,7 +146,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
    @Test
    public void testEnterNoLeaveNoExpire() throws Exception {
       analyzer = new CriticalAnalyzerImpl().setTimeout(10, TimeUnit.MILLISECONDS).setCheckTime(5, TimeUnit.MILLISECONDS);
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 2);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 2);
       component.measureCritical(0);
       assertFalse(component.checkExpiration(TimeUnit.MINUTES.toNanos(1), false));
       analyzer.stop();
@@ -166,7 +156,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
    @Test
    public void testEnterNoLeaveExpire() throws Exception {
       analyzer = new CriticalAnalyzerImpl().setTimeout(10, TimeUnit.MILLISECONDS).setCheckTime(5, TimeUnit.MILLISECONDS);
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 2);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 2);
       component.measureCritical(0);
       Thread.sleep(50);
       assertTrue(component.checkExpiration(0, false));
@@ -184,7 +174,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
          latch.countDown();
       });
 
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 1);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 1);
       analyzer.add(component);
 
       component.measureCritical(0).close();
@@ -206,7 +196,7 @@ public class CriticalAnalyzerTest extends ArtemisTestCase {
          latch.countDown();
       });
 
-      CriticalComponent component = new CriticalComponentImpl(analyzer, 1);
+      MeasurableCriticalComponent component = new MeasurableCriticalComponentImpl(analyzer, 1);
       analyzer.add(component);
 
       AutoCloseable measure = component.measureCritical(0);

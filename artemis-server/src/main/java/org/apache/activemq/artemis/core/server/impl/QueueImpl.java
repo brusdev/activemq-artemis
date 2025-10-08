@@ -120,7 +120,7 @@ import org.apache.activemq.artemis.utils.collections.NodeStoreFactory;
 import org.apache.activemq.artemis.utils.collections.PriorityLinkedList;
 import org.apache.activemq.artemis.utils.collections.PriorityLinkedListImpl;
 import org.apache.activemq.artemis.utils.collections.TypedProperties;
-import org.apache.activemq.artemis.utils.critical.CriticalComponentImpl;
+import org.apache.activemq.artemis.utils.critical.MeasurableCriticalComponentImpl;
 import org.jctools.queues.MpscUnboundedArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,7 +132,7 @@ import static org.apache.activemq.artemis.utils.collections.IterableStream.itera
  * <p>
  * Completely non blocking between adding to queue and delivering to consumers.
  */
-public class QueueImpl extends CriticalComponentImpl implements Queue {
+public class QueueImpl extends MeasurableCriticalComponentImpl implements Queue {
 
    protected static final int CRITICAL_PATHS = 5;
    protected static final int CRITICAL_PATH_ADD_TAIL = 0;
