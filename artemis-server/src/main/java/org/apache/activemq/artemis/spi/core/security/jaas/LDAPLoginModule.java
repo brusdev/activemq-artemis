@@ -61,6 +61,7 @@ import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
+import org.apache.activemq.artemis.core.remoting.impl.ssl.SSLSupport;
 import org.apache.activemq.artemis.utils.PasswordMaskingUtil;
 import org.apache.activemq.artemis.utils.sm.SecurityManagerShim;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -97,7 +98,21 @@ public class LDAPLoginModule implements AuditLoginModule {
       PASSWORD_CODEC("passwordCodec"),
       CONNECTION_TIMEOUT("connectionTimeout"),
       READ_TIMEOUT("readTimeout"),
-      NO_CACHE_EXCEPTIONS("noCacheExceptions");
+      NO_CACHE_EXCEPTIONS("noCacheExceptions"),
+      // SSL Configuration fields
+      KEYSTORE_PROVIDER("keystoreProvider"),
+      KEYSTORE_TYPE("keystoreType"),
+      KEYSTORE_PATH("keystorePath"),
+      KEYSTORE_PASSWORD("keystorePassword"),
+      KEYSTORE_ALIAS("keystoreAlias"),
+      TRUSTSTORE_PROVIDER("truststoreProvider"),
+      TRUSTSTORE_TYPE("truststoreType"),
+      TRUSTSTORE_PATH("truststorePath"),
+      TRUSTSTORE_PASSWORD("truststorePassword"),
+      CRL_PATH("crlPath"),
+      SSL_PROVIDER("sslProvider"),
+      TRUST_ALL("trustAll"),
+      TRUST_MANAGER_FACTORY_PLUGIN("trustManagerFactoryPlugin");
 
       private final String name;
 
@@ -306,6 +321,8 @@ public class LDAPLoginModule implements AuditLoginModule {
             ActiveMQServerLogger.LOGGER.failedToCloseContext(e);
          }
       }
+      // Clear the SSLSupport from ThreadLocal to prevent memory leaks
+      clearCurrentSSLSupport();
    }
 
    protected boolean authenticate(String username, String password) throws LoginException {
@@ -651,6 +668,94 @@ public class LDAPLoginModule implements AuditLoginModule {
       }
    }
 
+   private void configureSSLSocketFactory(Hashtable<String, String> env) throws Exception {
+      // Check if any SSL configuration is provided
+      if (!hasSSLConfiguration()) {
+         return;
+      }
+
+      logger.debug("SSL configuration detected, creating custom socket factory");
+
+      // Create SSLSupport instance from configuration
+      SSLSupport sslSupport = createSSLSupport();
+
+      // Store the SSLSupport instance in ThreadLocal so LDAPSocketFactory can access it
+      currentSSLSupport.set(sslSupport);
+
+      // Set the socket factory using java.naming.ldap.factory.socket property
+      env.put("java.naming.ldap.factory.socket", LDAPSocketFactory.class.getName());
+
+      logger.debug("Custom SSL socket factory configured");
+   }
+
+   private static final ThreadLocal<SSLSupport> currentSSLSupport = new ThreadLocal<>();
+
+   /**
+    * Gets the current SSLSupport instance. This is used by LDAPSocketFactory
+    * to retrieve the configured SSL support for the current thread.
+    */
+   static SSLSupport getCurrentSSLSupport() {
+      return currentSSLSupport.get();
+   }
+
+   /**
+    * Clears the current SSLSupport instance.
+    */
+   static void clearCurrentSSLSupport() {
+      currentSSLSupport.remove();
+   }
+
+   private boolean hasSSLConfiguration() {
+      return isLoginPropertySet(ConfigKey.KEYSTORE_PATH) ||
+             isLoginPropertySet(ConfigKey.TRUSTSTORE_PATH) ||
+             isLoginPropertySet(ConfigKey.CRL_PATH);
+   }
+
+   private SSLSupport createSSLSupport() {
+      SSLSupport sslSupport = new SSLSupport();
+
+      if (isLoginPropertySet(ConfigKey.KEYSTORE_PROVIDER)) {
+         sslSupport.setKeystoreProvider(getLDAPPropertyValue(ConfigKey.KEYSTORE_PROVIDER));
+      }
+      if (isLoginPropertySet(ConfigKey.KEYSTORE_TYPE)) {
+         sslSupport.setKeystoreType(getLDAPPropertyValue(ConfigKey.KEYSTORE_TYPE));
+      }
+      if (isLoginPropertySet(ConfigKey.KEYSTORE_PATH)) {
+         sslSupport.setKeystorePath(getLDAPPropertyValue(ConfigKey.KEYSTORE_PATH));
+      }
+      if (isLoginPropertySet(ConfigKey.KEYSTORE_PASSWORD)) {
+         sslSupport.setKeystorePassword(getPlainPassword(getLDAPPropertyValue(ConfigKey.KEYSTORE_PASSWORD)));
+      }
+      if (isLoginPropertySet(ConfigKey.KEYSTORE_ALIAS)) {
+         sslSupport.setKeystoreAlias(getLDAPPropertyValue(ConfigKey.KEYSTORE_ALIAS));
+      }
+      if (isLoginPropertySet(ConfigKey.TRUSTSTORE_PROVIDER)) {
+         sslSupport.setTruststoreProvider(getLDAPPropertyValue(ConfigKey.TRUSTSTORE_PROVIDER));
+      }
+      if (isLoginPropertySet(ConfigKey.TRUSTSTORE_TYPE)) {
+         sslSupport.setTruststoreType(getLDAPPropertyValue(ConfigKey.TRUSTSTORE_TYPE));
+      }
+      if (isLoginPropertySet(ConfigKey.TRUSTSTORE_PATH)) {
+         sslSupport.setTruststorePath(getLDAPPropertyValue(ConfigKey.TRUSTSTORE_PATH));
+      }
+      if (isLoginPropertySet(ConfigKey.TRUSTSTORE_PASSWORD)) {
+         sslSupport.setTruststorePassword(getPlainPassword(getLDAPPropertyValue(ConfigKey.TRUSTSTORE_PASSWORD)));
+      }
+      if (isLoginPropertySet(ConfigKey.CRL_PATH)) {
+         sslSupport.setCrlPath(getLDAPPropertyValue(ConfigKey.CRL_PATH));
+      }
+      if (isLoginPropertySet(ConfigKey.SSL_PROVIDER)) {
+         sslSupport.setSslProvider(getLDAPPropertyValue(ConfigKey.SSL_PROVIDER));
+      }
+      if (isLoginPropertySet(ConfigKey.TRUST_ALL)) {
+         sslSupport.setTrustAll(Boolean.parseBoolean(getLDAPPropertyValue(ConfigKey.TRUST_ALL)));
+      }
+      if (isLoginPropertySet(ConfigKey.TRUST_MANAGER_FACTORY_PLUGIN)) {
+         sslSupport.setTrustManagerFactoryPlugin(getLDAPPropertyValue(ConfigKey.TRUST_MANAGER_FACTORY_PLUGIN));
+      }
+
+      return sslSupport;
+   }
 
    protected void openContext() throws Exception {
       if (context == null) {
@@ -705,6 +810,9 @@ public class LDAPLoginModule implements AuditLoginModule {
                   throw new NamingException("Empty password is not allowed");
                }
             }
+
+            // Configure SSL socket factory if SSL configuration is provided
+            configureSSLSocketFactory(env);
 
             extendInitialEnvironment(config, env);
 
