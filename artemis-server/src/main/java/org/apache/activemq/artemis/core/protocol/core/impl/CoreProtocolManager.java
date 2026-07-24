@@ -426,7 +426,7 @@ public class CoreProtocolManager implements ProtocolManager<Interceptor, ActiveM
       public void handlePacket(final Packet packet) {
          if (packet.getType() == PacketImpl.FEDERATION_DOWNSTREAM_CONNECT) {
             if (server.getSecurityStore().isSecurityEnabled()) {
-               if (rc.getSubject() == null) {
+               if (!rc.isAuthenticated()) {
                   ActiveMQServerLogger.LOGGER.federationDownstreamUnauthenticated(rc.getRemoteAddress());
                   rc.close();
                   return;

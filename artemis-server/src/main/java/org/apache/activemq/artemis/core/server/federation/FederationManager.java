@@ -143,6 +143,9 @@ public class FederationManager implements ActiveMQComponent {
       if (!server.getSecurityStore().isSecurityEnabled()) {
          return true;
       }
+      if (subject == null) {
+         return false;
+      }
       for (RolePrincipal role : subject.getPrincipals(RolePrincipal.class)) {
          if (downstreamAuthorization.contains(role.getName())) {
             return true;

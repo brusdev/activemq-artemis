@@ -52,6 +52,7 @@ public abstract class AbstractRemotingConnection implements RemotingConnection {
    protected volatile boolean dataReceived;
    private String clientId;
    private Subject subject;
+   private volatile boolean authenticated;
 
    public AbstractRemotingConnection(final Connection transportConnection, final Executor executor) {
       this.transportConnection = transportConnection;
@@ -280,6 +281,16 @@ public abstract class AbstractRemotingConnection implements RemotingConnection {
    @Override
    public Subject getSubject() {
       return subject;
+   }
+
+   @Override
+   public void setAuthenticated() {
+      this.authenticated = true;
+   }
+
+   @Override
+   public boolean isAuthenticated() {
+      return authenticated;
    }
 
    @Override

@@ -241,6 +241,7 @@ public class SecurityStoreImpl implements SecurityStore, HierarchicalRepositoryC
 
          if (connection != null) {
             connection.setSubject(subject);
+            connection.setAuthenticated();
          }
          if (AuditLogger.isResourceLoggingEnabled()) {
             if (connection != null) {

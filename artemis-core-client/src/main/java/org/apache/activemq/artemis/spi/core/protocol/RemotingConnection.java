@@ -220,6 +220,16 @@ public interface RemotingConnection extends BufferHandler {
    Subject getSubject();
 
    /**
+    * marks this connection as authenticated
+    */
+   void setAuthenticated();
+
+   /**
+    * {@return true if this connection has been successfully authenticated}
+    */
+   boolean isAuthenticated();
+
+   /**
     * {@return the name of the protocol for this Remoting Connection}
     */
    String getProtocolName();

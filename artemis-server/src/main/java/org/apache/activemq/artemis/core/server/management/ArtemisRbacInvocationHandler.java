@@ -360,6 +360,11 @@ public class ArtemisRbacInvocationHandler implements GuardInvocationHandler {
          public Subject getSubject() {
             return SecurityManagerShim.currentSubject();
          }
+
+         @Override
+         public boolean isAuthenticated() {
+            return SecurityManagerShim.currentSubject() != null;
+         }
       };
 
       @Override

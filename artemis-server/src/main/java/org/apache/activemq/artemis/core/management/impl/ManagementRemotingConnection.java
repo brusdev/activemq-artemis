@@ -36,6 +36,7 @@ import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
 public class ManagementRemotingConnection implements RemotingConnection {
 
    Subject subject;
+   boolean authenticated;
 
    @Override
    public Object getID() {
@@ -178,6 +179,16 @@ public class ManagementRemotingConnection implements RemotingConnection {
    @Override
    public Subject getSubject() {
       return subject;
+   }
+
+   @Override
+   public void setAuthenticated() {
+      this.authenticated = true;
+   }
+
+   @Override
+   public boolean isAuthenticated() {
+      return authenticated;
    }
 
    @Override

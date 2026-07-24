@@ -35,6 +35,10 @@ import org.apache.activemq.artemis.core.server.management.NotificationService;
 import org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository;
 import org.apache.activemq.artemis.logs.AssertionLoggerHandler;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager2;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager3;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager4;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager5;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.activemq.artemis.spi.core.security.jaas.UserPrincipal;
@@ -873,6 +877,202 @@ public class SecurityStoreImplTest {
       } catch (ActiveMQSecurityException e) {
          assertTrue(e.getMessage().contains(getDefaultClusterUser()));
       }
+   }
+
+   /**
+    * When a v5 security manager authenticates successfully it returns a Subject.
+    * SecurityStoreImpl must call setAuthenticated() on the connection regardless of whether a
+    * Subject is produced, so v5 is already covered by the existing tests. This test ensures the
+    * explicit verification path works.
+    */
+   @Test
+   public void testAuthenticateWithSecurityManager5SetsAuthenticated() throws Exception {
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), permitAll, 999, true, "", null, null, 0, 0);
+
+      RemotingConnection connection = Mockito.mock(RemotingConnection.class);
+      securityStore.authenticate("user", "pass", connection, null);
+
+      Mockito.verify(connection, Mockito.times(1)).setAuthenticated();
+   }
+
+   /**
+    * {@link ActiveMQSecurityManager3} does not populate a Subject — it returns a validated user
+    * name. SecurityStoreImpl must still call {@code setAuthenticated()} so that downstream checks
+    * (e.g. federation) that rely on {@link RemotingConnection#isAuthenticated()} work correctly
+    * even though {@link RemotingConnection#getSubject()} returns {@code null}.
+    */
+   @Test
+   public void testAuthenticateWithSecurityManager3SetsAuthenticated() throws Exception {
+      final String user = "alice";
+      ActiveMQSecurityManager3 manager3 = new ActiveMQSecurityManager3() {
+         @Override
+         public String validateUser(String u, String p, RemotingConnection rc) {
+            return user;
+         }
+
+         @Override
+         public String validateUserAndRole(String u, String p, Set<Role> roles,
+                                           CheckType checkType, String address,
+                                           RemotingConnection rc) {
+            return user;
+         }
+
+         @Override
+         public boolean validateUser(String u, String p) {
+            return true;
+         }
+
+         @Override
+         public boolean validateUserAndRole(String u, String p, Set<Role> roles, CheckType ct) {
+            return true;
+         }
+      };
+
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), manager3, 999, true, "", null, null, 0, 0);
+
+      RemotingConnection connection = Mockito.mock(RemotingConnection.class);
+      securityStore.authenticate(user, "pass", connection, null);
+
+      Mockito.verify(connection, Mockito.times(1)).setAuthenticated();
+      // Subject is NOT set for manager3 — only the authenticated flag
+      Mockito.verify(connection, Mockito.times(1)).setSubject(null);
+   }
+
+   /**
+    * {@link ActiveMQSecurityManager4} is the same as v3 but with domain support.
+    * SecurityStoreImpl must call {@code setAuthenticated()} even though no Subject is produced.
+    */
+   @Test
+   public void testAuthenticateWithSecurityManager4SetsAuthenticated() throws Exception {
+      final String user = "bob";
+      ActiveMQSecurityManager4 manager4 = new ActiveMQSecurityManager4() {
+         @Override
+         public String validateUser(String u, String p, RemotingConnection rc, String domain) {
+            return user;
+         }
+
+         @Override
+         public String validateUserAndRole(String u, String p, Set<Role> roles,
+                                           CheckType checkType, String address,
+                                           RemotingConnection rc, String domain) {
+            return user;
+         }
+
+         @Override
+         public boolean validateUser(String u, String p) {
+            return true;
+         }
+
+         @Override
+         public boolean validateUserAndRole(String u, String p, Set<Role> roles, CheckType ct) {
+            return true;
+         }
+      };
+
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), manager4, 999, true, "", null, null, 0, 0);
+
+      RemotingConnection connection = Mockito.mock(RemotingConnection.class);
+      securityStore.authenticate(user, "pass", connection, null);
+
+      Mockito.verify(connection, Mockito.times(1)).setAuthenticated();
+      Mockito.verify(connection, Mockito.times(1)).setSubject(null);
+   }
+
+   /**
+    * {@link ActiveMQSecurityManager2} authenticates via certificate and returns a boolean result.
+    * SecurityStoreImpl must call {@code setAuthenticated()} even though no Subject or user name is
+    * produced.
+    */
+   @Test
+   public void testAuthenticateWithSecurityManager2SetsAuthenticated() throws Exception {
+      ActiveMQSecurityManager2 manager2 = new ActiveMQSecurityManager2() {
+         @Override
+         public boolean validateUser(String u, String p, java.security.cert.X509Certificate[] certs) {
+            return true;
+         }
+
+         @Override
+         public boolean validateUserAndRole(String u, String p, Set<Role> roles,
+                                            CheckType checkType, String address,
+                                            RemotingConnection rc) {
+            return true;
+         }
+
+         @Override
+         public boolean validateUser(String u, String p) {
+            return true;
+         }
+
+         @Override
+         public boolean validateUserAndRole(String u, String p, Set<Role> roles, CheckType ct) {
+            return true;
+         }
+      };
+
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), manager2, 999, true, "", null, null, 0, 0);
+
+      RemotingConnection connection = Mockito.mock(RemotingConnection.class);
+      securityStore.authenticate("user", "pass", connection, null);
+
+      Mockito.verify(connection, Mockito.times(1)).setAuthenticated();
+      Mockito.verify(connection, Mockito.times(1)).setSubject(null);
+   }
+
+   /**
+    * Base {@link ActiveMQSecurityManager} (v1) returns a boolean. SecurityStoreImpl must call
+    * {@code setAuthenticated()} on success.
+    */
+   @Test
+   public void testAuthenticateWithSecurityManager1SetsAuthenticated() throws Exception {
+      ActiveMQSecurityManager manager1 = new ActiveMQSecurityManager() {
+         @Override
+         public boolean validateUser(String u, String p) {
+            return true;
+         }
+
+         @Override
+         public boolean validateUserAndRole(String u, String p, Set<Role> roles, CheckType ct) {
+            return true;
+         }
+      };
+
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), manager1, 999, true, "", null, null, 0, 0);
+
+      RemotingConnection connection = Mockito.mock(RemotingConnection.class);
+      securityStore.authenticate("user", "pass", connection, null);
+
+      Mockito.verify(connection, Mockito.times(1)).setAuthenticated();
+      Mockito.verify(connection, Mockito.times(1)).setSubject(null);
+   }
+
+   /**
+    * When authentication fails, {@code setAuthenticated()} must NOT be called on the connection
+    * because the exception is thrown before reaching that code path.
+    */
+   @Test
+   public void testAuthenticateFailureDoesNotSetAuthenticated() throws Exception {
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), denyAll, 999, true, "", null, null, 0, 0);
+
+      RemotingConnection connection = Mockito.mock(RemotingConnection.class);
+      try {
+         securityStore.authenticate("user", "pass", connection, null);
+         fail("Expected ActiveMQSecurityException");
+      } catch (ActiveMQSecurityException expected) {
+         // expected
+      }
+
+      Mockito.verify(connection, Mockito.never()).setAuthenticated();
+   }
+
+   /**
+    * When the connection parameter is {@code null} no NPE must be thrown. This covers calls from
+    * management contexts where there is no transport connection.
+    */
+   @Test
+   public void testAuthenticateWithNullConnectionDoesNotThrow() throws Exception {
+      SecurityStoreImpl securityStore = new SecurityStoreImpl(new HierarchicalObjectRepository<>(), permitAll, 999, true, "", null, null, 0, 0);
+      // must not throw
+      securityStore.authenticate("user", "pass", null, null);
    }
 
    private static SecurityAuth getSecurityAuth(String user, String password) {
